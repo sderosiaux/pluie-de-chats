@@ -160,10 +160,7 @@ export function buildBestiary(): void {
     }
     if (caught) {
       card.style.cursor = 'pointer';
-      card.addEventListener('click', () => {
-        Music.sfxMeow();
-        openBestiaryDetail(type);
-      });
+      card.addEventListener('click', () => openBestiaryDetail(type));
     }
     grid.appendChild(card);
   });
@@ -192,13 +189,14 @@ export function openBestiaryDetail(type: CatType): void {
   const hintEl = document.getElementById('bst-detail-hint');
   if (hintEl) hintEl.textContent = type.hint || '';
 
-  // 3 poses (sit, mid, tro) centrées sans label
+  // 3 poses (sit, mid, tro) centrées sans label — clic = miaou
   const posesEl = document.getElementById('bst-detail-poses');
   if (!posesEl) return;
   posesEl.innerHTML = '';
   for (let i = 0; i < 3; i++) {
     const wrap = document.createElement('div');
     wrap.className = 'bst-pose';
+    wrap.style.cursor = 'pointer';
     const cvs = document.createElement('canvas');
     cvs.width = 160; cvs.height = 160;
     const tc = cvs.getContext('2d')!;
@@ -209,6 +207,7 @@ export function openBestiaryDetail(type: CatType): void {
       drawCatPreview(cvs, type, true);
     }
     wrap.appendChild(cvs);
+    wrap.addEventListener('click', () => Music.sfxMeow());
     posesEl.appendChild(wrap);
   }
   overlay.classList.add('show');

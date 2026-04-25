@@ -1,7 +1,10 @@
 // Scène animée du menu de démarrage.
 // Reprend l'ambiance du jeu (ciel + soleil parallax + nuages + chats sprites)
 // sans gameplay, weapons ou interaction.
-import { CAT_SPRITES } from './sprites';
+import { CAT_SPRITES, BG_SPRITES } from './sprites';
+
+const SCENE_IDS = ['city', 'garden', 'home', 'forest'];
+const sceneId = SCENE_IDS[Math.floor(Math.random() * SCENE_IDS.length)];
 
 const canvas = document.getElementById('menu-canvas') as HTMLCanvasElement | null;
 if (!canvas) throw new Error('menu-canvas missing');
@@ -72,9 +75,9 @@ function spawnCat(initial = false): void {
   });
 }
 
-// Init : pré-remplir avec quelques nuages et chats déjà à l'écran
+// Init : pré-remplir avec quelques nuages et chats déjà à l'écran (peu nombreux pour ne pas surcharger)
 for (let i = 0; i < 5; i++) spawnCloud(true);
-for (let i = 0; i < 7; i++) spawnCat(true);
+for (let i = 0; i < 3; i++) spawnCat(true);
 
 function drawSky(): void {
   // Gradient candy pop
@@ -123,6 +126,28 @@ function updateAndDrawClouds(dt: number): void {
   ctx.restore();
 }
 
+function drawScenery(): void {
+  const sprite = BG_SPRITES[sceneId];
+  if (!sprite || !sprite.complete || !sprite.naturalWidth) return;
+  // Hauteur du décor proportionnelle à la fenêtre, mais plafonnée
+  const dispH = Math.min(160, Math.max(110, Math.round(H * 0.18)));
+  const dispW = sprite.naturalWidth * dispH / sprite.naturalHeight;
+  const baseY = H - dispH;
+  let i = 0;
+  // Tile + flip alterné pour cacher les coutures
+  for (let x = 0; x < W + dispW; x += dispW, i++) {
+    ctx.save();
+    if (i % 2 === 1) {
+      ctx.translate(x + dispW, baseY);
+      ctx.scale(-1, 1);
+      ctx.drawImage(sprite, 0, 0, dispW, dispH);
+    } else {
+      ctx.drawImage(sprite, x, baseY, dispW, dispH);
+    }
+    ctx.restore();
+  }
+}
+
 function updateAndDrawCats(dt: number): void {
   for (let i = cats.length - 1; i >= 0; i--) {
     const c = cats[i];
@@ -145,8 +170,8 @@ function updateAndDrawCats(dt: number): void {
     ctx.drawImage(img, -d / 2, -d / 2, d, d);
     ctx.restore();
   }
-  // Spawn doux : maintient ~8-12 chats à l'écran
-  if (cats.length < 10 && Math.random() < 0.02) spawnCat();
+  // Spawn doux : maintient ~3-5 chats à l'écran (peu, juste pour l'ambiance)
+  if (cats.length < 4 && Math.random() < 0.006) spawnCat();
 }
 
 function loop(ts: number): void {
@@ -158,6 +183,7 @@ function loop(ts: number): void {
   drawSky();
   drawSun(time);
   updateAndDrawClouds(dt);
+  drawScenery();
   updateAndDrawCats(dt);
 
   rafId = requestAnimationFrame(loop);
