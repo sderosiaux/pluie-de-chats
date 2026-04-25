@@ -4,7 +4,7 @@
 // drawCatShape against ad-hoc breed branches isn't worth the friction.
 import { state } from './state';
 import { ctx } from './canvas';
-import { CAT_TYPES, OBJECT_TYPES } from './data';
+// data: CAT_TYPES/OBJECT_TYPES non utilisés directement ici (les `type` arrivent via param)
 import { CAT_SPRITES, OBJECT_SPRITES, WEAPON_SPRITES } from './sprites';
 
 // ── Cat types & drawing (reused from v1) ──────────────────────────────────────
@@ -658,13 +658,12 @@ export function drawScottish(s) {
   const col='#B0A090', colD='#887060';
   ctx.fillStyle=col;
   ctx.beginPath(); ctx.ellipse(0,s*.1,s*.56,s*.5,0,0,Math.PI*2); ctx.fill();
-  if (true) { // stries douces
-    ctx.save();
-    ctx.beginPath(); ctx.ellipse(0,s*.1,s*.56,s*.5,0,0,Math.PI*2); ctx.clip();
-    ctx.strokeStyle=colD; ctx.lineWidth=s*.07; ctx.lineCap='round';
-    for(let i=-1;i<=1;i++){ctx.beginPath();ctx.moveTo(i*s*.2-s*.28,-s*.3);ctx.lineTo(i*s*.2+s*.1,s*.6);ctx.stroke();}
-    ctx.restore();
-  }
+  // stries douces
+  ctx.save();
+  ctx.beginPath(); ctx.ellipse(0,s*.1,s*.56,s*.5,0,0,Math.PI*2); ctx.clip();
+  ctx.strokeStyle=colD; ctx.lineWidth=s*.07; ctx.lineCap='round';
+  for(let i=-1;i<=1;i++){ctx.beginPath();ctx.moveTo(i*s*.2-s*.28,-s*.3);ctx.lineTo(i*s*.2+s*.1,s*.6);ctx.stroke();}
+  ctx.restore();
   ctx.fillStyle=col;
   ctx.beginPath(); ctx.arc(0,-s*.355,s*.42,0,Math.PI*2); ctx.fill();
   // Oreilles repliées — demi-cercles aplatis vers le bas

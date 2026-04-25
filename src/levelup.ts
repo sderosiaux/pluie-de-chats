@@ -3,7 +3,7 @@ import { luOverlay } from './dom';
 import { updateHUD } from './catch';
 import { checkUnlocks } from './unlock';
 import { Music } from './audio';
-import { state, rechargeTimers, upgradeFlags, unlockedTypes, pickCounts, pendingLevelUps } from './state';
+import { state, rechargeTimers, unlockedTypes, pickCounts, pendingLevelUps } from './state';
 import { TYPE_ORDER, LEVELS, type Level } from './config';
 import { PROJ_DEFS, UPGRADES } from './data';
 import type { Upgrade, ProjDef } from './types';

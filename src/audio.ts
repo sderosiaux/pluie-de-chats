@@ -16,8 +16,7 @@ export const Music = (() => {
 
   // G major note table (Hz)
   const __ = 0;
-  const G2=98,
-    G3=196, A3=220, B3=247, D4=294, Fs4=370,
+  const G3=196, A3=220, D4=294,
     G4=392, A4=440, B4=494, C5=523, D5=587, E5=659, Fs5=740, G5=784, A5=880, B5=988;
 
   // 4-bar melody (64 × 16th notes = 6s loop)
