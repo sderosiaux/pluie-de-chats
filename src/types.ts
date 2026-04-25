@@ -19,6 +19,10 @@ export interface CatType {
   isTrap?: boolean;
   trapKind?: 'bomb' | 'dog' | 'puddle' | 'chili' | 'vacuum';
   baseVy?: number;
+  // Indestructibles : projectiles passent au travers, et au contact du sol
+  // l'objet se transforme en décor lurer/repuller cats nearby
+  unbreakable?: boolean;
+  lureKind?: 'attract' | 'repel' | null;
 }
 
 export interface Cat {
@@ -99,6 +103,7 @@ export interface Effect {
   x?: number; y?: number;
   x1?: number; y1?: number;
   x2?: number; y2?: number;
+  vx?: number; vy?: number;
   life: number;
   dur: number;
   age: number;
@@ -110,6 +115,13 @@ export interface Effect {
   desc?: string;
   shownMissMsg?: boolean;
   shownMultiMsg?: boolean;
+  // Enemy bullet (tireur)
+  ownerId?: number;
+  // Ground decor / lure
+  spriteId?: string;
+  lureKind?: 'attract' | 'repel' | null;
+  lureRadius?: number;
+  size?: number;
 }
 
 export interface Particle {

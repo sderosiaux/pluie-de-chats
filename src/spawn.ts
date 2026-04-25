@@ -43,7 +43,9 @@ export function spawnCat(forcedType?: CatType): void {
     bossAnchorX: 0,
     bossWobble: Math.random() * Math.PI * 2,
     visible: true, visTimer: 1.2 + Math.random() * 0.6,
-    spitTimer: type.id === 'crachat' ? 2.2 + Math.random() * 1.5 : 0,
+    spitTimer: type.id === 'crachat' ? 2.2 + Math.random() * 1.5
+             : type.id === 'tireur'  ? 1.5 + Math.random() * 1.2
+             : 0,
     lucky: type.id !== 'boss' && Math.random() < (upgradeFlags.luckyRate || 0.05),
     spriteFlip: Math.random() < 0.5,
     spriteRot: (Math.random() - 0.5) * 0.32,

@@ -172,18 +172,17 @@ export function drawInventory(): void {
     ctx.save();
 
     if (locked) {
-      // Dark blurred background circle
+      // Dark background circle
       ctx.beginPath(); ctx.arc(sx, sy, slotR, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(20,10,45,0.75)'; ctx.fill();
+      ctx.fillStyle = 'rgba(20,10,45,0.78)'; ctx.fill();
       ctx.strokeStyle = 'rgba(255,206,58,0.45)'; ctx.lineWidth = 1.5;
       ctx.stroke();
-      // Big shiny padlock centered in slot
-      drawPadlock(sx, sy, slotR * 0.72);
-      // Hint below
-      ctx.font = `700 ${Math.round(slotR * 0.38)}px "Baloo 2",Arial`;
-      ctx.fillStyle = '#ffce3a'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-      ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 3;
-      ctx.fillText(def.unlockHint, sx, sy + slotR * 0.62);
+      // Padlock dans la moitié haute du slot, hint dans la moitié basse — le tout INSIDE
+      drawPadlock(sx, sy - slotR * 0.22, slotR * 0.55);
+      ctx.font = `700 ${Math.round(slotR * 0.34)}px "Baloo 2",Arial`;
+      ctx.fillStyle = '#ffce3a'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 2;
+      ctx.fillText(def.unlockHint, sx, sy + slotR * 0.45);
       ctx.shadowBlur = 0;
 
     } else {

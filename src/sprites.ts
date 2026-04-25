@@ -15,6 +15,7 @@ const CAT_IDS = [
   'jardinier','chevalier','musicien','cuisinier','clown','robot','sportif',
   'professeur','facteur','samourai','infirmier',
   'batman','catwoman','flash','hulk','spiderman','superman',
+  'parrain','tireur','garde','trafiquant',
 ];
 
 export const CAT_SPRITES: Record<string, HTMLImageElement[]> = {};
@@ -37,6 +38,7 @@ export const OBJECT_SPRITES: Record<string, HTMLImageElement> = {
   flaque:     loadImage('/sprites/objects/flaque.png'),
   piment:     loadImage('/sprites/objects/piment.png'),
   aspirateur: loadImage('/sprites/objects/aspirateur.png'),
+  croquettes: loadImage('/sprites/objects/croquettes.png'),
 };
 
 export const BG_SPRITES: Record<string, HTMLImageElement> = {

@@ -150,11 +150,22 @@ export const CAT_TYPES: CatType[] = [
     label:'Chat Hulk',      hint:'Smash ! Encaisse les coups' },
   { id:'catwoman',  pts:6, col:'#2A1B4A', size:0.95, w:5, stripes:false, minLvl:4,
     label:'Chat Catwoman',  hint:'Rapide et insaisissable' },
+  // ── Chats Mafia ──────────────────────────────────────────────────────────
+  { id:'parrain',    pts:12, col:'#3a3a3a', size:1.4,  w:3, stripes:false, minLvl:5, hp:3,
+    label:'Le Parrain',     hint:'Tank costaud — gros score, 3 HP' },
+  { id:'tireur',     pts:7,  col:'#1a1a1a', size:1.0,  w:5, stripes:false, minLvl:4,
+    label:'Tireur Mafia',   hint:'Te tire dessus toutes les 3s !' },
+  { id:'garde',      pts:8,  col:'#5a5a6a', size:1.1,  w:4, stripes:false, minLvl:5, hp:3,
+    label:'Garde du corps', hint:'Costaud, prend 3 coups' },
+  { id:'trafiquant', pts:6,  col:'#E8B14A', size:1.0,  w:6, stripes:false, minLvl:3,
+    label:'Trafiquant',     hint:'Cossu, +6 pts faciles' },
 ];
 
 export const OBJECT_TYPES: ObjectType[] = [
-  { id:'plume',      label:'Plume',         col:'#C8B4E8', isObject:true, isNeutral:true, size:0.55, baseVy:0.6,  pts:0, w: 28 },
-  { id:'souris',     label:'Jouet-souris',  col:'#C0B0A0', isObject:true, isNeutral:true, size:0.7,  baseVy:1.1,  pts:1, w: 28 },
+  // Plume / Souris / Croquettes — tombent puis "font partie du décor" au sol
+  { id:'plume',      label:'Plume',         col:'#C8B4E8', isObject:true, isNeutral:true, size:0.55, baseVy:0.6,  pts:0, w: 24, unbreakable:true, lureKind:null },
+  { id:'souris',     label:'Jouet-souris',  col:'#C0B0A0', isObject:true, isNeutral:true, size:0.7,  baseVy:1.1,  pts:0, w: 22, unbreakable:true, lureKind:'repel' },
+  { id:'croquettes', label:'Croquettes',    col:'#D4A55A', isObject:true, isNeutral:true, size:0.8,  baseVy:0.9,  pts:0, w: 22, unbreakable:true, lureKind:'attract' },
   { id:'bombe',      label:'Bombe',         col:'#2C3E50', isObject:true, isTrap:true, trapKind:'bomb',    size:0.85, baseVy:1.3,  pts:0, w: 12 },
   { id:'chien',      label:'Petit chien',   col:'#9C5A2A', isObject:true, isTrap:true, trapKind:'dog',     size:0.95, baseVy:1.2,  pts:0, w: 7  },
   { id:'flaque',     label:'Flaque',        col:'#5BB6E8', isObject:true, isTrap:true, trapKind:'puddle',  size:0.85, baseVy:0.95, pts:0, w: 8  },

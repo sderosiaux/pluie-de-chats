@@ -176,6 +176,20 @@ function loop(ts: number): void {
       }
       // Shield flash decay
       if (c.shieldFlash>0) c.shieldFlash-=dt*5;
+      // Lure forces des décors ground (croquettes attire, souris repousse)
+      if (!c.isObject) {
+        for (const e of effects) {
+          if (e.type !== 'ground_decor' || !e.lureKind || !e.lureRadius) continue;
+          const lx = e.x || 0, ly = e.y || 0;
+          const dx = lx - c.x, dy = ly - c.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist > e.lureRadius || dist < 1) continue;
+          const force = (1 - dist / e.lureRadius) * 0.18;
+          const sign = e.lureKind === 'attract' ? 1 : -1;
+          c.vx += (dx / dist) * force * sign;
+          c.vy += (dy / dist) * force * sign;
+        }
+      }
       // Griffeur — fonce vers le lanceur
       if (c.type.id==='griffeur') {
         const dx=state.LAUNCHER.x-c.x, dy=state.LAUNCHER.y-c.y, dist=Math.hypot(dx,dy);
@@ -264,7 +278,35 @@ function loop(ts: number): void {
           hairballs.push({ x:c.x, y:c.y, vx:(dx/d)*spd, vy:(dy/d)*spd, r:8, age:0, dur:5, catId:c.id });
         }
       }
+      // Tireur Mafia — tire une balle vers le launcher toutes les ~3s
+      if (c.type.id==='tireur') {
+        c.spitTimer -= dt;
+        if (c.spitTimer <= 0) {
+          c.spitTimer = 2.5 + Math.random()*1.0;
+          const dx = state.LAUNCHER.x - c.x, dy = state.LAUNCHER.y - c.y;
+          const d = Math.hypot(dx, dy) || 1;
+          const spd = 5.5;
+          effects.push({
+            type: 'enemyBullet', x: c.x, y: c.y + c.size * 0.3,
+            vx: (dx/d) * spd, vy: (dy/d) * spd,
+            life: 1, dur: 4, age: 0, ownerId: c.id,
+          });
+        }
+      }
       if(c.x<c.size||c.x>state.W-c.size){c.vx*=-1;c.x=Math.max(c.size,Math.min(state.W-c.size,c.x));}
+      // Indestructibles : au contact du sol → se transforment en décor (lure attract/repel) puis disparaissent du pool cats
+      if (c.type.unbreakable && c.y >= state.H - state.DECOR_H + c.size * 0.4) {
+        effects.push({
+          type: 'ground_decor',
+          x: c.x, y: state.H - state.DECOR_H + c.size * 0.4,
+          spriteId: c.type.id,
+          lureKind: c.type.lureKind || null,
+          lureRadius: c.type.lureKind ? 140 : 0,
+          size: c.size * 1.6,
+          life: 1, dur: 8, age: 0,
+        });
+        cats.splice(i,1);continue;
+      }
       if(c.y>state.H+c.size){
         // Bombe tombée au sol = esquivée, aucun malus
         if(!c.isObject && c.type.pts>0){ state.combo=0; updateHUD(); }
@@ -315,6 +357,8 @@ function loop(ts: number): void {
     let hitCount=0;
     for(const cat of cats){
       if(cat.caught)continue;
+      // Indestructibles : projectiles passent à travers (plume/souris/croquettes)
+      if(cat.type.unbreakable)continue;
       // Furtif: invincible quand invisible
       if(cat.type.id==='furtif'&&!cat.visible)continue;
       const dist=Math.hypot(cat.x-p.x, cat.y-p.y);
@@ -385,6 +429,24 @@ function loop(ts: number): void {
           cat.vy+=(e.y-cat.y)/safeD*force;
           if(d<22)catchCat(cat,e.x,e.y,false);
         }
+      }
+    }
+
+    // enemyBullet: balle tirée par un Tireur Mafia → vol en ligne droite, kill au contact launcher
+    if (e.type === 'enemyBullet') {
+      e.x = (e.x || 0) + (e.vx || 0);
+      e.y = (e.y || 0) + (e.vy || 0);
+      // Hors écran → expire
+      if (e.y > state.H + 20 || e.x < -20 || e.x > state.W + 20 || e.y < -20) {
+        effects.splice(i, 1); continue;
+      }
+      // Collision launcher
+      const dx = state.LAUNCHER.x - (e.x || 0);
+      const dy = state.LAUNCHER.y - (e.y || 0);
+      if (Math.hypot(dx, dy) < 28) {
+        loseLife();
+        spawnParticles(e.x || 0, e.y || 0, 8, true);
+        effects.splice(i, 1); continue;
       }
     }
 
