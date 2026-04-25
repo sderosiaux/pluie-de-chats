@@ -105,8 +105,8 @@
 <body>
 <div id="hud">
   <button id="music-btn" title="Musique">🔇</button>
-  <div id="score">🐾 0</div>
-  <div id="level-badge">⭐ Niv. 1</div>
+  <div id="score">0</div>
+  <div id="level-badge">★ Niv. 1</div>
   <div id="combo"></div>
   <div id="hi-block">Record<span id="hi-val">0</span></div>
 </div>
@@ -125,19 +125,25 @@ const toast      = document.getElementById('unlock-toast');
 
 const HUD_H = 56;
 // INV_H adapté à la taille d'écran + safe area iPhone
+const DIAL_R = 62;         // ring radius
+const DIAL_HUB_R = 32;    // center hub radius
+const DIAL_ANGLES = [-90, -18, 54, 126, 198]; // degrees per TYPE_ORDER slot
+
 function getInvH() {
   const safeBottom = parseInt(getComputedStyle(document.documentElement)
     .getPropertyValue('--sab') || '0', 10) || 0;
-  return (window.innerWidth < 430 ? 100 : 90) + safeBottom;
+  return 175 + safeBottom;
 }
 let INV_H = getInvH();
+let DIAL_CY = 0;
 
 let W, H, LAUNCHER;
 function resize() {
   W = canvas.width = window.innerWidth;
   H = canvas.height = window.innerHeight;
   INV_H = getInvH();
-  LAUNCHER = { x: W / 2, y: H - INV_H - 58 };
+  LAUNCHER = { x: W / 2, y: H - INV_H - 52 };
+  DIAL_CY = H - INV_H + Math.round(INV_H * 0.44);
 }
 resize();
 window.addEventListener('resize', resize);
@@ -833,16 +839,14 @@ function getEventPos(e) {
 }
 
 function handleDown(pos) {
-  // inventory tap — must match drawInventory layout exactly
+  // inventory tap — radial dial detection
   if (pos.y > H - INV_H) {
-    const PAD = 6, GAP = 5;
-    const n = TYPE_ORDER.length;
-    const slotW = Math.min(100, (W - PAD*2 - GAP*(n-1)) / n);
-    const totalW = slotW*n + GAP*(n-1);
-    const startX = (W - totalW) / 2;
-    for (let i=0;i<n;i++) {
-      const sx = startX + i*(slotW+GAP);
-      if (pos.x >= sx && pos.x < sx + slotW) {
+    const dcx = W / 2, dcy = DIAL_CY;
+    for (let i = 0; i < TYPE_ORDER.length; i++) {
+      const ang = DIAL_ANGLES[i] * Math.PI / 180;
+      const sx = dcx + Math.cos(ang) * DIAL_R;
+      const sy = dcy + Math.sin(ang) * DIAL_R;
+      if (Math.hypot(pos.x - sx, pos.y - sy) < 30) {
         const id = TYPE_ORDER[i];
         if (unlockedTypes.has(id)) selectedType = id;
         return;
@@ -1003,192 +1007,163 @@ function drawLauncher() {
   ctx.restore();
 }
 
-// ── Inventory bar — Candy Pop PillTray ────────────────────────────────────────
+// ── Inventory — Candy Pop Dial Radial ─────────────────────────────────────────
 function drawInventory() {
-  const PAD = 6, GAP = 5;
-  const n = TYPE_ORDER.length;
-  const slotW = Math.min(100, (W - PAD*2 - GAP*(n-1)) / n);
-  const totalW = slotW*n + GAP*(n-1);
-  const startX = (W - totalW) / 2;
   const barY = H - INV_H;
-  const slotH = INV_H - PAD*2;
-  const SR = 14; // slot corner radius
+  const dcx = W / 2, dcy = DIAL_CY;
 
-  // ── Full bar fill (candy sky gradient continuation)
+  // Zone background (candy pink-rose)
   const bg = ctx.createLinearGradient(0, barY, 0, H);
-  bg.addColorStop(0, 'rgba(255,214,242,0.96)');
-  bg.addColorStop(1, 'rgba(255,200,235,0.99)');
+  bg.addColorStop(0, 'rgba(255,214,242,0.97)');
+  bg.addColorStop(1, 'rgba(255,196,232,1)');
   ctx.fillStyle = bg;
   ctx.fillRect(0, barY, W, INV_H);
+  // Top separator line
+  ctx.fillStyle = 'rgba(123,63,242,0.18)';
+  ctx.fillRect(0, barY, W, 1.5);
 
-  // ── Panel container behind slots
-  const pPad = 8;
-  const pX = startX - pPad, pY = barY + 4;
-  const pW = totalW + pPad*2, pH = slotH + PAD + 2;
-
+  // Outer ring glow
   ctx.save();
-  ctx.shadowColor = 'rgba(42,27,74,0.3)'; ctx.shadowBlur = 16; ctx.shadowOffsetY = 6;
-  const panelBg = ctx.createLinearGradient(0, pY, 0, pY + pH);
-  panelBg.addColorStop(0, 'rgba(42,27,74,0.94)');
-  panelBg.addColorStop(1, 'rgba(16,8,36,0.97)');
-  ctx.fillStyle = panelBg;
-  ctx.beginPath(); roundRect(ctx, pX, pY, pW, pH, 20); ctx.fill();
-  ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
-  // Gold border
-  ctx.strokeStyle = '#ffce3a'; ctx.lineWidth = 2;
-  ctx.beginPath(); roundRect(ctx, pX, pY, pW, pH, 20); ctx.stroke();
-  // Inner top shimmer
-  ctx.fillStyle = 'rgba(255,255,255,0.10)';
-  ctx.fillRect(pX + 20, pY + 1, pW - 40, 1.5);
+  ctx.strokeStyle = 'rgba(42,27,74,0.12)'; ctx.lineWidth = 2;
+  ctx.setLineDash([5, 5]);
+  ctx.beginPath(); ctx.arc(dcx, dcy, DIAL_R + 6, 0, Math.PI*2); ctx.stroke();
+  ctx.setLineDash([]);
   ctx.restore();
 
-  for (let i = 0; i < n; i++) {
+  for (let i = 0; i < TYPE_ORDER.length; i++) {
     const id = TYPE_ORDER[i];
     const def = PROJ_DEFS[id];
     const locked = !unlockedTypes.has(id);
     const isSelected = !locked && selectedType === id;
-
-    const sx = startX + i * (slotW + GAP);
-    const baseH = slotH * 0.9;
-    const h = isSelected ? slotH : baseH;
-    const sy = isSelected ? barY + PAD - 7 : barY + PAD + (slotH - baseH);
-    const cx = sx + slotW / 2;
-    const cy = sy + h / 2;
+    const ang = DIAL_ANGLES[i] * Math.PI / 180;
+    const sx = dcx + Math.cos(ang) * DIAL_R;
+    const sy = dcy + Math.sin(ang) * DIAL_R;
+    const slotR = isSelected ? 27 : 23;
 
     ctx.save();
 
     if (locked) {
-      // ── Locked slot ───────────────────────────────────────────────────────────
-      // Background
-      ctx.fillStyle = 'rgba(255,255,255,0.04)';
-      ctx.beginPath(); roundRect(ctx, sx, sy, slotW, h, SR); ctx.fill();
-
-      // Gold shimmer sweep animation
-      const shimT = ((gameTime * 0.38) % 1);
-      const shimX = sx - 20 + shimT * (slotW + 40);
-      const shimGrad = ctx.createLinearGradient(shimX - 20, 0, shimX + 20, 0);
+      // Shimmer sweep
+      ctx.save();
+      ctx.beginPath(); ctx.arc(sx, sy, slotR, 0, Math.PI*2); ctx.clip();
+      const shimT = ((gameTime * 0.42) % 1);
+      const shimX = sx - slotR*2 + shimT * slotR * 4;
+      const shimGrad = ctx.createLinearGradient(shimX - slotR, 0, shimX + slotR, 0);
       shimGrad.addColorStop(0, 'rgba(255,206,58,0)');
       shimGrad.addColorStop(0.5, 'rgba(255,206,58,0.38)');
       shimGrad.addColorStop(1, 'rgba(255,206,58,0)');
-      ctx.save();
-      ctx.beginPath(); roundRect(ctx, sx, sy, slotW, h, SR); ctx.clip();
-      ctx.fillStyle = shimGrad; ctx.fillRect(sx - 20, sy, slotW + 40, h);
+      ctx.fillStyle = 'rgba(42,27,74,0.82)'; ctx.fillRect(sx-slotR*2, sy-slotR, slotR*4, slotR*2);
+      ctx.fillStyle = shimGrad; ctx.fillRect(sx-slotR*2, sy-slotR, slotR*4, slotR*2);
       ctx.restore();
-
-      // Dashed gold border
-      ctx.setLineDash([3, 3]);
-      ctx.strokeStyle = 'rgba(255,206,58,0.4)'; ctx.lineWidth = 1.2;
-      ctx.beginPath(); roundRect(ctx, sx, sy, slotW, h, SR); ctx.stroke();
-      ctx.setLineDash([]);
-
-      // Gold lock icon
-      const lh = h * 0.34, lw = lh * 0.72;
-      const lx = cx, ly = cy - h*0.1;
-      const lockGrad = ctx.createLinearGradient(lx-lw*.5, ly-lh*.2, lx-lw*.5, ly+lh*.4);
-      lockGrad.addColorStop(0,'#ffd870'); lockGrad.addColorStop(1,'#a87820');
-      // shackle
-      ctx.strokeStyle = '#ffd870'; ctx.lineWidth = lw*.22; ctx.lineCap='round'; ctx.lineJoin='round';
-      ctx.beginPath();
-      ctx.moveTo(lx-lw*.42, ly-lh*.05); ctx.lineTo(lx-lw*.42, ly-lh*.48);
-      ctx.arc(lx, ly-lh*.48, lw*.42, Math.PI, 0);
-      ctx.lineTo(lx+lw*.42, ly-lh*.05);
-      ctx.stroke();
-      // body
-      ctx.fillStyle = lockGrad;
-      ctx.beginPath(); roundRect(ctx, lx-lw*.52, ly-lh*.08, lw*1.04, lh*.5, 3); ctx.fill();
-      ctx.strokeStyle = '#7a5410'; ctx.lineWidth = .8;
-      ctx.beginPath(); roundRect(ctx, lx-lw*.52, ly-lh*.08, lw*1.04, lh*.5, 3); ctx.stroke();
-      // keyhole
-      ctx.fillStyle = '#7a5410';
-      ctx.beginPath(); ctx.arc(lx, ly+lh*.12, lw*.13, 0, Math.PI*2); ctx.fill();
-
-      // NIV label
-      ctx.font = `800 ${Math.round(h*0.16)}px "Baloo 2",Arial`;
-      ctx.fillStyle = '#ffce3a'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(def.unlockHint, cx, sy + h*0.84);
+      ctx.strokeStyle = 'rgba(255,206,58,0.5)'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(sx, sy, slotR, 0, Math.PI*2); ctx.stroke();
+      // Lock icon
+      const lk = slotR * 0.45;
+      const lockG = ctx.createLinearGradient(sx, sy-lk*.8, sx, sy+lk*.6);
+      lockG.addColorStop(0,'#ffd870'); lockG.addColorStop(1,'#a87820');
+      ctx.strokeStyle = '#ffd870'; ctx.lineWidth = lk*.25; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(sx-lk*.42, sy-lk*.05); ctx.lineTo(sx-lk*.42, sy-lk*.52);
+      ctx.arc(sx, sy-lk*.52, lk*.42, Math.PI, 0); ctx.lineTo(sx+lk*.42, sy-lk*.05); ctx.stroke();
+      ctx.fillStyle = lockG;
+      ctx.beginPath(); roundRect(ctx, sx-lk*.52, sy-lk*.1, lk*1.04, lk*.58, 3); ctx.fill();
+      ctx.fillStyle = '#7a5410'; ctx.beginPath(); ctx.arc(sx, sy+lk*.16, lk*.13, 0, Math.PI*2); ctx.fill();
+      // Level label below
+      ctx.font = `800 ${Math.round(slotR*.42)}px "Baloo 2",Arial`;
+      ctx.fillStyle = '#ffce3a'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillText(def.unlockHint, sx, sy + slotR + 3);
 
     } else {
-      // ── Unlocked slot ─────────────────────────────────────────────────────────
       const tone = def.col;
-
-      // Shadow for selected
+      // Selected: pulsing outer ring
       if (isSelected) {
-        ctx.shadowColor = tone + 'bb'; ctx.shadowBlur = 14; ctx.shadowOffsetY = 3;
+        const a = (Math.sin(gameTime * 4.5) + 1) * 0.5 * 0.5 + 0.2;
+        ctx.strokeStyle = `rgba(255,62,165,${a})`; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.arc(sx, sy, slotR + 8, 0, Math.PI*2); ctx.stroke();
+        // Gold selected ring
+        ctx.strokeStyle = '#ffce3a'; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.arc(sx, sy, slotR + 2, 0, Math.PI*2); ctx.stroke();
       }
-
-      // Fill gradient
-      const slotGrad = ctx.createLinearGradient(sx, sy, sx, sy+h);
-      slotGrad.addColorStop(0, tone);
-      slotGrad.addColorStop(1, tone + 'cc');
+      // Fill
+      ctx.shadowColor = tone + (isSelected ? 'cc' : '66'); ctx.shadowBlur = isSelected ? 16 : 8; ctx.shadowOffsetY = 3;
+      const slotGrad = ctx.createRadialGradient(sx-slotR*.25, sy-slotR*.25, slotR*.05, sx, sy, slotR);
+      slotGrad.addColorStop(0, tone + 'ff'); slotGrad.addColorStop(1, tone + 'bb');
       ctx.fillStyle = slotGrad;
-      ctx.beginPath(); roundRect(ctx, sx, sy, slotW, h, SR); ctx.fill();
+      ctx.beginPath(); ctx.arc(sx, sy, slotR, 0, Math.PI*2); ctx.fill();
       ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
-
-      // Inner top highlight
-      ctx.save();
-      ctx.beginPath(); roundRect(ctx, sx, sy, slotW, h, SR); ctx.clip();
-      const hlGrad = ctx.createLinearGradient(sx, sy, sx, sy+h*.4);
-      hlGrad.addColorStop(0,'rgba(255,255,255,0.38)'); hlGrad.addColorStop(1,'rgba(255,255,255,0)');
-      ctx.fillStyle = hlGrad; ctx.fillRect(sx, sy, slotW, h*.4);
-      ctx.restore();
-
+      // Inner highlight
+      const hl = ctx.createRadialGradient(sx-slotR*.3, sy-slotR*.35, 0, sx, sy, slotR);
+      hl.addColorStop(0,'rgba(255,255,255,0.45)'); hl.addColorStop(0.55,'rgba(255,255,255,0)');
+      ctx.fillStyle = hl; ctx.beginPath(); ctx.arc(sx, sy, slotR, 0, Math.PI*2); ctx.fill();
       // Border
-      ctx.strokeStyle = isSelected ? '#ffce3a' : 'rgba(255,255,255,0.52)';
-      ctx.lineWidth = isSelected ? 2.5 : 1.5;
-      ctx.beginPath(); roundRect(ctx, sx, sy, slotW, h, SR); ctx.stroke();
-
-      // Extra glow ring on selected
-      if (isSelected) {
-        ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 4;
-        ctx.beginPath(); roundRect(ctx, sx-2, sy-2, slotW+4, h+4, SR+2); ctx.stroke();
-      }
-
-      // "ACTIF" label above selected
-      if (isSelected) {
-        ctx.font = `800 ${Math.round(h*0.14)}px "Baloo 2",Arial`;
-        ctx.fillStyle = '#ffce3a'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-        ctx.shadowColor = 'rgba(0,0,0,0.45)'; ctx.shadowBlur = 3;
-        ctx.fillText('ACTIF', cx, sy - 3);
-        ctx.shadowBlur = 0;
-      }
-
-      // Custom icon
-      const iconY = cy - h*0.1;
-      const iconR = Math.min(slotW, h) * 0.28;
-      drawProjIcon(id, cx, iconY, iconR);
-
-      // Recharge arc over icon
+      ctx.strokeStyle = isSelected ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.55)';
+      ctx.lineWidth = isSelected ? 2 : 1.2;
+      ctx.beginPath(); ctx.arc(sx, sy, slotR, 0, Math.PI*2); ctx.stroke();
+      // Icon
+      drawProjIcon(id, sx, sy, slotR * 0.6);
+      // Recharge arc
       if (def.stock < def.maxStock && rechargeTimers[id] > 0) {
         const pct = 1 - rechargeTimers[id] / def.recharge;
-        ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 2.2;
-        ctx.shadowColor = '#fff'; ctx.shadowBlur = 5;
-        ctx.beginPath(); ctx.arc(cx, iconY, iconR * 1.22, -Math.PI/2, -Math.PI/2 + pct*Math.PI*2);
+        ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 2;
+        ctx.shadowColor = '#fff'; ctx.shadowBlur = 4;
+        ctx.beginPath(); ctx.arc(sx, sy, slotR + (isSelected ? 5 : 3), -Math.PI/2, -Math.PI/2 + pct*Math.PI*2);
         ctx.stroke(); ctx.shadowBlur = 0;
       }
-
-      // Label
-      ctx.font = `600 ${Math.round(h*0.145)}px "Fredoka",Arial`;
-      ctx.fillStyle = isSelected ? '#fff' : 'rgba(255,255,255,0.85)';
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.shadowColor = 'rgba(0,0,0,0.28)'; ctx.shadowBlur = 2;
-      ctx.fillText(def.label, cx, sy + h*0.82);
-      ctx.shadowBlur = 0;
-
-      // Count badge (top-right)
-      const bR = h * 0.135;
-      const bX = sx + slotW - 1, bY = sy - 1;
+      // Label below
+      ctx.font = `600 ${Math.round(slotR*.5)}px "Fredoka",Arial`;
+      ctx.fillStyle = isSelected ? '#2a1b4a' : 'rgba(42,27,74,0.65)';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillText(def.label, sx, sy + slotR + 3);
+      // Count badge
+      const bR = slotR * 0.38;
+      const bX = sx + slotR * 0.7, bY = sy - slotR * 0.7;
       ctx.fillStyle = '#fff8e6';
+      ctx.shadowColor = 'rgba(42,27,74,0.25)'; ctx.shadowBlur = 4;
       ctx.beginPath(); ctx.arc(bX, bY, bR + 2, 0, Math.PI*2); ctx.fill();
-      ctx.strokeStyle = '#2a1b4a'; ctx.lineWidth = 1.5;
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = '#2a1b4a'; ctx.lineWidth = 1.2;
       ctx.beginPath(); ctx.arc(bX, bY, bR + 2, 0, Math.PI*2); ctx.stroke();
-      const count = def.maxStock >= 99 ? '∞' : String(def.stock);
       ctx.font = `900 ${Math.round(bR*1.5)}px "Baloo 2",Arial`;
       ctx.fillStyle = '#2a1b4a'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(count, bX, bY + 0.5);
+      ctx.fillText(String(def.stock), bX, bY + 0.5);
     }
-
     ctx.restore();
   }
+
+  // ── Center hub ────────────────────────────────────────────────────────────────
+  ctx.save();
+  // Glow
+  ctx.shadowColor = '#ffce3a'; ctx.shadowBlur = 28;
+  // Outer dark ring
+  ctx.fillStyle = '#2a1b4a';
+  ctx.beginPath(); ctx.arc(dcx, dcy, DIAL_HUB_R + 4, 0, Math.PI*2); ctx.fill();
+  ctx.shadowBlur = 0;
+  // Gold fill
+  const hubG = ctx.createLinearGradient(dcx, dcy - DIAL_HUB_R, dcx, dcy + DIAL_HUB_R);
+  hubG.addColorStop(0, '#ffd870'); hubG.addColorStop(0.55, '#e8b85c'); hubG.addColorStop(1, '#a87820');
+  ctx.fillStyle = hubG;
+  ctx.beginPath(); ctx.arc(dcx, dcy, DIAL_HUB_R, 0, Math.PI*2); ctx.fill();
+  // Cream border
+  ctx.strokeStyle = '#fff8e6'; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.arc(dcx, dcy, DIAL_HUB_R, 0, Math.PI*2); ctx.stroke();
+  // "ACTIF" text
+  ctx.font = `600 ${Math.round(DIAL_HUB_R*.28)}px "Fredoka",Arial`;
+  ctx.fillStyle = '#2a1b4a'; ctx.globalAlpha = 0.65; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('ACTIF', dcx, dcy - DIAL_HUB_R*.28);
+  ctx.globalAlpha = 1;
+  // Current weapon label
+  ctx.font = `800 ${Math.round(DIAL_HUB_R*.38)}px "Baloo 2",Arial`;
+  ctx.fillStyle = '#2a1b4a'; ctx.shadowColor = 'rgba(0,0,0,0.15)'; ctx.shadowBlur = 2;
+  ctx.fillText(PROJ_DEFS[selectedType].label, dcx, dcy + DIAL_HUB_R*.24);
+  ctx.shadowBlur = 0;
+  ctx.restore();
+
+  // Hint
+  ctx.save();
+  ctx.font = `500 ${Math.min(W * 0.025, 10)}px "Fredoka",Arial`;
+  ctx.fillStyle = 'rgba(42,27,74,0.45)'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+  const sab = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sab')||'0',10)||0;
+  ctx.fillText("↑ Glisse pour viser  ·  appuie pour changer d'arme", W/2, H - sab - 3);
+  ctx.restore();
 }
 
 function roundRect(ctx,x,y,w,h,r){
@@ -1273,23 +1248,24 @@ function drawBackground() {
   ctx.fillStyle = sunGrad; ctx.beginPath(); ctx.arc(sunX, sunY, sunR * 1.3, 0, Math.PI*2); ctx.fill();
   ctx.fillStyle = '#fff7c0'; ctx.beginPath(); ctx.arc(sunX, sunY, sunR * 0.7, 0, Math.PI*2); ctx.fill();
 
-  // Chunky sticker clouds
+  // Anime clouds — pure white, rounded pillowy shapes
   for (const c of clouds) {
-    c.x += c.spd; if (c.x > W + c.r * 3) c.x = -c.r * 3;
-    ctx.save(); ctx.globalAlpha = c.a;
+    c.x += c.spd; if (c.x > W + c.r * 4) c.x = -c.r * 4;
+    ctx.save(); ctx.globalAlpha = 0.96;
     ctx.fillStyle = '#ffffff';
-    // shadow blob
-    ctx.save(); ctx.globalAlpha = c.a * 0.08; ctx.fillStyle = '#7b3ff2';
-    ctx.beginPath(); ctx.ellipse(c.x, c.y + c.r*.8, c.r*1.2, c.r*.28, 0, 0, Math.PI*2); ctx.fill();
-    ctx.restore();
-    // cloud puffs
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath(); ctx.arc(c.x, c.y, c.r, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(c.x + c.r*.72, c.y + c.r*.08, c.r*.78, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(c.x - c.r*.62, c.y + c.r*.1, c.r*.68, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(c.x + c.r*.3, c.y - c.r*.35, c.r*.55, 0, Math.PI*2); ctx.fill();
-    // flat base
-    ctx.fillRect(c.x - c.r * 1.3, c.y + c.r * .2, c.r * 2.6, c.r * .55);
+    // Main puffs (no shadow, no gradient — just clean flat white)
+    ctx.beginPath(); ctx.arc(c.x,          c.y,          c.r,       0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(c.x + c.r*.8, c.y + c.r*.1, c.r*.85,   0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(c.x - c.r*.7, c.y + c.r*.1, c.r*.75,   0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(c.x + c.r*.28,c.y - c.r*.4, c.r*.6,    0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(c.x - c.r*.2, c.y - c.r*.3, c.r*.5,    0, Math.PI*2); ctx.fill();
+    // Flat base to seal the bottom
+    ctx.fillRect(c.x - c.r * 1.45, c.y + c.r*.12, c.r * 2.9, c.r * .62);
+    // Tiny blush on the biggest puff — anime style
+    ctx.globalAlpha = 0.18;
+    ctx.fillStyle = '#ffb8d8';
+    ctx.beginPath(); ctx.ellipse(c.x - c.r*.42, c.y + c.r*.28, c.r*.22, c.r*.1, 0, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(c.x + c.r*.42, c.y + c.r*.28, c.r*.22, c.r*.1, 0, 0, Math.PI*2); ctx.fill();
     ctx.restore();
   }
 }
