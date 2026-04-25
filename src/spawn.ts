@@ -1,6 +1,5 @@
 // @ts-nocheck
-import { state, cats, _catIdCounter as _, upgradeFlags } from './state';
-import * as stateMod from './state';
+import { state, cats, upgradeFlags } from './state';
 import { CAT_TYPES, OBJECT_TYPES } from './data';
 import { CAT_SPAWN_Y } from './config';
 import { CAT_SPRITES } from './sprites';

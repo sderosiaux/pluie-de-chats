@@ -1,7 +1,9 @@
 // @ts-nocheck
-import { state, particles, popups, hairballs, cats, effects, rechargeTimers, upgradeFlags } from './state';
-import { CONFETTI } from './config';
-import { PROJ_DEFS } from './data';
+import { checkUnlocks } from './unlock';
+import { updateHUD } from './catch';
+import { state, particles, popups, hairballs, cats, projectiles, effects, rechargeTimers, upgradeFlags, pickCounts, pendingLevelUps, unlockedTypes } from './state';
+import { CONFETTI, SCENES } from './config';
+import { PROJ_DEFS, BASE_PROJ_DEFS } from './data';
 import { ctx } from './canvas';
 
 // ── Particles & popups ────────────────────────────────────────────────────────
