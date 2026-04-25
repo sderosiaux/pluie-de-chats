@@ -388,6 +388,10 @@
     font-weight: 800; font-size: 14px; cursor: pointer;
   }
   /* ── Start menu ────────────────────────────────────────────────────── */
+  #menu-canvas {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    z-index: 0; pointer-events: none;
+  }
   #start-menu-overlay {
     position: fixed; inset: 0; z-index: 300;
     background: linear-gradient(180deg, #7ad7ff 0%, #b8c8ff 55%, #e3c9ff 100%);
@@ -650,14 +654,7 @@
   <button id="go-menu-btn" style="margin-top:8px;background:rgba(255,255,255,0.1);color:#fff;border:none;border-radius:14px;padding:10px 22px;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:14px;cursor:pointer">← Menu</button>
 </div>
 <div id="start-menu-overlay" class="show">
-  <div class="sm-deco" aria-hidden="true">
-    <div class="sm-cloud c1"></div>
-    <div class="sm-cloud c2"></div>
-    <div class="sm-cloud c3"></div>
-    <div class="sm-cat-deco cd1">🐱</div>
-    <div class="sm-cat-deco cd2">😸</div>
-    <div class="sm-cat-deco cd3">🙀</div>
-  </div>
+  <canvas id="menu-canvas" aria-hidden="true"></canvas>
   <div class="sm-top">
     <h1 class="sm-title">
       <span class="sm-title-row1">

@@ -4,18 +4,24 @@ import { renderHighscores } from './highscores';
 import { buildBestiary } from './bestiary';
 import { Music } from './audio';
 import { state } from './state';
+import { startMenuScene, stopMenuScene } from './menu-scene';
 
 export const startMenu = document.getElementById('start-menu-overlay')!;
 export const hsOverlay = document.getElementById('highscores-overlay')!;
 
+// La scène menu démarre dès le chargement (overlay affiché par défaut via class="show")
+startMenuScene();
+
 export function openStartMenu(): void {
   state.menuActive = true;
   startMenu.classList.add('show');
+  startMenuScene();
 }
 
 export function closeStartMenu(): void {
   state.menuActive = false;
   startMenu.classList.remove('show');
+  stopMenuScene();
 }
 
 function bind(id: string, ev: string, fn: (e: Event) => void): void {
