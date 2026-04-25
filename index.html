@@ -985,6 +985,11 @@ function spawnPopup(x,y,text,col) {
   popups.push({ x, y, text, col, life:1, vy:-2.8 });
 }
 
+let staticMsg = null;
+function showStaticMsg(x, y, text, col) {
+  staticMsg = { x, y, text, col, age: 0, dur: 1.4 };
+}
+
 function loseLife() {
   if (gameOver || lives <= 0) return;
   lives--;
@@ -1206,7 +1211,7 @@ function fire(fingerPos) {
   const def = PROJ_DEFS[selectedType];
   if (def.stock <= 0) {
     const secsLeft = Math.ceil(rechargeTimers[selectedType]);
-    spawnPopup(LAUNCHER.x, LAUNCHER.y - 30, `⏳ ${secsLeft}s`, '#ffce3a');
+    showStaticMsg(LAUNCHER.x, LAUNCHER.y - 44, `⏳ ${secsLeft}s`, '#ffce3a');
     return;
   }
 
@@ -1899,6 +1904,25 @@ function loop(ts) {
     ctx.fillStyle = sp.col; ctx.shadowColor = 'rgba(0,0,0,0.25)'; ctx.shadowBlur = 3;
     ctx.fillText(sp.text, sp.x, sp.y);
     ctx.restore();
+  }
+
+  // Message statique (recharge)
+  if (staticMsg) {
+    staticMsg.age += dt;
+    const t = staticMsg.age / staticMsg.dur;
+    if (t >= 1) { staticMsg = null; }
+    else {
+      const alpha = t < 0.15 ? t/0.15 : t > 0.7 ? 1-(t-0.7)/0.3 : 1;
+      ctx.save(); ctx.globalAlpha = alpha;
+      ctx.font = `900 24px "Baloo 2",Arial`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.strokeStyle = '#2a1b4a'; ctx.lineWidth = 5; ctx.lineJoin = 'round';
+      ctx.strokeText(staticMsg.text, staticMsg.x, staticMsg.y);
+      ctx.fillStyle = staticMsg.col;
+      ctx.shadowColor = 'rgba(0,0,0,0.3)'; ctx.shadowBlur = 4;
+      ctx.fillText(staticMsg.text, staticMsg.x, staticMsg.y);
+      ctx.restore();
+    }
   }
 
   requestAnimationFrame(loop);
