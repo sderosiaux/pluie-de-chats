@@ -2,7 +2,7 @@
 import { state } from './state';
 import { ctx } from './canvas';
 import { CAT_TYPES, OBJECT_TYPES } from './data';
-import { CAT_SPRITES, OBJECT_SPRITES } from './sprites';
+import { CAT_SPRITES, OBJECT_SPRITES, WEAPON_SPRITES } from './sprites';
 
 // ── Cat types & drawing (reused from v1) ──────────────────────────────────────
 /* extracted to module */

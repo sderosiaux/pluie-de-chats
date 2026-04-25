@@ -1,6 +1,7 @@
 // @ts-nocheck
+import { maybeAddHighscore } from './highscores';
 import { checkUnlocks } from './unlock';
-import { updateHUD } from './catch';
+import { updateHUD, catchCat } from './catch';
 import { state, particles, popups, hairballs, cats, projectiles, effects, rechargeTimers, upgradeFlags, pickCounts, pendingLevelUps, unlockedTypes } from './state';
 import { CONFETTI, SCENES } from './config';
 import { PROJ_DEFS, BASE_PROJ_DEFS } from './data';
@@ -47,7 +48,7 @@ export function gainLife() {
 
 export function triggerGameOver() {
   state.gameOver = true;
-  document.getElementById('go-state.score').textContent = state.score;
+  document.getElementById('go-score').textContent = state.score;
   document.getElementById('go-hi-val').textContent = state.hiScore;
   document.getElementById('gameover-overlay').classList.add('show');
   // Tentative d'ajout au top 10 local

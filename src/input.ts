@@ -4,7 +4,7 @@ import { state, upgradeFlags, unlockedTypes, rechargeTimers } from './state';
 import { canvas } from './canvas';
 import { DIAL_R, DIAL_ANGLES, TYPE_ORDER } from './config';
 import { PROJ_DEFS } from './data';
-import { fire, fireLaser, computeLaserEnd } from './fire';
+import { fire, fireLaser, computeLaserEnd, updateSteerLaser } from './fire';
 
 // ── Input ─────────────────────────────────────────────────────────────────────
 

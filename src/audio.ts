@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { canvas } from './canvas';
 // ── Music Engine — chiptune Web Audio API ─────────────────────────────────────
 export const Music = (() => {
   let actx, master, playing = false, timer = null, until = 0;

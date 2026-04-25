@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { WEAPON_SPRITES } from './sprites';
 import { luOverlay } from './dom';
 import { updateHUD } from './catch';
 import { checkUnlocks } from './unlock';
