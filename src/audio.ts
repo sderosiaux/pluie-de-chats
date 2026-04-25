@@ -1,8 +1,12 @@
-// @ts-nocheck
 import { canvas } from './canvas';
+
 // ── Music Engine — chiptune Web Audio API ─────────────────────────────────────
 export const Music = (() => {
-  let actx, master, playing = false, timer = null, until = 0;
+  let actx: AudioContext;
+  let master: GainNode;
+  let playing = false;
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  let until = 0;
   const BPM = 160;
   const S  = 60 / BPM / 4; // 16th note = 0.09375s
 
@@ -41,7 +45,8 @@ export const Music = (() => {
 
   function init() {
     if (actx) return;
-    actx = new (window.AudioContext || window.webkitAudioContext)();
+    const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+    actx = new Ctx();
     master = actx.createGain();
     master.gain.value = 0.28;
     const comp = actx.createDynamicsCompressor();
@@ -49,7 +54,7 @@ export const Music = (() => {
     master.connect(comp); comp.connect(actx.destination);
   }
 
-  function note(freq, t, dur, type, vol, detune = 0) {
+  function note(freq: number, t: number, dur: number, type: OscillatorType, vol: number, detune = 0) {
     if (!freq) return;
     const o = actx.createOscillator(), g = actx.createGain();
     o.type = type;
@@ -64,7 +69,7 @@ export const Music = (() => {
     o.start(t); o.stop(t + dur + 0.01);
   }
 
-  function kick(t) {
+  function kick(t: number) {
     const o = actx.createOscillator(), g = actx.createGain();
     o.frequency.setValueAtTime(180, t);
     o.frequency.exponentialRampToValueAtTime(1, t + 0.3);
@@ -74,7 +79,7 @@ export const Music = (() => {
     o.start(t); o.stop(t + 0.31);
   }
 
-  function snare(t) {
+  function snare(t: number) {
     const len = 0.14;
     const buf = actx.createBuffer(1, Math.ceil(actx.sampleRate * len), actx.sampleRate);
     const d = buf.getChannelData(0);
@@ -92,7 +97,7 @@ export const Music = (() => {
     o.connect(g2); g2.connect(master); o.start(t); o.stop(t + 0.07);
   }
 
-  function hihat(t) {
+  function hihat(t: number) {
     const len = 0.036;
     const buf = actx.createBuffer(1, Math.ceil(actx.sampleRate * len), actx.sampleRate);
     const d = buf.getChannelData(0);
@@ -105,7 +110,7 @@ export const Music = (() => {
     n.start(t); n.stop(t + len + 0.01);
   }
 
-  function scheduleLoop(start) {
+  function scheduleLoop(start: number): number {
     const steps = MEL.length; // 64
     for (let i = 0; i < steps; i++) {
       const t = start + i * S;
@@ -132,7 +137,7 @@ export const Music = (() => {
   }
 
   // Public SFX (play detached, doesn't need music running)
-  function sfx(freqs, dur = 0.1, vol = 0.22, type = 'sine') {
+  function sfx(freqs: number[], dur = 0.1, vol = 0.22, type: OscillatorType = 'sine') {
     if (!actx) return;
     freqs.forEach((f, i) => {
       if (f) setTimeout(() => note(f, actx.currentTime, dur, type, vol), i * 55);
@@ -146,10 +151,10 @@ export const Music = (() => {
       if (playing) return;
       playing = true; until = actx.currentTime + 0.05; pump();
     },
-    stop() { playing = false; clearTimeout(timer); },
+    stop() { playing = false; if (timer) clearTimeout(timer); },
     toggle() { playing ? this.stop() : this.start(); return playing; },
     get on() { return playing; },
-    sfxCatch(pts) {
+    sfxCatch(pts: number) {
       if (!actx) init();
       if (pts >= 5)  sfx([G5, B5, D5*2], 0.1, 0.22, 'square');
       else if (pts >= 3) sfx([E5, G5], 0.09, 0.18, 'square');
@@ -165,16 +170,18 @@ export const Music = (() => {
 
 
 // ── Music button wiring ───────────────────────────────────────────────────────
-document.getElementById('music-btn').addEventListener('click', () => {
+document.getElementById('music-btn')?.addEventListener('click', () => {
   const on = Music.toggle();
-  document.getElementById('music-btn').textContent = on ? '🎵' : '🔇';
+  const btn = document.getElementById('music-btn');
+  if (btn) btn.textContent = on ? '🎵' : '🔇';
 });
 
 // Auto-start on first canvas interaction (browsers require user gesture)
 canvas.addEventListener('pointerdown', () => {
   if (!Music.on) {
     Music.start();
-    document.getElementById('music-btn').textContent = '🎵';
+    const btn = document.getElementById('music-btn');
+    if (btn) btn.textContent = '🎵';
   }
 }, { once: true });
 
