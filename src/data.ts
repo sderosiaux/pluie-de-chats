@@ -159,6 +159,17 @@ export const CAT_TYPES: CatType[] = [
     label:'Garde du corps', hint:'Costaud, prend 3 coups' },
   { id:'trafiquant', pts:6,  col:'#E8B14A', size:1.0,  w:6, stripes:false, minLvl:3,
     label:'Trafiquant',     hint:'Cossu, +6 pts faciles' },
+  // ── Chats Monuments (rares, gros score) ───────────────────────────────
+  { id:'liberte',    pts:10, col:'#7FC8B6', size:1.1,  w:2, stripes:false, minLvl:6,
+    label:'Chat Liberté',   hint:'NYC — couronne, torche, +10 pts' },
+  { id:'eiffel',     pts:9,  col:'#F5DCBA', size:1.0,  w:3, stripes:false, minLvl:5,
+    label:'Chat Eiffel',    hint:'Paris — béret, baguette' },
+  { id:'moai',       pts:10, col:'#888888', size:1.15, w:2, stripes:false, minLvl:6,
+    label:'Chat Moai',      hint:'Île de Pâques — stoïque, pierre' },
+  { id:'pagode',     pts:9,  col:'#E67E50', size:1.0,  w:3, stripes:false, minLvl:5,
+    label:'Chat Pagode',    hint:'Asie — kimono, zen' },
+  { id:'sphinx',     pts:11, col:'#E8C570', size:1.1,  w:2, stripes:false, minLvl:7,
+    label:'Chat Sphinx',    hint:'Égypte — nemes pharaon, mystère' },
 ];
 
 export const OBJECT_TYPES: ObjectType[] = [

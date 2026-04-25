@@ -34,8 +34,39 @@ interface MenuCat {
   alpha: number;
 }
 
+interface Floater {
+  x: number; y: number;
+  sz: number; vy: number; drift: number;
+  rot: number; rotSpd: number;
+  alpha: number; col: string;
+  shape: 'star' | 'sparkle' | 'heart';
+}
+
+const FLOATER_COLS = ['#ffd6f2', '#fff7c0', '#ffffff', '#e8d5ff', '#ffe1c0', '#c8eaff'];
+const HEART_COLS   = ['#ff8aba', '#ffb3d9', '#ff6b9e', '#ffa3c4'];
+const FLOATER_SHAPES: Array<'star' | 'sparkle' | 'heart'> = ['star', 'star', 'sparkle', 'heart'];
+
 const clouds: Cloud[] = [];
 const cats: MenuCat[] = [];
+const floaters: Floater[] = [];
+
+function spawnFloater(initial = false): void {
+  const shape = FLOATER_SHAPES[Math.floor(Math.random() * FLOATER_SHAPES.length)];
+  floaters.push({
+    x: Math.random() * window.innerWidth,
+    y: initial ? Math.random() * window.innerHeight : -10,
+    sz: 5 + Math.random() * 7,
+    vy: 0.18 + Math.random() * 0.32,
+    drift: (Math.random() - 0.5) * 0.18,
+    rot: Math.random() * Math.PI * 2,
+    rotSpd: (Math.random() - 0.5) * 0.025,
+    alpha: 0.45 + Math.random() * 0.35,
+    col: shape === 'heart'
+      ? HEART_COLS[Math.floor(Math.random() * HEART_COLS.length)]
+      : FLOATER_COLS[Math.floor(Math.random() * FLOATER_COLS.length)],
+    shape,
+  });
+}
 
 function resize(): void {
   W = canvas!.width = window.innerWidth;
@@ -75,9 +106,10 @@ function spawnCat(initial = false): void {
   });
 }
 
-// Init : pré-remplir avec quelques nuages et chats déjà à l'écran (peu nombreux pour ne pas surcharger)
+// Init : pré-remplir avec quelques nuages, chats et floaters déjà à l'écran
 for (let i = 0; i < 4; i++) spawnCloud(true);
 for (let i = 0; i < 2; i++) spawnCat(true);
+for (let i = 0; i < 8; i++) spawnFloater(true);
 
 function drawSky(): void {
   // Gradient candy pop
@@ -124,6 +156,54 @@ function updateAndDrawClouds(dt: number): void {
     ctx.fillRect(c.x - c.r * 1.45, c.y + c.r*.12, c.r * 2.9, c.r * .62);
   }
   ctx.restore();
+}
+
+function updateAndDrawFloaters(dt: number): void {
+  for (const f of floaters) {
+    f.x += f.drift * dt * 60;
+    f.y += f.vy * dt * 60;
+    f.rot += f.rotSpd * dt * 60;
+    if (f.y > H + f.sz * 2) { f.y = -f.sz * 2; f.x = Math.random() * W; }
+    if (f.x < -f.sz * 3) f.x = W + f.sz;
+    if (f.x > W + f.sz * 3) f.x = -f.sz;
+    ctx.save();
+    ctx.globalAlpha = f.alpha;
+    ctx.translate(f.x, f.y);
+    ctx.rotate(f.rot);
+    ctx.fillStyle = f.col;
+    if (f.shape === 'star') {
+      ctx.beginPath();
+      const r = f.sz;
+      for (let i = 0; i < 10; i++) {
+        const a = (i * Math.PI) / 5 - Math.PI / 2;
+        const rad = i % 2 === 0 ? r : r * 0.45;
+        const x = Math.cos(a) * rad, y = Math.sin(a) * rad;
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.closePath(); ctx.fill();
+    } else if (f.shape === 'sparkle') {
+      ctx.beginPath();
+      ctx.moveTo(0, -f.sz);
+      ctx.quadraticCurveTo(f.sz*0.18, 0, f.sz, 0);
+      ctx.quadraticCurveTo(f.sz*0.18, 0, 0, f.sz);
+      ctx.quadraticCurveTo(-f.sz*0.18, 0, -f.sz, 0);
+      ctx.quadraticCurveTo(-f.sz*0.18, 0, 0, -f.sz);
+      ctx.closePath(); ctx.fill();
+    } else {
+      const r = f.sz;
+      ctx.beginPath();
+      ctx.moveTo(0, r * 0.85);
+      ctx.bezierCurveTo(r * 1.1, r * 0.2, r * 0.6, -r * 0.85, 0, -r * 0.25);
+      ctx.bezierCurveTo(-r * 0.6, -r * 0.85, -r * 1.1, r * 0.2, 0, r * 0.85);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.beginPath();
+      ctx.ellipse(-r * 0.32, -r * 0.32, r * 0.18, r * 0.1, -0.4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+  ctx.globalAlpha = 1;
 }
 
 function drawScenery(): void {
@@ -182,6 +262,7 @@ function loop(ts: number): void {
 
   drawSky();
   drawSun(time);
+  updateAndDrawFloaters(dt);
   updateAndDrawClouds(dt);
   drawScenery();
   updateAndDrawCats(dt);

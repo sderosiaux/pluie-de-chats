@@ -16,6 +16,7 @@ const CAT_IDS = [
   'professeur','facteur','samourai','infirmier',
   'batman','catwoman','flash','hulk','spiderman','superman',
   'parrain','tireur','garde','trafiquant',
+  'liberte','eiffel','moai','pagode','sphinx',
 ];
 
 export const CAT_SPRITES: Record<string, HTMLImageElement[]> = {};
