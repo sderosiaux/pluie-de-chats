@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Revue chats</title>
+<style>
+  body { font: 14px/1.4 system-ui; background:#1a0a2e; color:#eee; margin:0; padding:16px 16px 120px; }
+  h1 { margin:0 0 8px; font-size:18px; }
+  .info { opacity:.7; margin-bottom:12px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:10px; }
+  .card { background:#2a1747; border:2px solid #3a2160; border-radius:12px; padding:8px; user-select:none; }
+  .card .id { font-weight:bold; text-align:center; margin-bottom:4px; font-size:13px; }
+  .poses { display:flex; gap:4px; justify-content:center; }
+  .pose { position:relative; cursor:pointer; border:2px solid transparent; border-radius:6px; padding:2px; transition:.12s; }
+  .pose:hover { border-color:#7b3ff2; }
+  .pose.sel { border-color:#ff3ea5; background:#4a1a3a; box-shadow:0 0 8px rgba(255,62,165,.6); }
+  .pose img { width:64px; height:64px; display:block; background:#fff1; border-radius:4px; }
+  .pose .lbl { font-size:10px; text-align:center; opacity:.6; margin-top:2px; }
+  .pose.sel .lbl { opacity:1; color:#ff3ea5; font-weight:bold; }
+  .allbtn { display:block; margin:4px auto 0; font-size:10px; background:#3a2160; color:#aaa; border:0; border-radius:4px; padding:2px 8px; cursor:pointer; }
+  .allbtn:hover { background:#5a3180; color:#fff; }
+  .bar { position:fixed; bottom:0; left:0; right:0; background:#0f0520; padding:12px 16px; border-top:2px solid #7b3ff2; display:flex; gap:12px; align-items:center; z-index:10; }
+  .bar button { background:#7b3ff2; color:#fff; border:0; padding:10px 18px; border-radius:8px; cursor:pointer; font-weight:bold; font-size:14px; }
+  .bar button:hover { background:#9b5ff2; }
+  .bar .count { font-weight:bold; color:#ff3ea5; }
+  .bar textarea { flex:1; background:#1a0a2e; color:#eee; border:1px solid #3a2160; border-radius:6px; padding:6px 10px; font-family:ui-monospace,monospace; min-height:40px; resize:vertical; }
+</style>
+</head>
+<body>
+<h1>Revue des chats — clique sur chaque pose moche</h1>
+<div class="info">Sélection par pose individuelle (sit / mid / tro). "Tout" sélectionne les 3 d'un chat.</div>
+<div class="grid" id="grid"></div>
+
+<div class="bar">
+  <span><span class="count" id="count">0</span> sélectionnés</span>
+  <textarea id="out" readonly placeholder="Liste apparaîtra ici…"></textarea>
+  <button id="copy">Copier</button>
+  <button id="clear" style="background:#555">Reset</button>
+</div>
+
+<script>
+const IDS = [
+  'astro','bengal','blanc','boss','bouclier','crachat','fantome','faux',
+  'furtif','griffeur','gris','medecin','micro','noir','persan','rainbow',
+  'rapide','scottish','siamois','sphynx','tabby','zigzag',
+  'pompier','boulanger','ninja','detective','pirate','policier','magicien',
+  'cowboy','viking','sorciere','marin','gamer','scientifique','artiste',
+  'jardinier','chevalier','musicien','cuisinier','clown','robot','sportif',
+  'professeur','facteur','samourai','infirmier',
+  'batman','catwoman','flash','hulk','spiderman','superman',
+  'parrain','tireur','garde','trafiquant',
+  'liberte','eiffel','moai','pagode','sphinx',
+];
+
+const grid = document.getElementById('grid');
+const out = document.getElementById('out');
+const countEl = document.getElementById('count');
+const sel = new Set();
+
+function refresh() {
+  countEl.textContent = sel.size;
+  out.value = [...sel].join(',');
+}
+
+const POSES = ['sit', 'mid', 'tro'];
+
+function togglePose(key, el) {
+  if (sel.has(key)) { sel.delete(key); el.classList.remove('sel'); }
+  else { sel.add(key); el.classList.add('sel'); }
+  refresh();
+}
+
+for (const id of IDS) {
+  const card = document.createElement('div');
+  card.className = 'card';
+  const poseEls = {};
+  card.innerHTML = `<div class="id">${id}</div>`;
+  const row = document.createElement('div');
+  row.className = 'poses';
+  for (const p of POSES) {
+    const key = `${id}_${p}`;
+    const pose = document.createElement('div');
+    pose.className = 'pose';
+    pose.innerHTML = `<img src="/sprites/cats/${key}.png?t=${Date.now()}" alt=""><div class="lbl">${p}</div>`;
+    pose.addEventListener('click', () => togglePose(key, pose));
+    row.appendChild(pose);
+    poseEls[p] = pose;
+  }
+  card.appendChild(row);
+  const all = document.createElement('button');
+  all.className = 'allbtn';
+  all.textContent = 'Tout';
+  all.addEventListener('click', () => {
+    const allSel = POSES.every(p => sel.has(`${id}_${p}`));
+    for (const p of POSES) {
+      const key = `${id}_${p}`;
+      if (allSel) { sel.delete(key); poseEls[p].classList.remove('sel'); }
+      else if (!sel.has(key)) { sel.add(key); poseEls[p].classList.add('sel'); }
+    }
+    refresh();
+  });
+  card.appendChild(all);
+  grid.appendChild(card);
+}
+
+document.getElementById('copy').addEventListener('click', async () => {
+  await navigator.clipboard.writeText(out.value);
+  const b = document.getElementById('copy');
+  const t = b.textContent; b.textContent = 'Copié ✓';
+  setTimeout(() => b.textContent = t, 1200);
+});
+document.getElementById('clear').addEventListener('click', () => {
+  sel.clear();
+  document.querySelectorAll('.pose.sel').forEach(c => c.classList.remove('sel'));
+  refresh();
+});
+</script>
+</body>
+</html>

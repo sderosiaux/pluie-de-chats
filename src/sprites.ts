@@ -1,8 +1,10 @@
 // Tous les chargements de sprites. PNG servis depuis /sprites/ par Vite.
 
-function loadImage(src: string): HTMLImageElement {
+const BASE = import.meta.env.BASE_URL;
+
+function loadImage(path: string): HTMLImageElement {
   const i = new Image();
-  i.src = src;
+  i.src = BASE + path;
   return i;
 }
 
@@ -21,32 +23,32 @@ const CAT_IDS = [
 
 export const CAT_SPRITES: Record<string, HTMLImageElement[]> = {};
 for (const id of CAT_IDS) {
-  CAT_SPRITES[id] = ['sit', 'mid', 'tro'].map(p => loadImage(`/sprites/cats/${id}_${p}.png`));
+  CAT_SPRITES[id] = ['sit', 'mid', 'tro'].map(p => loadImage(`sprites/cats/${id}_${p}.png`));
 }
 
 export const WEAPON_SPRITES: Record<string, HTMLImageElement> = {
-  pelote:   loadImage('/sprites/weapons/pelote.png'),
-  artifice: loadImage('/sprites/weapons/artifice.png'),
-  laser:    loadImage('/sprites/weapons/laser.png'),
-  carton:   loadImage('/sprites/weapons/carton.png'),
+  pelote:   loadImage('sprites/weapons/pelote.png'),
+  artifice: loadImage('sprites/weapons/artifice.png'),
+  laser:    loadImage('sprites/weapons/laser.png'),
+  carton:   loadImage('sprites/weapons/carton.png'),
 };
 
 export const OBJECT_SPRITES: Record<string, HTMLImageElement> = {
-  bombe:      loadImage('/sprites/objects/bombe.png'),
-  plume:      loadImage('/sprites/objects/plume.png'),
-  souris:     loadImage('/sprites/objects/souris.png'),
-  chien:      loadImage('/sprites/objects/chien.png'),
-  flaque:     loadImage('/sprites/objects/flaque.png'),
-  piment:     loadImage('/sprites/objects/piment.png'),
-  aspirateur: loadImage('/sprites/objects/aspirateur.png'),
-  croquettes: loadImage('/sprites/objects/croquettes.png'),
+  bombe:      loadImage('sprites/objects/bombe.png'),
+  plume:      loadImage('sprites/objects/plume.png'),
+  souris:     loadImage('sprites/objects/souris.png'),
+  chien:      loadImage('sprites/objects/chien.png'),
+  flaque:     loadImage('sprites/objects/flaque.png'),
+  piment:     loadImage('sprites/objects/piment.png'),
+  aspirateur: loadImage('sprites/objects/aspirateur.png'),
+  croquettes: loadImage('sprites/objects/croquettes.png'),
 };
 
 export const BG_SPRITES: Record<string, HTMLImageElement> = {
-  city:   loadImage('/sprites/scenery/city.png'),
-  garden: loadImage('/sprites/scenery/garden.png'),
-  home:   loadImage('/sprites/scenery/home.png'),
-  forest: loadImage('/sprites/scenery/forest.png'),
+  city:   loadImage('sprites/scenery/city.png'),
+  garden: loadImage('sprites/scenery/garden.png'),
+  home:   loadImage('sprites/scenery/home.png'),
+  forest: loadImage('sprites/scenery/forest.png'),
 };
 
-export const MOON_SPRITE = loadImage('/sprites/scenery/moon.png');
+export const MOON_SPRITE = loadImage('sprites/scenery/moon.png');

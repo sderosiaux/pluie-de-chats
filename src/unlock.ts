@@ -14,7 +14,7 @@ export function checkUnlocks(): void {
 
 function showWeaponUnlockToast(weaponId: string, label: string): void {
   if (!toast) return;
-  toast.innerHTML = `<img src="/sprites/weapons/${weaponId}.png" alt="" style="width:28px;height:28px;vertical-align:middle;margin-right:8px"><span>${label} débloqué !</span>`;
+  toast.innerHTML = `<img src="${import.meta.env.BASE_URL}sprites/weapons/${weaponId}.png" alt="" style="width:28px;height:28px;vertical-align:middle;margin-right:8px"><span>${label} débloqué !</span>`;
   toast.classList.add('show');
   setTimeout(() => toast.classList.remove('show'), 2800);
 }
