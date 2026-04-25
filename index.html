@@ -1152,15 +1152,7 @@ function drawInventory() {
   const barY = H - INV_H;
   const dcx = W / 2, dcy = DIAL_CY;
 
-  // Zone background (candy pink-rose)
-  const bg = ctx.createLinearGradient(0, barY, 0, H);
-  bg.addColorStop(0, 'rgba(255,214,242,0.97)');
-  bg.addColorStop(1, 'rgba(255,196,232,1)');
-  ctx.fillStyle = bg;
-  ctx.fillRect(0, barY, W, INV_H);
-  // Top separator line
-  ctx.fillStyle = 'rgba(123,63,242,0.18)';
-  ctx.fillRect(0, barY, W, 1.5);
+  // Pas de fond opaque — le ciel continue
 
   // Outer ring glow
   ctx.save();
@@ -1529,8 +1521,8 @@ function loop(ts) {
         }
       }
       if(c.x<c.size||c.x>W-c.size){c.vx*=-1;c.x=Math.max(c.size,Math.min(W-c.size,c.x));}
-      if(c.y>H-INV_H+c.size*2){
-        if(c.type.pts>0){ combo=0; loseLife(); updateHUD(); }
+      if(c.y>H-INV_H-c.size){
+        if(c.type.pts>0){ combo=0; updateHUD(); }
         cats.splice(i,1);continue;
       }
     } else {
