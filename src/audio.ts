@@ -185,6 +185,32 @@ export const Music = (() => {
       if (!actx) init();
       sfx([G4, B4, D5, G5], 0.12, 0.25, 'square');
     },
+    /** Petit miaou synthétique — pitch légèrement randomisé pour la variété. */
+    sfxMeow() {
+      if (!actx) init();
+      if (actx.state === 'suspended') actx.resume();
+      const t = actx.currentTime;
+      const pitch = 0.85 + Math.random() * 0.4; // 0.85..1.25 → variabilité
+      const o = actx.createOscillator();
+      const g = actx.createGain();
+      const f = actx.createBiquadFilter();
+      o.type = 'sawtooth';
+      // Frequency sweep "mi-aou" : grave → aigu → grave
+      o.frequency.setValueAtTime(380 * pitch, t);
+      o.frequency.linearRampToValueAtTime(720 * pitch, t + 0.09);
+      o.frequency.linearRampToValueAtTime(420 * pitch, t + 0.28);
+      // Envelope
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.16, t + 0.025);
+      g.gain.setValueAtTime(0.16, t + 0.18);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.32);
+      // Filtre passe-bas pour adoucir le sawtooth → plus chaleureux/animal
+      f.type = 'lowpass';
+      f.frequency.value = 1400;
+      f.Q.value = 1.2;
+      o.connect(f); f.connect(g); g.connect(master);
+      o.start(t); o.stop(t + 0.34);
+    },
   };
 })();
 

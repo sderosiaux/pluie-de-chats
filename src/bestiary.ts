@@ -1,6 +1,7 @@
 import { caughtTypes } from './state';
 import { CAT_TYPES, CAT_LABELS, CAT_CATEGORIES, CAT_CATCOLS } from './data';
 import { CAT_SPRITES } from './sprites';
+import { Music } from './audio';
 import type { CatType } from './types';
 
 // Hydrate caughtTypes from localStorage at module load
@@ -159,7 +160,10 @@ export function buildBestiary(): void {
     }
     if (caught) {
       card.style.cursor = 'pointer';
-      card.addEventListener('click', () => openBestiaryDetail(type));
+      card.addEventListener('click', () => {
+        Music.sfxMeow();
+        openBestiaryDetail(type);
+      });
     }
     grid.appendChild(card);
   });
