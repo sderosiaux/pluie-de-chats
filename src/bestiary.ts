@@ -152,18 +152,11 @@ export function buildBestiary(): void {
   sorted.forEach(type => {
     const caught = caughtTypes.has(type.id);
     const label = type.label || (CAT_LABELS as any)[type.id] || type.id;
-    const cat = (CAT_CATEGORIES as any)[type.id] || 'Spécial';
-    const catCol = (CAT_CATCOLS as any)[cat] || '#888';
     const rarity = getRarity(type);
 
     const card = document.createElement('div');
     card.className = `bst-card bst-rar-${rarity}` + (caught ? '' : ' unknown');
     if (caught) card.title = RARITY_LABEL[rarity];
-
-    const badge = document.createElement('div');
-    badge.className = 'bst-badge';
-    badge.style.background = catCol;
-    badge.textContent = caught ? cat : '???';
 
     const cvs = document.createElement('canvas');
     cvs.width = 72; cvs.height = 72;
@@ -174,11 +167,7 @@ export function buildBestiary(): void {
     name.className = 'bst-name';
     name.textContent = caught ? label : '???';
 
-    const pts = document.createElement('div');
-    pts.className = 'bst-pts';
-    if (caught) pts.textContent = type.pts > 0 ? `+${type.pts} pts` : `${type.pts} pts`;
-
-    card.append(badge, cvs, name, pts);
+    card.append(cvs, name);
     if (caught && type.hint) {
       const hint = document.createElement('div');
       hint.className = 'bst-hint';
