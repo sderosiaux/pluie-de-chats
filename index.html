@@ -427,6 +427,17 @@ const CAT_TYPES = [
     label:'Griffeur',      hint:'Fonce vers toi !' },
   { id:'medecin',  pts:5,  col:'#27AE60', size:0.9,  w:3,  stripes:false, minLvl:3,
     label:'Médecin',       hint:'+1 ❤️ !', heals:true },
+  // ── Chats de race ─────────────────────────────────────────────────────────────
+  { id:'siamois',  pts:3,  col:'#F5DCBA', size:1.0,  w:10, stripes:false, minLvl:2,
+    label:'Siamois',       hint:'Regard de saphir envoûtant' },
+  { id:'sphynx',   pts:4,  col:'#C8A882', size:0.95, w:8,  stripes:false, minLvl:3,
+    label:'Sphynx',        hint:'Chat nu, regard perçant' },
+  { id:'persan',   pts:4,  col:'#F0E6D3', size:1.1,  w:7,  stripes:false, minLvl:3,
+    label:'Persan',        hint:'Poil ultra-long et majestueux' },
+  { id:'scottish', pts:5,  col:'#B8C4CC', size:1.0,  w:6,  stripes:true,  minLvl:4,
+    label:'Scottish Fold', hint:'Oreilles repliées trop mignonnes' },
+  { id:'bengal',   pts:6,  col:'#D4A55A', size:1.05, w:5,  stripes:true,  minLvl:5,
+    label:'Bengal',        hint:'Rosettes léopard sauvages' },
 ];
 
 function pickCatType(forceRare) {
@@ -509,10 +520,260 @@ function drawProjIcon(id, cx, cy, size, targetCtx) {
   }
   ctx.restore();
 }
+function drawSiamois(s) {
+  // Corps crème clair, masque + extrémités chocolat, yeux bleus
+  const cream='#F5ECD7', dark='#4A2C1A';
+  ctx.fillStyle=cream;
+  ctx.beginPath(); ctx.ellipse(0,s*.1,s*.56,s*.5,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(0,-s*.355,s*.4,0,Math.PI*2); ctx.fill();
+  // Masque foncé autour du museau
+  ctx.fillStyle=dark;
+  ctx.beginPath(); ctx.ellipse(0,-s*.27,s*.22,s*.18,0,0,Math.PI*2); ctx.fill();
+  // Oreilles pointues foncées
+  ctx.beginPath(); ctx.moveTo(-s*.36,-s*.62); ctx.lineTo(-s*.19,-s*.93); ctx.lineTo(-s*.02,-s*.65); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo( s*.02,-s*.65); ctx.lineTo( s*.19,-s*.93); ctx.lineTo( s*.36,-s*.62); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#FFB5C8';
+  ctx.beginPath(); ctx.moveTo(-s*.28,-s*.67); ctx.lineTo(-s*.19,-s*.82); ctx.lineTo(-s*.10,-s*.68); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo( s*.10,-s*.68); ctx.lineTo( s*.19,-s*.82); ctx.lineTo( s*.28,-s*.67); ctx.closePath(); ctx.fill();
+  // Yeux bleus caractéristiques
+  ctx.fillStyle='#1B6CA8';
+  ctx.beginPath(); ctx.arc(-s*.145,-s*.375,s*.092,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc( s*.145,-s*.375,s*.092,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#111';
+  ctx.beginPath(); ctx.ellipse(-s*.145,-s*.375,s*.05,s*.075,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( s*.145,-s*.375,s*.05,s*.075,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='white';
+  ctx.beginPath(); ctx.arc(-s*.11,-s*.41,s*.026,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc( s*.17,-s*.41,s*.026,0,Math.PI*2); ctx.fill();
+  // Nez + bouche
+  ctx.fillStyle='#FF8FAB';
+  ctx.beginPath(); ctx.moveTo(-s*.04,-s*.25); ctx.lineTo(s*.04,-s*.25); ctx.lineTo(0,-s*.22); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle='#555'; ctx.lineWidth=s*.022; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(0,-s*.22); ctx.quadraticCurveTo(-s*.1,-s*.16,-s*.13,-s*.17); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0,-s*.22); ctx.quadraticCurveTo( s*.1,-s*.16, s*.13,-s*.17); ctx.stroke();
+  // Blush + moustaches
+  ctx.fillStyle='rgba(255,127,179,0.4)';
+  ctx.beginPath(); ctx.ellipse(-s*.29,-s*.19,s*.1,s*.06,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( s*.29,-s*.19,s*.1,s*.06,0,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='rgba(120,120,120,0.4)'; ctx.lineWidth=1.0;
+  [[-s*.055,-s*.26,-s*.36,-s*.31],[-s*.055,-s*.26,-s*.35,-s*.23],
+   [ s*.055,-s*.26, s*.36,-s*.31],[ s*.055,-s*.26, s*.35,-s*.23]].forEach(([x1,y1,x2,y2])=>{
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  });
+  // Queue
+  ctx.strokeStyle=dark; ctx.lineWidth=s*.13; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(s*.45,s*.2); ctx.quadraticCurveTo(s*.88,-s*.08,s*.56,-s*.62); ctx.stroke();
+}
+
+function drawSphynx(s) {
+  // Pas de fourrure — peau nude rose-brun, grandes oreilles, rides
+  const skin='#C4956A', skinD='#A07040';
+  ctx.fillStyle=skin;
+  ctx.beginPath(); ctx.ellipse(0,s*.1,s*.54,s*.48,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(0,-s*.35,s*.38,0,Math.PI*2); ctx.fill();
+  // Grandes oreilles triangulaires très ouvertes
+  ctx.fillStyle=skin;
+  ctx.beginPath(); ctx.moveTo(-s*.42,-s*.58); ctx.lineTo(-s*.28,-s*.98); ctx.lineTo( s*.0,-s*.62); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo( s*.0,-s*.62); ctx.lineTo( s*.28,-s*.98); ctx.lineTo( s*.42,-s*.58); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#E8B4A0';
+  ctx.beginPath(); ctx.moveTo(-s*.38,-s*.60); ctx.lineTo(-s*.26,-s*.9); ctx.lineTo(-s*.04,-s*.64); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo( s*.04,-s*.64); ctx.lineTo( s*.26,-s*.9); ctx.lineTo( s*.38,-s*.60); ctx.closePath(); ctx.fill();
+  // Rides sur le front
+  ctx.strokeStyle=skinD; ctx.lineWidth=s*.018; ctx.lineCap='round';
+  for(let i=0;i<3;i++){
+    ctx.beginPath(); ctx.moveTo(-s*.12,-s*.48+i*s*.06); ctx.quadraticCurveTo(0,-s*.52+i*s*.06,s*.12,-s*.48+i*s*.06); ctx.stroke();
+  }
+  // Grands yeux verts en amande
+  ctx.fillStyle='#3DAA5C';
+  ctx.beginPath(); ctx.ellipse(-s*.148,-s*.37,s*.1,s*.075,0.2,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( s*.148,-s*.37,s*.1,s*.075,-0.2,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#111';
+  ctx.beginPath(); ctx.ellipse(-s*.148,-s*.37,s*.048,s*.072,0.2,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( s*.148,-s*.37,s*.048,s*.072,-0.2,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='white';
+  ctx.beginPath(); ctx.arc(-s*.11,-s*.4,s*.024,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc( s*.17,-s*.4,s*.024,0,Math.PI*2); ctx.fill();
+  // Nez proéminent
+  ctx.fillStyle='#E08070';
+  ctx.beginPath(); ctx.ellipse(0,-s*.26,s*.06,s*.045,0,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='#888'; ctx.lineWidth=s*.02; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(0,-s*.215); ctx.quadraticCurveTo(-s*.09,-s*.15,-s*.12,-s*.16); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0,-s*.215); ctx.quadraticCurveTo( s*.09,-s*.15, s*.12,-s*.16); ctx.stroke();
+  // Blush discret
+  ctx.fillStyle='rgba(220,140,100,0.35)';
+  ctx.beginPath(); ctx.ellipse(-s*.27,-s*.18,s*.1,s*.06,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( s*.27,-s*.18,s*.1,s*.06,0,0,Math.PI*2); ctx.fill();
+  // Queue fine
+  ctx.strokeStyle=skinD; ctx.lineWidth=s*.07; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(s*.45,s*.2); ctx.quadraticCurveTo(s*.9,-s*.05,s*.6,-s*.55); ctx.stroke();
+}
+
+function drawPersan(s) {
+  // Face très plate, fourrure abondante, tête ronde, expression renfrognée
+  const col='#E8DCC8', colD='#C8B898';
+  // Corps très poilu — ellipse plus large
+  ctx.fillStyle=col;
+  ctx.beginPath(); ctx.ellipse(0,s*.12,s*.64,s*.55,0,0,Math.PI*2); ctx.fill();
+  // Fourrure — petits traits autour du corps
+  ctx.strokeStyle=colD; ctx.lineWidth=s*.04; ctx.lineCap='round';
+  for(let i=0;i<14;i++){
+    const a=(i/14)*Math.PI*2;
+    const r1=s*.58+Math.sin(i*1.7)*s*.04, r2=r1+s*.1;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a)*r1,s*.12+Math.sin(a)*r1*.85);
+    ctx.lineTo(Math.cos(a)*r2,s*.12+Math.sin(a)*r2*.85);
+    ctx.stroke();
+  }
+  // Tête très ronde
+  ctx.fillStyle=col;
+  ctx.beginPath(); ctx.arc(0,-s*.33,s*.45,0,Math.PI*2); ctx.fill();
+  // Oreilles petites, rondes, presque cachées
+  ctx.fillStyle=col;
+  ctx.beginPath(); ctx.moveTo(-s*.34,-s*.64); ctx.lineTo(-s*.2,-s*.82); ctx.lineTo(-s*.04,-s*.66); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo( s*.04,-s*.66); ctx.lineTo( s*.2,-s*.82); ctx.lineTo( s*.34,-s*.64); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#FFB5C8';
+  ctx.beginPath(); ctx.moveTo(-s*.28,-s*.67); ctx.lineTo(-s*.2,-s*.78); ctx.lineTo(-s*.1,-s*.68); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo( s*.1,-s*.68); ctx.lineTo( s*.2,-s*.78); ctx.lineTo( s*.28,-s*.67); ctx.closePath(); ctx.fill();
+  // Face très plate — nez quasi absent, yeux proches
+  ctx.fillStyle='#B5935A';
+  ctx.beginPath(); ctx.arc(-s*.12,-s*.35,s*.088,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc( s*.12,-s*.35,s*.088,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#111';
+  ctx.beginPath(); ctx.ellipse(-s*.12,-s*.35,s*.048,s*.076,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( s*.12,-s*.35,s*.048,s*.076,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='white';
+  ctx.beginPath(); ctx.arc(-s*.09,-s*.38,s*.024,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc( s*.14,-s*.38,s*.024,0,Math.PI*2); ctx.fill();
+  // Nez très court et plat
+  ctx.fillStyle='#FF9BAB';
+  ctx.beginPath(); ctx.ellipse(0,-s*.265,s*.04,s*.03,0,0,Math.PI*2); ctx.fill();
+  // Bouche grognon (U inversé)
+  ctx.strokeStyle='#888'; ctx.lineWidth=s*.022; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(-s*.08,-s*.21); ctx.quadraticCurveTo(-s*.04,-s*.18,0,-s*.2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo( s*.08,-s*.21); ctx.quadraticCurveTo( s*.04,-s*.18,0,-s*.2); ctx.stroke();
+  // Blush
+  ctx.fillStyle='rgba(255,127,179,0.45)';
+  ctx.beginPath(); ctx.ellipse(-s*.26,-s*.18,s*.11,s*.065,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( s*.26,-s*.18,s*.11,s*.065,0,0,Math.PI*2); ctx.fill();
+  // Queue touffue
+  ctx.strokeStyle=colD; ctx.lineWidth=s*.18; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(s*.45,s*.2); ctx.quadraticCurveTo(s*.85,-s*.06,s*.55,-s*.58); ctx.stroke();
+  ctx.strokeStyle=col; ctx.lineWidth=s*.1;
+  ctx.beginPath(); ctx.moveTo(s*.45,s*.2); ctx.quadraticCurveTo(s*.85,-s*.06,s*.55,-s*.58); ctx.stroke();
+}
+
+function drawScottish(s) {
+  // Oreilles repliées vers l'avant — le trait distinctif
+  const col='#B0A090', colD='#887060';
+  ctx.fillStyle=col;
+  ctx.beginPath(); ctx.ellipse(0,s*.1,s*.56,s*.5,0,0,Math.PI*2); ctx.fill();
+  if (true) { // stries douces
+    ctx.save();
+    ctx.beginPath(); ctx.ellipse(0,s*.1,s*.56,s*.5,0,0,Math.PI*2); ctx.clip();
+    ctx.strokeStyle=colD; ctx.lineWidth=s*.07; ctx.lineCap='round';
+    for(let i=-1;i<=1;i++){ctx.beginPath();ctx.moveTo(i*s*.2-s*.28,-s*.3);ctx.lineTo(i*s*.2+s*.1,s*.6);ctx.stroke();}
+    ctx.restore();
+  }
+  ctx.fillStyle=col;
+  ctx.beginPath(); ctx.arc(0,-s*.355,s*.42,0,Math.PI*2); ctx.fill();
+  // Oreilles repliées — demi-cercles aplatis vers le bas
+  ctx.fillStyle=col;
+  ctx.beginPath(); ctx.ellipse(-s*.25,-s*.66,s*.18,s*.12,-0.3,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( s*.25,-s*.66,s*.18,s*.12, 0.3,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#FFB5C8';
+  ctx.beginPath(); ctx.ellipse(-s*.25,-s*.64,s*.1,s*.07,-0.3,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( s*.25,-s*.64,s*.1,s*.07, 0.3,0,Math.PI*2); ctx.fill();
+  // Yeux ronds et doux — expression calme
+  ctx.fillStyle='#8B6914';
+  ctx.beginPath(); ctx.arc(-s*.145,-s*.375,s*.095,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc( s*.145,-s*.375,s*.095,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#111';
+  ctx.beginPath(); ctx.arc(-s*.145,-s*.375,s*.055,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc( s*.145,-s*.375,s*.055,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='white';
+  ctx.beginPath(); ctx.arc(-s*.108,-s*.41,s*.027,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc( s*.178,-s*.41,s*.027,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#FF8FAB';
+  ctx.beginPath(); ctx.moveTo(-s*.05,-s*.265); ctx.lineTo(s*.05,-s*.265); ctx.lineTo(0,-s*.23); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle='#666'; ctx.lineWidth=s*.022; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(0,-s*.23); ctx.quadraticCurveTo(-s*.1,-s*.16,-s*.13,-s*.175); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0,-s*.23); ctx.quadraticCurveTo( s*.1,-s*.16, s*.13,-s*.175); ctx.stroke();
+  ctx.fillStyle='rgba(255,127,179,0.5)';
+  ctx.beginPath(); ctx.ellipse(-s*.29,-s*.19,s*.11,s*.066,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( s*.29,-s*.19,s*.11,s*.066,0,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='rgba(120,120,120,0.4)'; ctx.lineWidth=1.0;
+  [[-s*.055,-s*.26,-s*.37,-s*.31],[-s*.055,-s*.26,-s*.36,-s*.23],
+   [ s*.055,-s*.26, s*.37,-s*.31],[ s*.055,-s*.26, s*.36,-s*.23]].forEach(([x1,y1,x2,y2])=>{
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  });
+  ctx.strokeStyle=col; ctx.lineWidth=s*.135; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(s*.45,s*.2); ctx.quadraticCurveTo(s*.88,-s*.08,s*.56,-s*.62); ctx.stroke();
+}
+
+function drawBengal(s) {
+  // Pelage fauve avec taches leopard, museau clair, yeux verts
+  const base='#C8843A', spot='#5A3010', light='#F0D090';
+  ctx.fillStyle=base;
+  ctx.beginPath(); ctx.ellipse(0,s*.1,s*.56,s*.5,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(0,-s*.355,s*.4,0,Math.PI*2); ctx.fill();
+  // Taches léopard sur le corps
+  ctx.fillStyle=spot;
+  const spots=[[-s*.22,s*.0,s*.1,s*.07],[ s*.25,s*.05,s*.09,s*.065],
+               [-s*.08,s*.28,s*.12,s*.07],[ s*.18,s*.22,s*.1,s*.065],
+               [-s*.35,s*.18,s*.08,s*.055],[ s*.0,s*.42,s*.09,s*.055]];
+  spots.forEach(([x,y,rx,ry])=>{
+    ctx.beginPath(); ctx.ellipse(x,y,rx,ry,Math.random()*.8,0,Math.PI*2); ctx.fill();
+  });
+  // Rosettes sur la tête
+  ctx.fillStyle=spot;
+  ctx.beginPath(); ctx.ellipse(-s*.08,-s*.52,s*.06,s*.04,0.4,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( s*.08,-s*.52,s*.06,s*.04,-0.4,0,Math.PI*2); ctx.fill();
+  // Oreilles pointues fauves
+  ctx.fillStyle=base;
+  ctx.beginPath(); ctx.moveTo(-s*.36,-s*.62); ctx.lineTo(-s*.19,-s*.93); ctx.lineTo(-s*.02,-s*.65); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo( s*.02,-s*.65); ctx.lineTo( s*.19,-s*.93); ctx.lineTo( s*.36,-s*.62); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#FFB5C8';
+  ctx.beginPath(); ctx.moveTo(-s*.30,-s*.66); ctx.lineTo(-s*.20,-s*.84); ctx.lineTo(-s*.09,-s*.68); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo( s*.09,-s*.68); ctx.lineTo( s*.20,-s*.84); ctx.lineTo( s*.30,-s*.66); ctx.closePath(); ctx.fill();
+  // Museau clair
+  ctx.fillStyle=light;
+  ctx.beginPath(); ctx.ellipse(0,-s*.24,s*.2,s*.14,0,0,Math.PI*2); ctx.fill();
+  // Yeux verts intenses
+  ctx.fillStyle='#2E8B3A';
+  ctx.beginPath(); ctx.arc(-s*.145,-s*.375,s*.092,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc( s*.145,-s*.375,s*.092,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#111';
+  ctx.beginPath(); ctx.ellipse(-s*.145,-s*.375,s*.046,s*.075,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( s*.145,-s*.375,s*.046,s*.075,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='white';
+  ctx.beginPath(); ctx.arc(-s*.108,-s*.41,s*.026,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc( s*.175,-s*.41,s*.026,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#FF8FAB';
+  ctx.beginPath(); ctx.moveTo(-s*.05,-s*.26); ctx.lineTo(s*.05,-s*.26); ctx.lineTo(0,-s*.225); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle='#555'; ctx.lineWidth=s*.022; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(0,-s*.225); ctx.quadraticCurveTo(-s*.1,-s*.155,-s*.14,-s*.175); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0,-s*.225); ctx.quadraticCurveTo( s*.1,-s*.155, s*.14,-s*.175); ctx.stroke();
+  ctx.fillStyle='rgba(255,127,179,0.45)';
+  ctx.beginPath(); ctx.ellipse(-s*.29,-s*.19,s*.11,s*.065,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( s*.29,-s*.19,s*.11,s*.065,0,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='rgba(120,120,120,0.4)'; ctx.lineWidth=1.0;
+  [[-s*.055,-s*.26,-s*.37,-s*.31],[-s*.055,-s*.26,-s*.36,-s*.23],
+   [ s*.055,-s*.26, s*.37,-s*.31],[ s*.055,-s*.26, s*.36,-s*.23]].forEach(([x1,y1,x2,y2])=>{
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  });
+  ctx.strokeStyle=spot; ctx.lineWidth=s*.135; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(s*.45,s*.2); ctx.quadraticCurveTo(s*.88,-s*.08,s*.56,-s*.62); ctx.stroke();
+}
+
 function drawCatShape(s, type) {
   const col = type.col;
   if (type.id === 'fantome') { drawGhost(s); return; }
   if (type.id === 'faux')    { drawDog(s);   return; }
+  if (type.id === 'siamois') { drawSiamois(s); return; }
+  if (type.id === 'sphynx')  { drawSphynx(s);  return; }
+  if (type.id === 'persan')  { drawPersan(s);  return; }
+  if (type.id === 'scottish'){ drawScottish(s); return; }
+  if (type.id === 'bengal')  { drawBengal(s);  return; }
   ctx.fillStyle = col;
   ctx.beginPath(); ctx.ellipse(0,s*.1,s*.56,s*.5,0,0,Math.PI*2); ctx.fill();
   if (type.stripes) {
