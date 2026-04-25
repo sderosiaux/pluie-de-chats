@@ -100,6 +100,41 @@
     white-space: nowrap;
   }
   #unlock-toast.show { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+
+  #gameover-overlay {
+    display: none; position: fixed; inset: 0; z-index: 100;
+    background: rgba(42,27,74,0.9); backdrop-filter: blur(10px);
+    flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  }
+  #gameover-overlay.show { display: flex; }
+  .go-emoji { font-size: 56px; animation: candy-pulse 1.2s ease-in-out infinite; }
+  .go-title {
+    font-family: 'Baloo 2', sans-serif; font-weight: 900;
+    font-size: clamp(38px, 10vw, 56px); color: #ffce3a;
+    text-shadow: 0 4px 0 rgba(0,0,0,.35), 0 0 30px rgba(255,206,58,.4);
+    letter-spacing: 2px;
+  }
+  .go-score {
+    font-family: 'Fredoka', sans-serif; font-size: clamp(18px,5vw,24px);
+    color: #fff8e6; letter-spacing: .5px;
+  }
+  .go-score span, .go-hi span {
+    font-family: 'Baloo 2', sans-serif; font-weight: 800; color: #ff3ea5;
+  }
+  .go-hi {
+    font-family: 'Fredoka', sans-serif; font-size: clamp(13px,3.5vw,16px);
+    color: rgba(255,248,230,.7);
+  }
+  #replay-btn {
+    font-family: 'Baloo 2', sans-serif; font-weight: 800;
+    font-size: clamp(16px,4vw,20px); color: #2a1b4a;
+    background: linear-gradient(180deg, #ffce3a, #e8a820);
+    border: none; padding: 14px 36px; border-radius: 30px;
+    box-shadow: 0 6px 0 #a87820, 0 10px 24px rgba(255,206,58,.35);
+    cursor: pointer; margin-top: 8px;
+    transition: transform .12s, box-shadow .12s;
+  }
+  #replay-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #a87820; }
 </style>
 </head>
 <body>
@@ -111,6 +146,13 @@
   <div id="hi-block">Record<span id="hi-val">0</span></div>
 </div>
 <div id="unlock-toast"></div>
+<div id="gameover-overlay">
+  <div class="go-emoji">😿</div>
+  <div class="go-title">GAME OVER</div>
+  <div class="go-score">Score <span id="go-score">0</span></div>
+  <div class="go-hi">Record <span id="go-hi-val">0</span></div>
+  <button id="replay-btn">🐱 Rejouer !</button>
+</div>
 <canvas id="game"></canvas>
 
 <script>
@@ -158,8 +200,11 @@ const CAT_SPAWN_Y = HUD_H - 10;
 let score = 0, combo = 0, gameTime = 0, spawnTimer = 0;
 let level = 1, laserHitWidth = 6;
 let hiScore = parseInt(localStorage.getItem('pdc_hi') || '0');
-let cats = [], projectiles = [], effects = [], particles = [], popups = [], clouds = [];
+let cats = [], projectiles = [], effects = [], particles = [], popups = [], clouds = [], hairballs = [];
 let _catIdCounter = 0;
+let lives = 5;
+const MAX_LIVES = 7;
+let gameOver = false;
 let isDragging = false, dragPos = null;
 let selectedType = 'pelote';
 let unlockedTypes = new Set(['pelote']);
@@ -254,6 +299,13 @@ const CAT_TYPES = [
     label:'Chat Furtif',   hint:'Frappe quand il est visible !' },
   { id:'boss',     pts:15, col:'#C0392B', size:2.1,  w:0,  stripes:true,  minLvl:6, hp:3,
     label:'LE BOSS',       hint:'3 HP — bonne chance !' },
+  // ── Chats attaquants ──────────────────────────────────────────────────────────
+  { id:'crachat',  pts:3,  col:'#3dc47e', size:0.88, w:8,  stripes:false, minLvl:3,
+    label:'Crâcheur',      hint:'Crache des boules de poils !' },
+  { id:'griffeur', pts:5,  col:'#FF6B35', size:1.05, w:5,  stripes:true,  minLvl:4,
+    label:'Griffeur',      hint:'Fonce vers toi !' },
+  { id:'medecin',  pts:5,  col:'#27AE60', size:0.9,  w:3,  stripes:false, minLvl:3,
+    label:'Médecin',       hint:'+1 ❤️ !', heals:true },
 ];
 
 function pickCatType(forceRare) {
@@ -399,6 +451,24 @@ function drawCatShape(s, type) {
   });
   ctx.strokeStyle=col; ctx.lineWidth=s*.135; ctx.lineCap='round';
   ctx.beginPath(); ctx.moveTo(s*.45,s*.2); ctx.quadraticCurveTo(s*.88,-s*.08,s*.56,-s*.62); ctx.stroke();
+
+  // Médecin overlay — white cross
+  if (type.id==='medecin') {
+    ctx.fillStyle='rgba(255,255,255,0.92)';
+    ctx.fillRect(-s*.06,-s*.62,s*.12,s*.34);
+    ctx.fillRect(-s*.18,-s*.54,s*.36,s*.12);
+    ctx.fillStyle='rgba(39,174,96,0.5)';
+    ctx.beginPath(); ctx.arc(0,-s*.355,s*.62,0,Math.PI*2); ctx.fill();
+  }
+  // Griffeur overlay — angry eyes slash
+  if (type.id==='griffeur') {
+    ctx.strokeStyle='rgba(255,80,0,0.75)'; ctx.lineWidth=s*.04;
+    ctx.beginPath(); ctx.moveTo(-s*.22,-s*.44); ctx.lineTo(-s*.08,-s*.3); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo( s*.22,-s*.44); ctx.lineTo( s*.08,-s*.3); ctx.stroke();
+    // Speed lines
+    ctx.strokeStyle='rgba(255,100,0,0.3)'; ctx.lineWidth=s*.025;
+    for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(-s*.7+i*s*.15,s*.1+i*s*.1);ctx.lineTo(-s*.95+i*s*.15,s*.1+i*s*.1);ctx.stroke();}
+  }
 }
 function drawGhost(s) {
   ctx.fillStyle='rgba(168,230,255,0.82)';
@@ -545,6 +615,7 @@ function spawnCat(forcedType) {
     catnipDazed: false, catnipVx: 0, catnipVy: 0,
     hp: type.hp || 1, maxHp: type.hp || 1, shieldFlash: 0,
     visible: true, visTimer: 1.2 + Math.random() * 0.6,
+    spitTimer: type.id === 'crachat' ? 2.2 + Math.random() * 1.5 : 0,
   });
 }
 
@@ -633,6 +704,24 @@ function drawProjectileShape(p) {
   ctx.restore();
 }
 
+// ── Lives display ─────────────────────────────────────────────────────────────
+function drawLives() {
+  const heartSize = Math.round(Math.min(W * 0.048, 20));
+  const gap = heartSize * 1.28;
+  const totalW = MAX_LIVES * gap;
+  const startX = W/2 - totalW/2 + gap/2;
+  const lifeY = H - INV_H - heartSize/2 - 5;
+  ctx.font = `${heartSize}px Arial`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  for (let i = 0; i < MAX_LIVES; i++) {
+    ctx.globalAlpha = i < lives ? 1 : 0.22;
+    ctx.shadowColor = i < lives ? '#ff3ea5' : 'transparent';
+    ctx.shadowBlur = i < lives ? 6 : 0;
+    ctx.fillText(i < lives ? '❤️' : '🖤', startX + i * gap, lifeY);
+  }
+  ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+}
+
 // ── Effects drawing ───────────────────────────────────────────────────────────
 function drawEffect(e) {
   switch (e.type) {
@@ -717,6 +806,14 @@ function drawEffect(e) {
       ctx.restore();
       break;
     }
+    case 'hit_flash': {
+      ctx.save();
+      ctx.globalAlpha = e.life * 0.38;
+      ctx.fillStyle = '#FF1744';
+      ctx.fillRect(0, 0, W, H);
+      ctx.restore();
+      break;
+    }
     case 'carton_box': {
       const sz = 32 + (1-e.life)*8;
       // attraction field
@@ -767,6 +864,48 @@ function spawnPopup(x,y,text,col) {
   popups.push({ x, y, text, col, life:1, vy:-2.8 });
 }
 
+function loseLife() {
+  if (gameOver || lives <= 0) return;
+  lives--;
+  spawnParticles(LAUNCHER.x, LAUNCHER.y-20, 10, true);
+  spawnPopup(LAUNCHER.x, LAUNCHER.y - 50, '−1 ❤️', '#FF4444');
+  effects.push({ type:'hit_flash', life:1, dur:0.35, age:0 });
+  if (lives <= 0) triggerGameOver();
+}
+
+function gainLife() {
+  if (lives >= MAX_LIVES) return;
+  lives++;
+  spawnPopup(LAUNCHER.x, LAUNCHER.y - 50, '+1 ❤️', '#27AE60');
+}
+
+function triggerGameOver() {
+  gameOver = true;
+  document.getElementById('go-score').textContent = score;
+  document.getElementById('go-hi-val').textContent = hiScore;
+  document.getElementById('gameover-overlay').classList.add('show');
+}
+
+function resetGame() {
+  score = 0; combo = 0; level = 1; lives = 5; gameOver = false;
+  cats = []; projectiles = []; effects = []; particles = []; popups = []; hairballs = [];
+  TYPE_ORDER.forEach(id => {
+    const d = PROJ_DEFS[id];
+    d.stock = d.maxStock;
+    rechargeTimers[id] = 0;
+  });
+  // Reset upgrades
+  PROJ_DEFS.pelote.bounces = 3;
+  PROJ_DEFS.artifice.blastR = 100;
+  PROJ_DEFS.catnip.cloudR = 135;
+  PROJ_DEFS.carton.pullR = 165;
+  TYPE_ORDER.forEach(id => { PROJ_DEFS[id].recharge = {pelote:4,artifice:12,laser:18,catnip:22,carton:28}[id]; });
+  unlockedTypes.clear(); unlockedTypes.add('pelote');
+  checkUnlocks();
+  updateHUD();
+  document.getElementById('gameover-overlay').classList.remove('show');
+}
+
 // ── Level-up logic ────────────────────────────────────────────────────────────
 function checkLevelUp() {
   while (level < LEVELS.length && score >= LEVELS[level].threshold) {
@@ -775,6 +914,7 @@ function checkLevelUp() {
     applyBonus(def.bonus);
     effects.push({ type:'levelup', level, desc: def.desc, life:1, dur:2.4, age:0 });
     Music.sfxLevelUp();
+    if (level % 3 === 0) gainLife();
     updateHUD();
   }
 }
@@ -1174,14 +1314,32 @@ function roundRect(ctx,x,y,w,h,r){
 }
 
 // ── Catch cat ─────────────────────────────────────────────────────────────────
+function comboMult() {
+  return combo >= 9 ? 4 : combo >= 6 ? 3 : combo >= 3 ? 2 : 1;
+}
+
 function catchCat(cat, px, py, silent) {
   if (cat.caught) return;
   cat.caught = true;
   const pts = cat.type.pts;
-  score = Math.max(0, score + pts);
-  if (pts > 0) { combo++; spawnParticles(cat.x,cat.y,pts>=5?20:pts>=3?12:7,false); }
-  else { combo=0; spawnParticles(cat.x,cat.y,8,true); }
-  if (!silent) spawnPopup(px||cat.x, py||cat.y, (pts>0?'+':'')+pts, pts>0?(pts>=5?'#ffce3a':pts>=3?'#7b3ff2':'#ff3ea5'):'#FF4444');
+  if (pts > 0) {
+    const mult = comboMult();
+    const earned = pts * mult;
+    score += earned;
+    combo++;
+    if (cat.type.heals) gainLife();
+    spawnParticles(cat.x, cat.y, pts>=5 ? 20 : pts>=3 ? 12 : 7, false);
+    if (!silent) {
+      const col = pts>=5 ? '#ffce3a' : pts>=3 ? '#7b3ff2' : '#ff3ea5';
+      const txt = mult > 1 ? `+${earned} ×${mult}` : `+${earned}`;
+      spawnPopup(px||cat.x, py||cat.y, txt, col);
+    }
+  } else {
+    score = Math.max(0, score + pts);
+    combo = 0;
+    spawnParticles(cat.x, cat.y, 8, true);
+    if (!silent) spawnPopup(px||cat.x, py||cat.y, String(pts), '#FF4444');
+  }
   Music.sfxCatch(pts);
   if (score > hiScore) { hiScore=score; localStorage.setItem('pdc_hi',hiScore); hiValEl.textContent=hiScore; }
   checkUnlocks();
@@ -1192,8 +1350,12 @@ function catchCat(cat, px, py, silent) {
 function updateHUD() {
   scoreEl.textContent = score;
   if (combo >= 3) {
-    comboEl.textContent = `×${combo} COMBO`;
+    const mult = comboMult();
+    comboEl.textContent = `${combo} COMBO ×${mult}`;
     comboEl.classList.add('active');
+  } else if (combo > 0) {
+    comboEl.textContent = `${combo} ↗`;
+    comboEl.classList.remove('active');
   } else {
     comboEl.textContent = '';
     comboEl.classList.remove('active');
@@ -1279,6 +1441,8 @@ function loop(ts) {
   drawBackground();
   drawXPBar();
 
+  if (gameOver) { requestAnimationFrame(loop); return; }
+
   // Spawn cats
   spawnTimer-=dt;
   if(spawnTimer<=0){spawnCat();spawnTimer=spawnInterval();}
@@ -1346,9 +1510,27 @@ function loop(ts) {
       }
       // Shield flash decay
       if (c.shieldFlash>0) c.shieldFlash-=dt*5;
+      // Griffeur — fonce vers le lanceur
+      if (c.type.id==='griffeur') {
+        const dx=LAUNCHER.x-c.x, dy=LAUNCHER.y-c.y, dist=Math.hypot(dx,dy);
+        if (dist > 1) { c.vx+=(dx/dist)*.18; c.vy+=(dy/dist)*.18; }
+        const spd=Math.hypot(c.vx,c.vy);
+        if (spd>6) { c.vx=c.vx/spd*6; c.vy=c.vy/spd*6; }
+        if (dist < c.size + 32) { loseLife(); spawnPopup(c.x,c.y,'GRIFFE !','#FF6B35'); c.caught=true; }
+      }
+      // Crachat — crache des boules de poils
+      if (c.type.id==='crachat') {
+        c.spitTimer -= dt;
+        if (c.spitTimer <= 0) {
+          c.spitTimer = 2.2 + Math.random()*1.5;
+          const dx=LAUNCHER.x-c.x, dy=LAUNCHER.y-c.y, d=Math.hypot(dx,dy);
+          const spd=2.8+Math.random()*.8;
+          hairballs.push({ x:c.x, y:c.y, vx:(dx/d)*spd, vy:(dy/d)*spd, r:8, age:0, dur:5, catId:c.id });
+        }
+      }
       if(c.x<c.size||c.x>W-c.size){c.vx*=-1;c.x=Math.max(c.size,Math.min(W-c.size,c.x));}
       if(c.y>H-INV_H+c.size*2){
-        if(c.type.pts>0&&combo>0){combo=Math.max(0,combo-1);updateHUD();}
+        if(c.type.pts>0){ combo=0; loseLife(); updateHUD(); }
         cats.splice(i,1);continue;
       }
     } else {
@@ -1480,8 +1662,43 @@ function loop(ts) {
     drawEffect(e);
   }
 
+  // Hairballs
+  for (let i=hairballs.length-1;i>=0;i--) {
+    const hb=hairballs[i];
+    hb.x+=hb.vx; hb.y+=hb.vy; hb.age+=dt;
+    if (hb.age>hb.dur||hb.y>H||hb.x<-20||hb.x>W+20) { hairballs.splice(i,1); continue; }
+    // Hit by projectile?
+    let destroyed=false;
+    for (const p of projectiles) {
+      if (Math.hypot(hb.x-p.x,hb.y-p.y)<22) {
+        spawnPopup(hb.x,hb.y,'Esquivé !','#ffce3a');
+        spawnParticles(hb.x,hb.y,6,false);
+        destroyed=true; break;
+      }
+    }
+    if (destroyed) { hairballs.splice(i,1); continue; }
+    // Hit launcher?
+    if (Math.hypot(hb.x-LAUNCHER.x,hb.y-LAUNCHER.y)<32) {
+      loseLife(); spawnPopup(LAUNCHER.x,LAUNCHER.y-44,'TOUCHÉ !','#FF4444');
+      hairballs.splice(i,1); continue;
+    }
+    // Draw — green hairball
+    ctx.save();
+    const wb=Math.sin(hb.age*9)*.18;
+    ctx.fillStyle='#3dc47e';
+    ctx.shadowColor='#3dc47e'; ctx.shadowBlur=8;
+    ctx.beginPath(); ctx.ellipse(hb.x,hb.y,hb.r*(1+wb),hb.r*(1-wb),hb.age*2,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur=0;
+    ctx.fillStyle='rgba(255,255,255,.3)';
+    ctx.beginPath(); ctx.ellipse(hb.x-hb.r*.28,hb.y-hb.r*.28,hb.r*.32,hb.r*.22,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
   // Launcher
   drawLauncher();
+
+  // Lives
+  drawLives();
 
   // Inventory
   drawInventory();
@@ -1759,6 +1976,8 @@ canvas.addEventListener('pointerdown', () => {
   }
 }, { once: true });
 
+document.getElementById('replay-btn').addEventListener('click', resetGame);
+updateHUD();
 requestAnimationFrame(loop);
 </script>
 </body>
