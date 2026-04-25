@@ -325,6 +325,7 @@ let _catIdCounter = 0;
 let lives = 5;
 const MAX_LIVES = 7;
 let gameOver = false;
+let timeScale = 1, slowMoTimer = 0;
 let isDragging = false, dragPos = null;
 let selectedType = 'pelote';
 let unlockedTypes = new Set(['pelote']);
@@ -705,6 +706,16 @@ function renderCat(cat) {
     ctx.beginPath(); ctx.roundRect(bx,by,bw,bh,4); ctx.stroke();
   }
 
+  // Lucky — étoile dorée scintillante
+  if (cat.lucky && !cat.caught) {
+    const sparkA = 0.6 + Math.sin(gameTime * 8 + cat.wobble) * 0.4;
+    ctx.globalAlpha = sparkA;
+    ctx.font = `${Math.round(s * 0.55)}px Arial`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('⭐', s * 0.65, -s * 0.9);
+    ctx.globalAlpha = 1;
+  }
+
   ctx.restore();
 }
 
@@ -737,6 +748,7 @@ function spawnCat(forcedType) {
     hp: type.hp || 1, maxHp: type.hp || 1, shieldFlash: 0,
     visible: true, visTimer: 1.2 + Math.random() * 0.6,
     spitTimer: type.id === 'crachat' ? 2.2 + Math.random() * 1.5 : 0,
+    lucky: type.id !== 'boss' && Math.random() < 0.05,
   });
 }
 
@@ -996,6 +1008,8 @@ function loseLife() {
   spawnParticles(LAUNCHER.x, LAUNCHER.y-20, 10, true);
   spawnPopup(LAUNCHER.x, LAUNCHER.y - 50, '−1 ❤️', '#FF4444');
   effects.push({ type:'hit_flash', life:1, dur:0.35, age:0 });
+  if (navigator.vibrate) navigator.vibrate(40);
+  if (lives === 1) { timeScale = 0.32; slowMoTimer = 3.0; }
   if (lives <= 0) triggerGameOver();
 }
 
@@ -1013,7 +1027,7 @@ function triggerGameOver() {
 }
 
 function resetGame() {
-  score = 0; combo = 0; level = 1; lives = 5; gameOver = false; levelUpPaused = false;
+  score = 0; combo = 0; level = 1; lives = 5; gameOver = false; levelUpPaused = false; timeScale = 1; slowMoTimer = 0;
   cats = []; projectiles = []; effects = []; particles = []; popups = []; hairballs = [];
   TYPE_ORDER.forEach(id => {
     const d = PROJ_DEFS[id];
@@ -1496,13 +1510,23 @@ function catchCat(cat, px, py, silent) {
   cat.caught = true;
   const pts = cat.type.pts;
   if (pts > 0) {
-    const mult = comboMult();
+    const baseMult = comboMult();
+    const luckyMult = cat.lucky ? 5 : 1;
+    const mult = baseMult * luckyMult;
     const earned = pts * mult;
     score += earned;
     combo++;
     if (cat.type.heals) gainLife();
-    spawnParticles(cat.x, cat.y, pts>=5 ? 20 : pts>=3 ? 12 : 7, false);
-    if (!silent) {
+    spawnParticles(cat.x, cat.y, cat.lucky ? 35 : pts>=5 ? 20 : pts>=3 ? 12 : 7, false);
+    if (cat.lucky) {
+      spawnPopup(px||cat.x, (py||cat.y)-20, '⭐ LUCKY ×5 !', '#ffce3a');
+      for (let i=0;i<40;i++) {
+        const a=Math.random()*Math.PI*2, spd=4+Math.random()*9;
+        particles.push({x:cat.x,y:cat.y,vx:Math.cos(a)*spd,vy:Math.sin(a)*spd-4,
+          col:['#ffce3a','#ff3ea5','#26c6f7','#7b3ff2'][i%4],
+          sz:5+Math.random()*8,life:1,decay:.01,rot:0,rotSpd:(Math.random()-.5)*.4});
+      }
+    } else if (!silent) {
       const col = pts>=5 ? '#ffce3a' : pts>=3 ? '#7b3ff2' : '#ff3ea5';
       const txt = mult > 1 ? `+${earned} ×${mult}` : `+${earned}`;
       spawnPopup(px||cat.x, py||cat.y, txt, col);
@@ -1536,6 +1560,37 @@ function updateHUD() {
   }
   const isMax = level >= LEVELS.length;
   levelBadge.textContent = isMax ? '★ MAX' : `★ Niv. ${level}`;
+}
+
+function drawBossBar() {
+  const boss = cats.find(c => c.type.id === 'boss' && !c.caught);
+  if (!boss) return;
+  const pct = boss.hp / boss.maxHp;
+  const bw = Math.min(W * 0.72, 340), bh = 18, bx = (W - bw) / 2, by = HUD_H + 10;
+  ctx.save();
+  // Track
+  ctx.fillStyle = 'rgba(20,10,40,0.7)';
+  ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 9); ctx.fill();
+  // Fill rouge → orange
+  const g = ctx.createLinearGradient(bx, 0, bx + bw * pct, 0);
+  g.addColorStop(0, '#C0392B'); g.addColorStop(1, '#E74C3C');
+  ctx.fillStyle = g;
+  ctx.shadowColor = '#C0392B'; ctx.shadowBlur = 10;
+  ctx.beginPath(); ctx.roundRect(bx, by, bw * pct, bh, 9); ctx.fill();
+  ctx.shadowBlur = 0;
+  // Sheen
+  ctx.fillStyle = 'rgba(255,255,255,0.18)';
+  ctx.beginPath(); ctx.roundRect(bx, by, bw * pct, bh * 0.42, 9); ctx.fill();
+  // Bordure
+  ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 9); ctx.stroke();
+  // Label
+  ctx.font = `700 11px "Fredoka",Arial`; ctx.fillStyle = '#fff';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 3;
+  ctx.fillText(`👑 BOSS  ${boss.hp} / ${boss.maxHp}`, W/2, by + bh/2);
+  ctx.shadowBlur = 0;
+  ctx.restore();
 }
 
 function drawXPBar() {
@@ -1609,13 +1664,31 @@ function drawBackground() {
 // ── Game loop ─────────────────────────────────────────────────────────────────
 let lastTime=0;
 function loop(ts) {
-  const dt = Math.min((ts-lastTime)/1000, 0.05);
-  lastTime=ts; gameTime+=dt;
+  let dt = Math.min((ts-lastTime)/1000, 0.05);
+  lastTime=ts;
+  // Slow-mo
+  if (slowMoTimer > 0) {
+    slowMoTimer -= dt;
+    if (slowMoTimer <= 0) { timeScale = 1; slowMoTimer = 0; }
+    else timeScale += (0.32 - timeScale) * 0; // hold
+  }
+  dt *= timeScale;
+  gameTime += dt;
 
   drawBackground();
   drawXPBar();
+  drawBossBar();
 
   if (gameOver || levelUpPaused) { requestAnimationFrame(loop); return; }
+
+  // Vignette rouge pulsante — 1 vie restante
+  if (lives === 1) {
+    const pulse = 0.18 + Math.sin(gameTime * 4.5) * 0.1;
+    const vg = ctx.createRadialGradient(W/2, H/2, H*0.28, W/2, H/2, H*0.82);
+    vg.addColorStop(0, 'rgba(255,0,0,0)');
+    vg.addColorStop(1, `rgba(220,0,0,${pulse})`);
+    ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+  }
 
   // Spawn cats
   spawnTimer-=dt;
@@ -1796,6 +1869,8 @@ function loop(ts) {
 
     // catnip: attract cats
     if(e.type==='catnip_cloud'){
+      if(!e.caught) e.caught=0;
+      if(!e.caughtIds) e.caughtIds=new Set();
       for(const cat of cats){
         if(cat.caught)continue;
         const d=Math.hypot(cat.x-e.x,cat.y-e.y);
@@ -1804,8 +1879,16 @@ function loop(ts) {
           const f=0.04/Math.max(1,d*.02);
           cat.catnipVx=(cat.vx*.3)+(e.x-cat.x)*f;
           cat.catnipVy=(cat.vy*.1)+(e.y-cat.y)*f;
-          if(d<18)catchCat(cat,cat.x,cat.y,false);
+          if(d<18&&!e.caughtIds.has(cat.id)){
+            e.caughtIds.add(cat.id);
+            catchCat(cat,cat.x,cat.y,e.caught>0);
+            e.caught++;
+          }
         }
+      }
+      if(e.caught>=2&&e.life<0.15){
+        const lbl=['','','DOUBLE !','TRIPLE !','×4 !','×5 !'][Math.min(e.caught,5)]||`×${e.caught} !`;
+        spawnPopup(e.x,e.y-50,lbl,'#27AE60');
       }
     }
 
@@ -1944,8 +2027,8 @@ function explode(p){
       caught++;
     }
   }
-  if(caught>=3) spawnPopup(p.x,p.y-50,`BOOM ×${caught} !!`,'#F1C40F');
-  else if(caught>=1) spawnPopup(p.x,p.y-40,`+${caught}`,'#F1C40F');
+  const multiLabels = ['','','DOUBLE !','TRIPLE !','×4 CHATS !','×5 CHATS !!'];
+  if (caught >= 2) spawnPopup(p.x, p.y-55, multiLabels[Math.min(caught,5)] || `×${caught} CHATS !`, '#F1C40F');
   spawnParticles(p.x,p.y,25,false);
   ['#FFD700','#FF6B6B','#4ECDC4','#A29BFE'].forEach(col=>{
     for(let i=0;i<4;i++){
