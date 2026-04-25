@@ -9,7 +9,7 @@ export interface CatType {
   size: number;
   w: number;
   stripes?: boolean;
-  minLvl: number;
+  minLvl?: number;
   hp?: number;
   label?: string;
   hint?: string;
@@ -104,6 +104,8 @@ export interface Effect {
   caughtIds?: Set<number>;
   level?: number;
   desc?: string;
+  shownMissMsg?: boolean;
+  shownMultiMsg?: boolean;
 }
 
 export interface Particle {

@@ -1,15 +1,13 @@
-// @ts-nocheck
 // Pluie de Chats — entry point (game loop + init)
-import { hiValEl, toast } from './dom';
-import { state, cats, projectiles, effects, particles, popups, hairballs, clouds, bgFloaters,
-  unlockedTypes, caughtTypes, rechargeTimers, upgradeFlags, pickCounts, pendingLevelUps } from './state';
-import { HUD_H, DIAL_R, DIAL_HUB_R, DIAL_ANGLES, GRAVITY, MAX_PULL, MIN_SPEED, MAX_SPEED,
-  CAT_SPAWN_Y, TYPE_ORDER, LEVELS, CONFETTI, SCENES, FLOATER_COLS, HEART_COLS,
-  FLOATER_SHAPES, EVENT_POOL } from './config';
-import { canvas, ctx, resize } from './canvas';
-import { PROJ_DEFS, BASE_PROJ_DEFS, CAT_TYPES, OBJECT_TYPES, CAT_LABELS,
-  CAT_CATEGORIES, CAT_CATCOLS, UPGRADES } from './data';
-import { CAT_SPRITES, WEAPON_SPRITES, OBJECT_SPRITES, BG_SPRITES, MOON_SPRITE } from './sprites';
+import { hiValEl } from './dom';
+import {
+  state, cats, projectiles, effects, particles, popups, hairballs,
+  rechargeTimers, upgradeFlags,
+} from './state';
+import { HUD_H, TYPE_ORDER, SCENES } from './config';
+import { ctx } from './canvas';
+import { PROJ_DEFS, CAT_TYPES } from './data';
+import { CAT_SPRITES } from './sprites';
 import { catchCat, drawBossBar, drawXPBar, updateHUD } from './catch';
 import { deployCarton, explode, loseLife, spawnParticles, spawnPopup } from './effects';
 import { triggerEvent } from './events';
@@ -37,12 +35,12 @@ import './events';
 import './levelup';
 
 // DOM bindings
-window._gameCtx = ctx;
-if (hiValEl) hiValEl.textContent = state.hiScore;
+(window as any)._gameCtx = ctx;
+if (hiValEl) hiValEl.textContent = String(state.hiScore);
 
 // ── Game loop ──────────────────────────────────────────────
 let lastTime = 0;
-function loop(ts) {
+function loop(ts: number): void {
   let dt = Math.min((ts-lastTime)/1000, 0.05);
   lastTime=ts;
   // Slow-mo

@@ -1,4 +1,7 @@
 // @ts-nocheck
+// Render cats — large module with many sprite-fallback drawing helpers.
+// Keeping @ts-nocheck for now: typing 30+ canvas helpers and dispatching
+// drawCatShape against ad-hoc breed branches isn't worth the friction.
 import { state } from './state';
 import { ctx } from './canvas';
 import { CAT_TYPES, OBJECT_TYPES } from './data';

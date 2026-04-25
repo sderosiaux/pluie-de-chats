@@ -1,8 +1,9 @@
-// @ts-nocheck
-import { state, upgradeFlags, rechargeTimers, pickCounts } from './state';
+import { state, upgradeFlags } from './state';
 import { GRAVITY, TYPE_ORDER } from './config';
+import { updateHUD } from './catch';
+import type { ProjDef, CatType, ObjectType, Upgrade } from './types';
 
-export const PROJ_DEFS = {
+export const PROJ_DEFS: Record<string, ProjDef> = {
   pelote: {
     label: 'Pelote', emoji: '🧶', col: '#ff8a48',
     speed: [5, 22], gravity: GRAVITY,
@@ -39,14 +40,14 @@ export const PROJ_DEFS = {
   },
 };
 
-export const BASE_PROJ_DEFS = {
+export const BASE_PROJ_DEFS: Record<string, Partial<ProjDef>> = {
   pelote:  { stock:3, maxStock:3, bounces:3, recharge:2 },
   artifice:{ stock:2, maxStock:2, blastR:100, recharge:12 },
   laser:   { stock:1, maxStock:1, recharge:18 },
   carton:  { stock:1, maxStock:1, pullR:165, recharge:28, bounces:3 },
 };
 
-export const CAT_TYPES = [
+export const CAT_TYPES: CatType[] = [
   // ── Chats de base ────────────────────────────────────────────────────────────
   { id:'tabby',   pts:1,  col:'#FF8C00', size:1.0,  w:25, stripes:true,  minLvl:1 },
   { id:'noir',    pts:1,  col:'#1a1a2e', size:1.0,  w:20, stripes:false, minLvl:1 },
@@ -152,7 +153,7 @@ export const CAT_TYPES = [
     label:'Chat Catwoman',  hint:'Rapide et insaisissable' },
 ];
 
-export const OBJECT_TYPES = [
+export const OBJECT_TYPES: ObjectType[] = [
   { id:'plume',      label:'Plume',         col:'#C8B4E8', isObject:true, isNeutral:true, size:0.55, baseVy:0.6,  pts:0, w: 28 },
   { id:'souris',     label:'Jouet-souris',  col:'#C0B0A0', isObject:true, isNeutral:true, size:0.7,  baseVy:1.1,  pts:1, w: 28 },
   { id:'bombe',      label:'Bombe',         col:'#2C3E50', isObject:true, isTrap:true, trapKind:'bomb',    size:0.85, baseVy:1.3,  pts:0, w: 12 },
@@ -162,13 +163,13 @@ export const OBJECT_TYPES = [
   { id:'aspirateur', label:'Aspirateur',    col:'#7B7B8E', isObject:true, isTrap:true, trapKind:'vacuum',  size:1.0,  baseVy:1.0,  pts:0, w: 5  },
 ];
 
-export const CAT_LABELS = {
+export const CAT_LABELS: Record<string, string> = {
   tabby:'Chat Tigré', noir:'Chat Noir', blanc:'Chat Blanc', gris:'Chat Gris',
   fantome:'Fantôme', astro:'Astronaute', rainbow:'Arc-en-Ciel', micro:'Micro-Chat',
   faux:'Chien déguisé',
 };
 
-export const CAT_CATEGORIES = {
+export const CAT_CATEGORIES: Record<string, string> = {
   tabby:'Commun', noir:'Commun', blanc:'Commun', gris:'Commun',
   fantome:'Spécial', astro:'Spécial', rainbow:'Spécial', micro:'Spécial', faux:'Piège',
   zigzag:'Rare', rapide:'Rare', bouclier:'Rare', furtif:'Rare', boss:'Boss',
@@ -177,12 +178,12 @@ export const CAT_CATEGORIES = {
   pompier:'Profession', boulanger:'Profession', ninja:'Profession', detective:'Profession', pirate:'Profession',
 };
 
-export const CAT_CATCOLS = {
+export const CAT_CATCOLS: Record<string, string> = {
   Commun:'#9BA7B0', Spécial:'#26c6f7', Piège:'#FF4444',
   Rare:'#7b3ff2', Boss:'#C0392B', Attaquant:'#FF6B35', Race:'#ffce3a', Profession:'#3DC47E',
 };
 
-export const UPGRADES = [
+export const UPGRADES: Upgrade[] = [
   // Artilleur
   { id:'bounce2',       family:'Artilleur', emoji:'🧶', col:'#FF6B35', req:'pelote',
     label:'Élastique++',        desc:'Pelote rebondit 2× de plus',
@@ -234,7 +235,7 @@ export const UPGRADES = [
   // Survivant
   { id:'max_life',      family:'Survivant', emoji:'❤️', col:'#3DC47E',
     label:'+1 Cœur Max',        desc:'Vie maximum +1 (et +1 vie maintenant)', max:4,
-    apply:()=>{ MAX_LIVES++; lives=Math.min(lives+1,MAX_LIVES); updateHUD(); } },
+    apply:()=>{ state.MAX_LIVES++; state.lives = Math.min(state.lives + 1, state.MAX_LIVES); updateHUD(); } },
   { id:'slowmo_early',  family:'Survivant', emoji:'🐌', col:'#3DC47E',
     label:'Réflexes++',         desc:'Slow-mo déclenché dès 2 vies restantes', max:1,
     apply:()=>{ upgradeFlags.slowMoLives=2; } },
