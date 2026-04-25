@@ -1204,7 +1204,11 @@ canvas.addEventListener('touchend',   e => { e.preventDefault(); handleUp(getEve
 // ── Fire projectile ───────────────────────────────────────────────────────────
 function fire(fingerPos) {
   const def = PROJ_DEFS[selectedType];
-  if (def.stock <= 0) { showToast(`${def.emoji} En recharge...`); return; }
+  if (def.stock <= 0) {
+    const secsLeft = Math.ceil(rechargeTimers[selectedType]);
+    spawnPopup(LAUNCHER.x, LAUNCHER.y - 30, `⏳ ${secsLeft}s`, '#ffce3a');
+    return;
+  }
 
   const dx = LAUNCHER.x - fingerPos.x;
   const dy = LAUNCHER.y - fingerPos.y;
