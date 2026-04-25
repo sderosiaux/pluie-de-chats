@@ -1472,7 +1472,16 @@ function drawInventory() {
     ctx.restore();
   }
 
-
+  // Label arme active au centre du dial
+  const selDef = PROJ_DEFS[selectedType];
+  ctx.save();
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = `800 ${Math.round(DIAL_HUB_R * 0.55)}px "Baloo 2",Arial`;
+  ctx.fillStyle = '#2a1b4a';
+  ctx.shadowColor = 'rgba(255,255,255,0.6)'; ctx.shadowBlur = 6;
+  ctx.fillText(selDef.label, dcx, dcy);
+  ctx.shadowBlur = 0;
+  ctx.restore();
 }
 
 function roundRect(ctx,x,y,w,h,r){
