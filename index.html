@@ -76,6 +76,11 @@
     transition: transform .1s;
   }
   #music-btn:active { transform: scale(0.9); }
+  #lives-el {
+    font-size: clamp(12px,3.5vw,16px);
+    letter-spacing: 2px;
+    flex-shrink: 0;
+  }
 
   @keyframes candy-pulse {
     0%, 100% { transform: scale(1) rotate(-4deg); }
@@ -140,10 +145,11 @@
 <body>
 <div id="hud">
   <button id="music-btn" title="Musique">🔇</button>
-  <div id="score">0</div>
+  <div id="score"><span style="font-family:'Fredoka',sans-serif;font-size:0.55em;font-weight:500;opacity:.6;display:block;line-height:1;letter-spacing:.5px">SCORE</span><span id="score-val">0</span></div>
   <div id="level-badge">★ Niv. 1</div>
   <div id="combo"></div>
   <div id="hi-block">Record<span id="hi-val">0</span></div>
+  <div id="lives-el">❤️❤️❤️❤️❤️</div>
 </div>
 <div id="unlock-toast"></div>
 <div id="gameover-overlay">
@@ -159,10 +165,11 @@
 // ── Setup ──────────────────────────────────────────────────────────────────
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
-const scoreEl    = document.getElementById('score');
+const scoreEl    = document.getElementById('score-val');
 const comboEl    = document.getElementById('combo');
 const hiValEl    = document.getElementById('hi-val');
 const levelBadge = document.getElementById('level-badge');
+const livesEl    = document.getElementById('lives-el');
 const toast      = document.getElementById('unlock-toast');
 
 const HUD_H = 56;
@@ -1341,6 +1348,7 @@ function catchCat(cat, px, py, silent) {
 
 function updateHUD() {
   scoreEl.textContent = score;
+  livesEl.textContent = '❤️'.repeat(lives) + '🖤'.repeat(Math.max(0, MAX_LIVES - lives));
   if (combo >= 3) {
     const mult = comboMult();
     comboEl.textContent = `${combo} COMBO ×${mult}`;
@@ -1462,14 +1470,22 @@ function loop(ts) {
     if (a > 0) {
       ctx.save(); ctx.globalAlpha = a;
       ctx.fillStyle = eventBanner.col + 'cc';
-      const bw = Math.min(W*0.82, 400), bh = 58, bx=(W-bw)/2, by=H*.38;
+      const hasDesc = !!eventBanner.desc;
+      const bw = Math.min(W*0.82, 400), bh = hasDesc ? 76 : 58, bx=(W-bw)/2, by=H*.38;
       ctx.shadowColor=eventBanner.col; ctx.shadowBlur=20;
       ctx.beginPath(); ctx.roundRect(bx,by,bw,bh,28); ctx.fill();
       ctx.shadowBlur=0;
-      ctx.font=`bold ${Math.round(bh*.45)}px "Arial Rounded MT Bold",Arial`;
-      ctx.fillStyle='white'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillStyle='white'; ctx.textAlign='center';
       ctx.shadowColor='rgba(0,0,0,0.4)'; ctx.shadowBlur=6;
-      ctx.fillText(eventBanner.text, W/2, by+bh/2);
+      const nameY = hasDesc ? by + bh*0.38 : by + bh/2;
+      ctx.font=`bold ${Math.round(hasDesc ? bh*.34 : bh*.45)}px "Arial Rounded MT Bold",Arial`;
+      ctx.textBaseline='middle';
+      ctx.fillText(eventBanner.text, W/2, nameY);
+      if (hasDesc) {
+        ctx.font=`${Math.round(bh*.22)}px "Arial Rounded MT Bold",Arial`;
+        ctx.globalAlpha = a * 0.85;
+        ctx.fillText(eventBanner.desc, W/2, by + bh*0.72);
+      }
       ctx.restore();
     }
     if (t >= 1) eventBanner = null;
@@ -1689,8 +1705,6 @@ function loop(ts) {
   // Launcher
   drawLauncher();
 
-  // Lives
-  drawLives();
 
   // Inventory
   drawInventory();
@@ -1767,18 +1781,18 @@ let eventBanner = null;    // { text, col, age, dur }
 let eventNextIn = 35 + Math.random()*20;
 
 const EVENT_POOL = [
-  { id:'pluie', name:'🌊 PLUIE DE CHATS !',   col:'#2980B9', dur:8  },
-  { id:'turbo', name:'⚡ MODE TURBO !',          col:'#E67E22', dur:10 },
-  { id:'rares', name:'🌈 VAGUE DORÉE !',         col:'#8E44AD', dur:12 },
-  { id:'nuit',  name:'🌙 NUIT DES CHATS...',     col:'#2C3E50', dur:14 },
-  { id:'boss',  name:'👑 LE BOSS ARRIVE !',      col:'#C0392B', dur:28 },
+  { id:'pluie', name:'🌊 PLUIE DE CHATS !',   desc:'16 chats débarquent d\'un coup !',      col:'#2980B9', dur:8  },
+  { id:'turbo', name:'⚡ MODE TURBO !',          desc:'Chats 2× plus rapides — bonne chance', col:'#E67E22', dur:10 },
+  { id:'rares', name:'🌈 VAGUE DORÉE !',         desc:'Que des chats rares, +points !',        col:'#8E44AD', dur:12 },
+  { id:'nuit',  name:'🌙 NUIT DES CHATS...',     desc:'Visibilité réduite — cherche les yeux', col:'#2C3E50', dur:14 },
+  { id:'boss',  name:'👑 LE BOSS ARRIVE !',      desc:'Gros chat, gros points... gros danger', col:'#C0392B', dur:28 },
 ];
 
 function triggerEvent() {
   const pool = EVENT_POOL.filter(e => e.id !== 'boss' || level >= 6);
   const ev = pool[Math.floor(Math.random()*pool.length)];
   activeEvent = { id: ev.id, timer: ev.dur };
-  eventBanner = { text: ev.name, col: ev.col, age: 0, dur: 2.8 };
+  eventBanner = { text: ev.name, desc: ev.desc, col: ev.col, age: 0, dur: 3.2 };
   eventNextIn = 40 + Math.random()*25;
 
   if (ev.id === 'pluie') {
