@@ -15,7 +15,7 @@ import { deployCarton, explode, loseLife, spawnParticles, spawnPopup } from './e
 import { triggerEvent } from './events';
 import { drawBackground } from './render-bg';
 import { renderCat } from './render-cats';
-import { drawEffect, drawProjectileShape } from './render-fx';
+import { drawEffect, drawLives, drawProjectileShape } from './render-fx';
 import { drawInventory, drawLauncher, drawTrajectory } from './render-ui';
 import { spawnCat, spawnInterval, spawnObject } from './spawn';
 
@@ -414,6 +414,7 @@ function loop(ts) {
 
   // Launcher
   drawLauncher();
+  drawLives();
 
 
   // Inventory
