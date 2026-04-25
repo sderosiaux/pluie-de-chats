@@ -1285,7 +1285,7 @@ function drawTrajectory() {
   for (let i=0;i<steps;i++) {
     x+=vx; y+=vy; vy+=grav;
     if (vx<0&&x<0||vx>0&&x>W) vx*=-1;
-    if (y > H || y < HUD_H) break;
+    if (y > H + 40 || y < HUD_H) break;
     if (i%4===0) {
       const alpha = 0.7 - (i/steps)*0.55;
       ctx.globalAlpha = Math.max(0.08, alpha);
@@ -1361,7 +1361,7 @@ function drawInventory() {
     ctx.save();
 
     if (locked) {
-      // Shimmer sweep
+      // Fond sombre + shimmer
       ctx.save();
       ctx.beginPath(); ctx.arc(sx, sy, slotR, 0, Math.PI*2); ctx.clip();
       const shimT = ((gameTime * 0.42) % 1);
@@ -1375,21 +1375,11 @@ function drawInventory() {
       ctx.restore();
       ctx.strokeStyle = 'rgba(255,206,58,0.5)'; ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.arc(sx, sy, slotR, 0, Math.PI*2); ctx.stroke();
-      // Lock icon
-      const lk = slotR * 0.45;
-      const lockG = ctx.createLinearGradient(sx, sy-lk*.8, sx, sy+lk*.6);
-      lockG.addColorStop(0,'#ffd870'); lockG.addColorStop(1,'#a87820');
-      ctx.strokeStyle = '#ffd870'; ctx.lineWidth = lk*.25; ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.moveTo(sx-lk*.42, sy-lk*.05); ctx.lineTo(sx-lk*.42, sy-lk*.52);
-      ctx.arc(sx, sy-lk*.52, lk*.42, Math.PI, 0); ctx.lineTo(sx+lk*.42, sy-lk*.05); ctx.stroke();
-      ctx.fillStyle = lockG;
-      ctx.beginPath(); roundRect(ctx, sx-lk*.52, sy-lk*.1, lk*1.04, lk*.58, 3); ctx.fill();
-      ctx.fillStyle = '#7a5410'; ctx.beginPath(); ctx.arc(sx, sy+lk*.16, lk*.13, 0, Math.PI*2); ctx.fill();
-      // Niveau requis dans le cercle
-      ctx.font = `800 ${Math.round(slotR*.38)}px "Baloo 2",Arial`;
-      ctx.fillStyle = '#ffce3a'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-      ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 3;
-      ctx.fillText(def.unlockHint, sx, sy + lk*.38);
+      // Niveau requis centré — pas de cadenas
+      ctx.font = `900 ${Math.round(slotR*.52)}px "Baloo 2",Arial`;
+      ctx.fillStyle = '#ffce3a'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 4;
+      ctx.fillText(def.unlockHint, sx, sy);
       ctx.shadowBlur = 0;
 
     } else {
@@ -1706,7 +1696,7 @@ function loop(ts) {
         }
       }
       if(c.x<c.size||c.x>W-c.size){c.vx*=-1;c.x=Math.max(c.size,Math.min(W-c.size,c.x));}
-      if(c.y>H-INV_H-c.size){
+      if(c.y>H+c.size){
         if(c.type.pts>0){ combo=0; updateHUD(); }
         cats.splice(i,1);continue;
       }
@@ -1779,7 +1769,7 @@ function loop(ts) {
     if(!p.active)continue;
 
     // off-screen (bottom or top after HUD)
-    if(p.y>H-INV_H+20||p.y<HUD_H){
+    if(p.y>H+20||p.y<HUD_H){
       if(p.type==='catnip')catnipExplode(p);
       else if(p.type==='carton')deployCarton(p);
       projectiles.splice(i,1);continue;
