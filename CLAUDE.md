@@ -24,16 +24,37 @@ index.html
 
 ## Style visuel — Kawaii chibi
 
-Tous les sprites (chats, armes, objets) suivent le même style :
+Tous les sprites (chats, armes, objets) suivent le même style. **Le prompt DOIT inclure
+les négatifs ci-dessous sinon Gemini retourne régulièrement des artefacts (2 sujets,
+fenêtre Photoshop, sujet coupé, halo sticker blanc).**
 
 ```
-Kawaii chibi [sujet] sticker illustration, smooth digital art, NOT pixel art,
-bold clean black outlines, flat candy-pop colors, soft smooth shading,
-pure white background, no frame no border no box, floating [character/object],
-centered, big round head on tiny body (pour les personnages), anti-aliased clean edges
+SUBJECT: a single ONE [sujet], exactly one subject, alone in the frame.
+
+STYLE: Kawaii chibi sticker illustration, smooth digital art, NOT pixel art,
+bold clean black outlines integrated into the shape (no outer white halo),
+flat candy-pop colors, soft smooth shading, anti-aliased clean edges,
+big round head on tiny body (pour les personnages).
+
+COMPOSITION: subject perfectly centered, fully visible from head to toe,
+generous empty margin (~20%) on all four sides, NOTHING touching the edges,
+no cropping, no zoom-in, no close-up.
+
+BACKGROUND: pure flat white background only (#FFFFFF), nothing else.
+
+STRICT NEGATIVES — DO NOT INCLUDE ANY OF THESE:
+- no second subject, no duplicate, no twin, no group, no pair, no reflection
+- no UI, no window, no application interface, no Photoshop / Illustrator / Figma chrome,
+  no toolbar, no panel, no menu bar, no software screenshot, no mockup frame
+- no picture frame, no border, no box, no card, no rounded rectangle around the subject
+- no white sticker outline / die-cut halo / outer glow / drop shadow
+- no text, no labels, no watermark, no logo, no signature
+- no checkered transparency pattern, no grid, no gradient background
 ```
 
 Génération via `~/.claude/scripts/generate_image.py` (Gemini primary, OpenAI fallback).
+**Toujours** réutiliser ce template. Si le résultat sort raté, regen sans relâcher les
+contraintes — ne jamais simplifier le prompt pour "voir ce que ça donne".
 
 ## Pipeline sprites
 
