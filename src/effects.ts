@@ -1,14 +1,16 @@
-// @ts-nocheck
 import { maybeAddHighscore } from './highscores';
 import { checkUnlocks } from './unlock';
 import { updateHUD, catchCat } from './catch';
-import { state, particles, popups, hairballs, cats, projectiles, effects, rechargeTimers, upgradeFlags, pickCounts, pendingLevelUps, unlockedTypes } from './state';
+import {
+  state, particles, popups, hairballs, cats, projectiles, effects,
+  rechargeTimers, upgradeFlags, pickCounts, pendingLevelUps, unlockedTypes,
+} from './state';
 import { CONFETTI, SCENES } from './config';
 import { PROJ_DEFS, BASE_PROJ_DEFS } from './data';
-import { ctx } from './canvas';
+import type { Cat, Projectile } from './types';
 
 // ── Particles & popups ────────────────────────────────────────────────────────
-export function spawnParticles(x,y,count,fail) {
+export function spawnParticles(x: number, y: number, count: number, fail: boolean): void {
   for (let i=0;i<count;i++) {
     const a=Math.random()*Math.PI*2, spd=3+Math.random()*7;
     particles.push({
@@ -19,15 +21,15 @@ export function spawnParticles(x,y,count,fail) {
     });
   }
 }
-export function spawnPopup(x,y,text,col) {
-  popups.push({ x, y, text, col, life:1, vy:-2.8 });
+export function spawnPopup(x: number, y: number, text: string, col: string): void {
+  popups.push({ x, y, text, col, life: 1, vy: -2.8 });
 }
 
-export function showStaticMsg(x, y, text, col) {
+export function showStaticMsg(x: number, y: number, text: string, col: string): void {
   state.staticMsg = { x, y, text, col, age: 0, dur: 1.4 };
 }
 
-export function loseLife() {
+export function loseLife(): void {
   if (upgradeFlags.shield) { upgradeFlags.shield=false; spawnPopup(state.LAUNCHER.x,state.LAUNCHER.y-60,'🛡️ BLOQUÉ !','#3DC47E'); return; }
   if (state.gameOver || state.lives <= 0) return;
   state.lives--;
@@ -40,24 +42,24 @@ export function loseLife() {
   if (state.lives <= 0) triggerGameOver();
 }
 
-export function gainLife() {
+export function gainLife(): void {
   if (state.lives >= state.MAX_LIVES) return;
   state.lives++;
   spawnPopup(state.LAUNCHER.x, state.LAUNCHER.y - 50, '+1 ❤️', '#27AE60');
 }
 
-export function triggerGameOver() {
+export function triggerGameOver(): void {
   state.gameOver = true;
-  document.getElementById('go-score').textContent = state.score;
-  document.getElementById('go-hi-val').textContent = state.hiScore;
-  document.getElementById('gameover-overlay').classList.add('show');
+  const goScore = document.getElementById('go-score');
+  if (goScore) goScore.textContent = String(state.score);
+  const goHi = document.getElementById('go-hi-val');
+  if (goHi) goHi.textContent = String(state.hiScore);
+  document.getElementById('gameover-overlay')?.classList.add('show');
   // Tentative d'ajout au top 10 local
   setTimeout(() => maybeAddHighscore(state.score), 100);
 }
 
-/* extracted to module */
-
-export function resetGame() {
+export function resetGame(): void {
   state.score = 0; state.combo = 0; state.comboTimer = 0; state.level = 1; state.lives = 5; state.gameOver = false;
   state.levelUpPaused = false; state.timeScale = 1; state.slowMoTimer = 0;
   state.wetTimer = 0; state.spicyTimer = 0;
@@ -66,23 +68,25 @@ export function resetGame() {
   pendingLevelUps.length = 0;
   cats.length = 0; projectiles.length = 0; effects.length = 0; particles.length = 0; popups.length = 0; hairballs.length = 0;
   state.laserHitWidth = 6;
-  for (const [id, base] of Object.entries(BASE_PROJ_DEFS)) {
-    Object.assign(PROJ_DEFS[id], base);
+  for (const [id, base] of Object.entries(BASE_PROJ_DEFS) as Array<[string, any]>) {
+    Object.assign((PROJ_DEFS as any)[id], base);
     rechargeTimers[id] = 0;
   }
   state.runId++;
   state.selectedType = 'pelote';
   unlockedTypes.clear(); unlockedTypes.add('pelote');
-  state.activeEvent = null; state.eventBanner = null; state.eventNextIn = 35 + Math.random()*20;
+  state.activeEvent = null;
+  state.eventBanner = null;
+  state.eventNextIn = 35 + Math.random() * 20;
   state.currentScene = SCENES[Math.floor(Math.random() * SCENES.length)];
   checkUnlocks();
   updateHUD();
-  document.getElementById('gameover-overlay').classList.remove('show');
+  document.getElementById('gameover-overlay')?.classList.remove('show');
 }
 
 
 // ── Trap effects ──────────────────────────────────────────────────────────────
-export function applyTrapEffect(cat, px, py) {
+export function applyTrapEffect(cat: Cat, px?: number, py?: number): void {
   const kind = cat.type.trapKind || 'bomb';
   const x = px || cat.x, y = py || cat.y;
   switch (kind) {
@@ -124,7 +128,7 @@ export function applyTrapEffect(cat, px, py) {
     }
     case 'vacuum': {
       // Vide le stock pelote en cours et déclenche le recharge
-      const pdef = PROJ_DEFS.pelote;
+      const pdef = (PROJ_DEFS as any).pelote;
       if (pdef.stock > 0) {
         pdef.stock = 0;
         if (rechargeTimers.pelote <= 0) rechargeTimers.pelote = pdef.recharge;
@@ -139,32 +143,40 @@ export function applyTrapEffect(cat, px, py) {
 
 
 // ── Effect spawners ───────────────────────────────────────────────────────────
-export function explode(p){
-  const def=PROJ_DEFS.artifice;
-  effects.push({type:'explosion',x:p.x,y:p.y,maxR:def.blastR,life:1,dur:0.7,age:0});
-  let caught=0;
-  for(const cat of cats){
-    if(cat.caught)continue;
-    if(Math.hypot(cat.x-p.x,cat.y-p.y)<def.blastR+cat.size*.5){
-      catchCat(cat,p.x,p.y,caught>0);
+export function explode(p: Projectile): void {
+  const def = (PROJ_DEFS as any).artifice;
+  effects.push({ type: 'explosion', x: p.x, y: p.y, maxR: def.blastR, life: 1, dur: 0.7, age: 0 });
+  let caught = 0;
+  for (const cat of cats) {
+    if (cat.caught) continue;
+    if (Math.hypot(cat.x - p.x, cat.y - p.y) < def.blastR + cat.size * .5) {
+      catchCat(cat, p.x, p.y, caught > 0);
       caught++;
     }
   }
-  const multiLabels = ['','','DOUBLE !','TRIPLE !','×4 CHATS !','×5 CHATS !!'];
-  if (caught >= 2) spawnPopup(p.x, p.y-55, multiLabels[Math.min(caught,5)] || `×${caught} CHATS !`, '#F1C40F');
-  spawnParticles(p.x,p.y,25,false);
-  ['#FFD700','#FF6B6B','#4ECDC4','#A29BFE'].forEach(col=>{
-    for(let i=0;i<4;i++){
-      const a=Math.random()*Math.PI*2,spd=4+Math.random()*8;
-      particles.push({x:p.x,y:p.y,vx:Math.cos(a)*spd,vy:Math.sin(a)*spd-4,
-        col,sz:6+Math.random()*8,life:1,decay:.012,rot:0,rotSpd:(Math.random()-.5)*.4});
+  const multiLabels = ['', '', 'DOUBLE !', 'TRIPLE !', '×4 CHATS !', '×5 CHATS !!'];
+  if (caught >= 2) {
+    spawnPopup(p.x, p.y - 55, multiLabels[Math.min(caught, 5)] || `×${caught} CHATS !`, '#F1C40F');
+  }
+  spawnParticles(p.x, p.y, 25, false);
+  ['#FFD700', '#FF6B6B', '#4ECDC4', '#A29BFE'].forEach(col => {
+    for (let i = 0; i < 4; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const spd = 4 + Math.random() * 8;
+      particles.push({
+        x: p.x, y: p.y,
+        vx: Math.cos(a) * spd, vy: Math.sin(a) * spd - 4,
+        col, sz: 6 + Math.random() * 8,
+        life: 1, decay: .012,
+        rot: 0, rotSpd: (Math.random() - .5) * .4,
+      });
     }
   });
 }
 
-export function deployCarton(p){
-  const def=PROJ_DEFS.carton;
-  effects.push({type:'carton_box',x:p.x,y:p.y,r:def.pullR,life:1,dur:def.pullDur,age:0});
-  spawnPopup(p.x,p.y-40,'📦 Carton posé !','#D4A017');
+export function deployCarton(p: Projectile): void {
+  const def = (PROJ_DEFS as any).carton;
+  effects.push({ type: 'carton_box', x: p.x, y: p.y, r: def.pullR, life: 1, dur: def.pullDur, age: 0 });
+  spawnPopup(p.x, p.y - 40, '📦 Carton posé !', '#D4A017');
 }
 

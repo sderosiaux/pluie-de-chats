@@ -1,13 +1,12 @@
-// @ts-nocheck
-import { state, hairballs } from './state';
+import { state } from './state';
 import { ctx } from './canvas';
-import { HUD_H, MIN_SPEED, MAX_SPEED } from './config';
 import { PROJ_DEFS } from './data';
 import { WEAPON_SPRITES } from './sprites';
+import type { Projectile, Effect } from './types';
 
 // ── Projectile drawing ────────────────────────────────────────────────────────
-export function drawProjectileShape(p) {
-  const def = PROJ_DEFS[p.type];
+export function drawProjectileShape(p: Projectile): void {
+  const def = (PROJ_DEFS as any)[p.type];
   ctx.save();
   ctx.translate(p.x, p.y);
 
@@ -98,7 +97,7 @@ export function drawProjectileShape(p) {
 
 
 // ── Lives display ─────────────────────────────────────────────────────────────
-export function drawLives() {
+export function drawLives(): void {
   const heartSize = Math.round(Math.min(state.W * 0.048, 20));
   const gap = heartSize * 1.28;
   const totalW = state.MAX_LIVES * gap;
@@ -117,20 +116,21 @@ export function drawLives() {
 
 
 // ── Effects drawing ───────────────────────────────────────────────────────────
-export function drawEffect(e) {
+export function drawEffect(e: Effect): void {
   switch (e.type) {
     case 'explosion': {
       const prog = 1 - e.life;
-      const r = e.maxR * (0.3 + prog * 0.7);
+      const r = (e.maxR || 0) * (0.3 + prog * 0.7);
+      const ex = e.x || 0, ey = e.y || 0;
       // outer ring
       ctx.globalAlpha = e.life * 0.7;
       ctx.strokeStyle = '#F1C40F'; ctx.lineWidth = 6 * e.life;
-      ctx.beginPath(); ctx.arc(e.x, e.y, r, 0, Math.PI*2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(ex, ey, r, 0, Math.PI*2); ctx.stroke();
       // inner glow
-      const g = ctx.createRadialGradient(e.x,e.y,0,e.x,e.y,r*.8);
+      const g = ctx.createRadialGradient(ex,ey,0,ex,ey,r*.8);
       g.addColorStop(0,`rgba(255,200,0,${e.life*.4})`);
       g.addColorStop(1,'rgba(255,100,0,0)');
-      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(e.x,e.y,r*.8,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(ex,ey,r*.8,0,Math.PI*2); ctx.fill();
       ctx.globalAlpha = 1;
       break;
     }
@@ -139,19 +139,20 @@ export function drawEffect(e) {
       const intensity = e.life > 0.4 ? 1 : e.life / 0.4;
       ctx.globalAlpha = intensity;
       const lScale = state.laserHitWidth / 6;
+      const x1 = e.x1 || 0, y1 = e.y1 || 0, x2 = e.x2 || 0, y2 = e.y2 || 0;
       // wide outer glow
       ctx.strokeStyle = `rgba(255,50,50,${0.25*intensity})`; ctx.lineWidth = 22 * lScale;
-      ctx.beginPath(); ctx.moveTo(e.x1,e.y1); ctx.lineTo(e.x2,e.y2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
       // mid glow
       ctx.strokeStyle = `rgba(255,100,100,${0.4*intensity})`; ctx.lineWidth = 10 * lScale;
-      ctx.beginPath(); ctx.moveTo(e.x1,e.y1); ctx.lineTo(e.x2,e.y2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
       // core beam
       ctx.strokeStyle = '#FF1744'; ctx.lineWidth = 3 * lScale;
       ctx.shadowColor = '#FF1744'; ctx.shadowBlur = 25 * lScale;
-      ctx.beginPath(); ctx.moveTo(e.x1,e.y1); ctx.lineTo(e.x2,e.y2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
       // bright center
       ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = lScale; ctx.shadowBlur = 0;
-      ctx.beginPath(); ctx.moveTo(e.x1,e.y1); ctx.lineTo(e.x2,e.y2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
       ctx.restore();
       break;
     }
@@ -194,15 +195,16 @@ export function drawEffect(e) {
     }
     case 'carton_box': {
       const sz = 48 + (1-e.life)*10;
+      const ex = e.x || 0, ey = e.y || 0, er = e.r || 0;
       // attraction field
-      const g2 = ctx.createRadialGradient(e.x,e.y,sz,e.x,e.y,e.r);
+      const g2 = ctx.createRadialGradient(ex,ey,sz,ex,ey,er);
       g2.addColorStop(0,`rgba(212,160,23,${e.life*.25})`);
       g2.addColorStop(1,'rgba(212,160,23,0)');
-      ctx.fillStyle=g2; ctx.beginPath(); ctx.arc(e.x,e.y,e.r,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle=g2; ctx.beginPath(); ctx.arc(ex,ey,er,0,Math.PI*2); ctx.fill();
       // sprite
       ctx.save();
-      ctx.translate(e.x, e.y + Math.sin(state.gameTime*4)*3);
-      const _cSpr = typeof WEAPON_SPRITES !== 'undefined' && WEAPON_SPRITES['carton'];
+      ctx.translate(ex, ey + Math.sin(state.gameTime*4)*3);
+      const _cSpr = WEAPON_SPRITES['carton'];
       if (_cSpr && _cSpr.complete && _cSpr.naturalWidth > 0) {
         ctx.globalAlpha = e.life;
         ctx.drawImage(_cSpr, -sz, -sz, sz*2, sz*2);

@@ -1,15 +1,14 @@
-// @ts-nocheck
 import { state, unlockedTypes, rechargeTimers } from './state';
 import { ctx } from './canvas';
-import { HUD_H, DIAL_R, DIAL_HUB_R, DIAL_ANGLES, MAX_PULL, TYPE_ORDER } from './config';
+import { HUD_H, DIAL_R, DIAL_ANGLES, MAX_PULL, TYPE_ORDER } from './config';
 import { PROJ_DEFS } from './data';
 import { drawProjIcon } from './render-cats';
 import { WEAPON_SPRITES } from './sprites';
 
 // ── Trajectory preview ────────────────────────────────────────────────────────
-export function drawTrajectory() {
+export function drawTrajectory(): void {
   if (!state.isDragging || !state.dragPos) return;
-  const def = PROJ_DEFS[state.selectedType];
+  const def = (PROJ_DEFS as any)[state.selectedType];
   if (def.stock <= 0) return;
 
   const dx = state.dragPos.x - state.LAUNCHER.x, dy = state.dragPos.y - state.LAUNCHER.y;
@@ -62,7 +61,7 @@ export function drawTrajectory() {
 
 
 // ── Launcher visual ───────────────────────────────────────────────────────────
-export function drawLauncher() {
+export function drawLauncher(): void {
   const lx = state.LAUNCHER.x, ly = state.LAUNCHER.y;
   ctx.save();
 
@@ -91,7 +90,7 @@ export function drawLauncher() {
 
 
 // ── Inventory — Candy Pop Dial Radial ─────────────────────────────────────────
-export function drawPadlock(cx, cy, size) {
+export function drawPadlock(cx: number, cy: number, size: number): void {
   const bw = size * 1.05, bh = size * 0.78;
   const bx = cx - bw / 2, by = cy - bh * 0.1;
   const shackleR = bw * 0.28;
@@ -128,7 +127,7 @@ export function drawPadlock(cx, cy, size) {
   ctx.restore();
 }
 
-export function drawInventory() {
+export function drawInventory(): void {
   const dcx = state.W / 2, dcy = state.DIAL_CY;
 
   for (let i = 0; i < TYPE_ORDER.length; i++) {
@@ -258,7 +257,7 @@ export function drawInventory() {
 
 }
 
-export function roundRect(ctx,x,y,w,h,r){
+export function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number): void {
   ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
   ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
   ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);

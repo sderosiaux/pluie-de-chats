@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { state, clouds, bgFloaters } from './state';
 import { ctx } from './canvas';
 import { HUD_H, FLOATER_COLS, HEART_COLS, FLOATER_SHAPES } from './config';
@@ -26,7 +25,7 @@ for (let i = 0; i < 9; i++) {
     shape,
   });
 }
-export function drawFloaters() {
+export function drawFloaters(): void {
   for (const f of bgFloaters) {
     f.x += f.drift; f.y += f.vy; f.rot += f.rotSpd;
     if (f.y > state.H + f.sz * 2) { f.y = -f.sz * 2; f.x = Math.random() * state.W; }
@@ -73,7 +72,7 @@ export function drawFloaters() {
   }
   ctx.globalAlpha = 1;
 }
-export function drawBackground() {
+export function drawBackground(): void {
   const isNight = state.activeEvent && state.activeEvent.id === 'nuit';
   const g = ctx.createLinearGradient(0, 0, 0, state.H);
   if (isNight) {
@@ -100,7 +99,7 @@ export function drawBackground() {
   const lapHash = Math.abs(Math.sin(lapIdx * 12.9898 + 78.233)) % 1;
   const baseY = HUD_H + 50 + lapHash * 90;
   const celestY = baseY + Math.sin(state.gameTime * 0.4) * 5;
-  if (isNight && typeof MOON_SPRITE !== 'undefined' && MOON_SPRITE.complete && MOON_SPRITE.naturalWidth > 0) {
+  if (isNight && MOON_SPRITE.complete && MOON_SPRITE.naturalWidth > 0) {
     // Halo bleuté autour de la lune
     const haloR = celestR * 1.7;
     const moonHalo = ctx.createRadialGradient(celestX, celestY, celestR * .3, celestX, celestY, haloR);
@@ -147,13 +146,7 @@ export function drawBackground() {
 
 
 // ── Scenery (tileable AI backgrounds) ────────────────────────────────────────
-/* extracted to module */
-/* extracted to module */
-// FLOATER_SPRITES removed (paw/yarn unused)
-
-
-
-export function drawScenery() {
+export function drawScenery(): void {
   const sprite = BG_SPRITES[state.currentScene];
   if (!sprite || !sprite.complete || !sprite.naturalWidth) return;
   const dispH = state.DECOR_H;

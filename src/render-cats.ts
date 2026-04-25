@@ -892,7 +892,7 @@ export function drawCatShape(s, type, cat) {
     for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(-s*.7+i*s*.15,s*.1+i*s*.1);ctx.lineTo(-s*.95+i*s*.15,s*.1+i*s*.1);ctx.stroke();}
   }
 }
-export function drawProjIcon(id, cx, cy, size, targetCtx) {
+export function drawProjIcon(id: string, cx: number, cy: number, size: number, targetCtx?: CanvasRenderingContext2D) {
   const ctx = targetCtx || window._gameCtx;
   const r = size;
   ctx.save();

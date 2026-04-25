@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { scoreEl, comboEl, hiValEl, levelBadge, livesEl } from './dom';
 import { markCaught } from './bestiary';
 import { ctx } from './canvas';
@@ -6,16 +5,16 @@ import { checkUnlocks } from './unlock';
 import { checkLevelUp } from './levelup';
 import { Music } from './audio';
 import { HUD_H, LEVELS } from './config';
-import { state, cats, projectiles, effects, particles, popups, hairballs, caughtTypes, upgradeFlags, pickCounts, pendingLevelUps } from './state';
-import { CAT_TYPES } from './data';
+import { state, cats, particles, upgradeFlags } from './state';
 import { spawnParticles, spawnPopup, applyTrapEffect, gainLife } from './effects';
+import type { Cat } from './types';
 
 // ── Catch cat ─────────────────────────────────────────────────────────────────
-export function comboMult() {
+export function comboMult(): number {
   return state.combo >= 9 ? 4 : state.combo >= 6 ? 3 : state.combo >= 3 ? 2 : 1;
 }
 
-export function catchCat(cat, px, py, silent) {
+export function catchCat(cat: Cat, px?: number, py?: number, silent?: boolean): void {
   if (cat.caught) return;
   cat.caught = true;
   if (cat.isObject) {
@@ -25,7 +24,7 @@ export function catchCat(cat, px, py, silent) {
       state.score += cat.type.pts;
       spawnPopup(px||cat.x, (py||cat.y)-20, `+${cat.type.pts} 🐭`, '#C8A8E8');
       spawnParticles(cat.x, cat.y, 5, false);
-      if (state.score > state.hiScore) { state.hiScore=state.score; localStorage.setItem('pdc_hi',state.hiScore); if (hiValEl) hiValEl.textContent=state.hiScore; }
+      if (state.score > state.hiScore) { state.hiScore = state.score; localStorage.setItem('pdc_hi', String(state.hiScore)); if (hiValEl) hiValEl.textContent = String(state.hiScore); }
     } else {
       spawnPopup(px||cat.x, (py||cat.y)-20, '🪶 ~', '#C8A8E8');
     }
@@ -65,31 +64,33 @@ export function catchCat(cat, px, py, silent) {
   }
   markCaught(cat.type.id);
   Music.sfxCatch(pts);
-  if (state.score > state.hiScore) { state.hiScore=state.score; localStorage.setItem('pdc_hi',state.hiScore); if (hiValEl) hiValEl.textContent=state.hiScore; }
+  if (state.score > state.hiScore) { state.hiScore = state.score; localStorage.setItem('pdc_hi', String(state.hiScore)); if (hiValEl) hiValEl.textContent = String(state.hiScore); }
   checkUnlocks();
   checkLevelUp();
   updateHUD();
 }
 
-export function updateHUD() {
-  scoreEl.textContent = state.score;
-  livesEl.textContent = '❤️'.repeat(state.lives) + '🖤'.repeat(Math.max(0, state.MAX_LIVES - state.lives));
-  if (state.combo >= 3) {
-    const mult = comboMult();
-    comboEl.textContent = `${state.combo} COMBO ×${mult}`;
-    comboEl.classList.add('active');
-  } else if (state.combo > 0) {
-    comboEl.textContent = `${state.combo} ↗`;
-    comboEl.classList.remove('active');
-  } else {
-    comboEl.textContent = '';
-    comboEl.classList.remove('active');
+export function updateHUD(): void {
+  if (scoreEl) scoreEl.textContent = String(state.score);
+  if (livesEl) livesEl.textContent = '❤️'.repeat(state.lives) + '🖤'.repeat(Math.max(0, state.MAX_LIVES - state.lives));
+  if (comboEl) {
+    if (state.combo >= 3) {
+      const mult = comboMult();
+      comboEl.textContent = `${state.combo} COMBO ×${mult}`;
+      comboEl.classList.add('active');
+    } else if (state.combo > 0) {
+      comboEl.textContent = `${state.combo} ↗`;
+      comboEl.classList.remove('active');
+    } else {
+      comboEl.textContent = '';
+      comboEl.classList.remove('active');
+    }
   }
   const isMax = state.level >= LEVELS.length;
-  levelBadge.textContent = isMax ? '★ MAX' : `★ Niv. ${state.level}`;
+  if (levelBadge) levelBadge.textContent = isMax ? '★ MAX' : `★ Niv. ${state.level}`;
 }
 
-export function drawBossBar() {
+export function drawBossBar(): void {
   const boss = cats.find(c => c.type.id === 'boss' && !c.caught);
   if (!boss) return;
   const pct = boss.hp / boss.maxHp;
@@ -120,7 +121,7 @@ export function drawBossBar() {
   ctx.restore();
 }
 
-export function drawXPBar() {
+export function drawXPBar(): void {
   const isMax = state.level >= LEVELS.length;
   const prev = LEVELS[state.level - 1].threshold;
   const next = isMax ? prev : LEVELS[state.level].threshold;
