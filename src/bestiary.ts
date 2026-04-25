@@ -6,12 +6,46 @@ import type { CatType } from './types';
 
 type Rarity = 'common' | 'uncommon' | 'rare' | 'legendary';
 
+// Rareté curée par identité du chat (pas par poids de spawn).
+// Légendaire : monuments, boss, mythiques.
+// Rare       : super-héros, mafia, spéciaux iconiques.
+// Peu commun : pouvoirs/rôles distinctifs, races.
+// Commun     : chats de base + petits métiers du quotidien.
+const RARITY_BY_ID: Record<string, Rarity> = {
+  // Légendaires
+  liberte: 'legendary', eiffel: 'legendary', moai: 'legendary',
+  pagode: 'legendary', sphinx: 'legendary',
+  boss: 'legendary', rainbow: 'legendary',
+  // Rares — super-héros
+  batman: 'rare', superman: 'rare', spiderman: 'rare',
+  flash: 'rare', hulk: 'rare', catwoman: 'rare',
+  // Rares — mafia
+  parrain: 'rare', tireur: 'rare', garde: 'rare', trafiquant: 'rare',
+  // Rares — spéciaux iconiques
+  astro: 'rare', fantome: 'rare', samourai: 'rare',
+  // Peu communs — pouvoirs / rôles distinctifs
+  bouclier: 'uncommon', furtif: 'uncommon', griffeur: 'uncommon',
+  medecin: 'uncommon', crachat: 'uncommon',
+  ninja: 'uncommon', magicien: 'uncommon', sorciere: 'uncommon',
+  scientifique: 'uncommon', robot: 'uncommon',
+  chevalier: 'uncommon', viking: 'uncommon',
+  micro: 'uncommon',
+  // Peu communs — races
+  siamois: 'uncommon', sphynx: 'uncommon', persan: 'uncommon',
+  scottish: 'uncommon', bengal: 'uncommon',
+  // Communs — chats de base + petits métiers
+  tabby: 'common', noir: 'common', blanc: 'common', gris: 'common',
+  faux: 'common', zigzag: 'common', rapide: 'common',
+  pompier: 'common', boulanger: 'common', detective: 'common',
+  pirate: 'common', policier: 'common', cowboy: 'common',
+  marin: 'common', gamer: 'common', artiste: 'common',
+  jardinier: 'common', musicien: 'common', cuisinier: 'common',
+  clown: 'common', sportif: 'common', professeur: 'common',
+  facteur: 'common', infirmier: 'common',
+};
+
 function getRarity(t: CatType): Rarity {
-  const w = t.w;
-  if (w === 0 || w <= 3) return 'legendary'; // boss + chats très rares
-  if (w <= 7) return 'rare';
-  if (w <= 13) return 'uncommon';
-  return 'common';
+  return RARITY_BY_ID[t.id] || 'common';
 }
 
 const RARITY_ORDER: Record<Rarity, number> = { common: 0, uncommon: 1, rare: 2, legendary: 3 };
