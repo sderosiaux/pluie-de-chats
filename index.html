@@ -1385,10 +1385,12 @@ function drawInventory() {
       ctx.fillStyle = lockG;
       ctx.beginPath(); roundRect(ctx, sx-lk*.52, sy-lk*.1, lk*1.04, lk*.58, 3); ctx.fill();
       ctx.fillStyle = '#7a5410'; ctx.beginPath(); ctx.arc(sx, sy+lk*.16, lk*.13, 0, Math.PI*2); ctx.fill();
-      // Level label below
-      ctx.font = `800 ${Math.round(slotR*.42)}px "Baloo 2",Arial`;
+      // Niveau requis dans le cercle
+      ctx.font = `800 ${Math.round(slotR*.38)}px "Baloo 2",Arial`;
       ctx.fillStyle = '#ffce3a'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-      ctx.fillText(def.unlockHint, sx, sy + slotR + 3);
+      ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 3;
+      ctx.fillText(def.unlockHint, sx, sy + lk*.38);
+      ctx.shadowBlur = 0;
 
     } else {
       const tone = def.col;
@@ -1476,13 +1478,6 @@ function drawInventory() {
   }
 
 
-  // Hint
-  ctx.save();
-  ctx.font = `500 ${Math.min(W * 0.025, 10)}px "Fredoka",Arial`;
-  ctx.fillStyle = 'rgba(42,27,74,0.45)'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-  const sab = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sab')||'0',10)||0;
-  ctx.fillText("↑ Glisse pour viser  ·  appuie pour changer d'arme", W/2, H - sab - 3);
-  ctx.restore();
 }
 
 function roundRect(ctx,x,y,w,h,r){
