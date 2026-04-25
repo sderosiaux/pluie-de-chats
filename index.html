@@ -140,6 +140,100 @@
     transition: transform .12s, box-shadow .12s;
   }
   #replay-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #a87820; }
+
+  /* ── Level-up overlay ── */
+  #levelup-overlay {
+    display: none; position: fixed; inset: 0; z-index: 90;
+    flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+    overflow: hidden;
+    background: #2d0e7a;
+  }
+  #levelup-overlay.show { display: flex; }
+  #lu-rays {
+    position: absolute; inset: -60%;
+    background: conic-gradient(
+      from 0deg,
+      rgba(255,255,255,0.10) 0deg, transparent 15deg,
+      rgba(255,255,255,0.10) 30deg, transparent 45deg,
+      rgba(255,255,255,0.10) 60deg, transparent 75deg,
+      rgba(255,255,255,0.10) 90deg, transparent 105deg,
+      rgba(255,255,255,0.10) 120deg, transparent 135deg,
+      rgba(255,255,255,0.10) 150deg, transparent 165deg,
+      rgba(255,255,255,0.10) 180deg, transparent 195deg,
+      rgba(255,255,255,0.10) 210deg, transparent 225deg,
+      rgba(255,255,255,0.10) 240deg, transparent 255deg,
+      rgba(255,255,255,0.10) 270deg, transparent 285deg,
+      rgba(255,255,255,0.10) 300deg, transparent 315deg,
+      rgba(255,255,255,0.10) 330deg, transparent 345deg,
+      rgba(255,255,255,0.10) 360deg
+    );
+    animation: lu-spin 10s linear infinite;
+    pointer-events: none;
+  }
+  @keyframes lu-spin { to { transform: rotate(360deg); } }
+  .lu-sub {
+    font-family: 'Fredoka', sans-serif; font-weight: 600;
+    font-size: clamp(13px,3.5vw,16px); color: #ffce3a;
+    letter-spacing: 4px; text-transform: uppercase;
+    position: relative; z-index: 2;
+  }
+  .lu-num {
+    font-family: 'Baloo 2', sans-serif; font-weight: 900;
+    font-size: clamp(72px,18vw,96px); line-height: 1;
+    color: #fff;
+    text-shadow: 0 6px 0 rgba(0,0,0,.3), 0 0 40px rgba(255,206,58,.5);
+    position: relative; z-index: 2;
+    animation: lu-pop 0.45s cubic-bezier(.17,.67,.35,1.4) both;
+  }
+  @keyframes lu-pop { from { transform: scale(0.4); opacity:0; } to { transform: scale(1); opacity:1; } }
+  .lu-unlock-title {
+    font-family: 'Baloo 2', sans-serif; font-weight: 900;
+    font-size: clamp(18px,5vw,24px); color: #ffce3a;
+    text-shadow: 0 3px 0 rgba(0,0,0,.3);
+    position: relative; z-index: 2; margin-top: 4px;
+    letter-spacing: 1px;
+  }
+  .lu-card {
+    position: relative; z-index: 2;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.08);
+    border: 3px solid rgba(255,206,58,0.6);
+    border-radius: 20px; padding: 18px 28px;
+    box-shadow: 0 0 40px rgba(255,206,58,0.25), 0 8px 0 rgba(0,0,0,.2);
+    animation: lu-pop 0.5s 0.15s cubic-bezier(.17,.67,.35,1.4) both;
+    min-width: 160px;
+  }
+  .lu-card canvas { border-radius: 12px; }
+  .lu-card-name {
+    font-family: 'Baloo 2', sans-serif; font-weight: 900;
+    font-size: clamp(16px,4.5vw,20px); color: #fff;
+    letter-spacing: 1px; text-transform: uppercase;
+  }
+  .lu-card-desc {
+    font-family: 'Fredoka', sans-serif; font-weight: 500;
+    font-size: clamp(13px,3.5vw,15px); color: rgba(255,248,230,0.82);
+    text-align: center; max-width: 200px;
+  }
+  #continuer-btn {
+    position: relative; z-index: 2;
+    font-family: 'Baloo 2', sans-serif; font-weight: 800;
+    font-size: clamp(16px,4vw,20px); color: #2a1b4a;
+    background: linear-gradient(180deg, #ffce3a, #e8a820);
+    border: none; padding: 14px 40px; border-radius: 30px;
+    box-shadow: 0 6px 0 #a87820, 0 10px 24px rgba(255,206,58,.35);
+    cursor: pointer; margin-top: 8px; letter-spacing: 1px;
+    transition: transform .12s, box-shadow .12s;
+  }
+  #continuer-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #a87820; }
+  #lu-confetti { position: absolute; inset: 0; pointer-events: none; z-index: 3; overflow: hidden; }
+  .lu-conf-piece {
+    position: absolute; width: 10px; height: 14px; border-radius: 2px;
+    animation: lu-conf-fall linear forwards;
+  }
+  @keyframes lu-conf-fall {
+    0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(110vh) rotate(720deg); opacity: 0.3; }
+  }
 </style>
 </head>
 <body>
@@ -152,6 +246,19 @@
   <div id="lives-el">❤️❤️❤️❤️❤️</div>
 </div>
 <div id="unlock-toast"></div>
+<div id="levelup-overlay">
+  <div id="lu-rays"></div>
+  <div id="lu-confetti"></div>
+  <div class="lu-sub">NIVEAU SUIVANT</div>
+  <div class="lu-num" id="lu-num">1</div>
+  <div class="lu-unlock-title" id="lu-unlock-title"></div>
+  <div class="lu-card" id="lu-card">
+    <canvas id="lu-icon-canvas" width="90" height="90"></canvas>
+    <div class="lu-card-name" id="lu-card-name"></div>
+    <div class="lu-card-desc" id="lu-card-desc"></div>
+  </div>
+  <button id="continuer-btn">CONTINUER →</button>
+</div>
 <div id="gameover-overlay">
   <div class="go-emoji">😿</div>
   <div class="go-title">GAME OVER</div>
@@ -165,14 +272,20 @@
 // ── Setup ──────────────────────────────────────────────────────────────────
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
+window._gameCtx = ctx;
 const scoreEl    = document.getElementById('score-val');
 const comboEl    = document.getElementById('combo');
 const hiValEl    = document.getElementById('hi-val');
 const levelBadge = document.getElementById('level-badge');
 const livesEl    = document.getElementById('lives-el');
 const toast      = document.getElementById('unlock-toast');
+const luOverlay  = document.getElementById('levelup-overlay');
+const luIconCanvas = document.getElementById('lu-icon-canvas');
+const luIconCtx  = luIconCanvas.getContext('2d');
 
 const HUD_H = 56;
+let levelUpPaused = false;
+
 // INV_H adapté à la taille d'écran + safe area iPhone
 const DIAL_R = 62;         // ring radius
 const DIAL_HUB_R = 32;    // center hub radius
@@ -331,7 +444,8 @@ function darken(hex, f) {
   return `rgb(${Math.floor(r*(1-f))},${Math.floor(g*(1-f))},${Math.floor(b*(1-f))})`;
 }
 
-function drawProjIcon(id, cx, cy, size) {
+function drawProjIcon(id, cx, cy, size, targetCtx) {
+  const ctx = targetCtx || window._gameCtx;
   const r = size;
   ctx.save();
   switch (id) {
@@ -894,7 +1008,7 @@ function triggerGameOver() {
 }
 
 function resetGame() {
-  score = 0; combo = 0; level = 1; lives = 5; gameOver = false;
+  score = 0; combo = 0; level = 1; lives = 5; gameOver = false; levelUpPaused = false;
   cats = []; projectiles = []; effects = []; particles = []; popups = []; hairballs = [];
   TYPE_ORDER.forEach(id => {
     const d = PROJ_DEFS[id];
@@ -915,15 +1029,72 @@ function resetGame() {
 
 // ── Level-up logic ────────────────────────────────────────────────────────────
 function checkLevelUp() {
-  while (level < LEVELS.length && score >= LEVELS[level].threshold) {
+  if (level >= LEVELS.length) return;
+  if (score >= LEVELS[level].threshold) {
     level++;
     const def = LEVELS[level - 1];
     applyBonus(def.bonus);
-    effects.push({ type:'levelup', level, desc: def.desc, life:1, dur:2.4, age:0 });
+    checkUnlocks();
     Music.sfxLevelUp();
     if (level % 3 === 0) gainLife();
     updateHUD();
+    showLevelUpScreen(level, def);
   }
+}
+
+function showLevelUpScreen(lvl, levelDef) {
+  // Find weapon unlocked at this level's threshold (if any)
+  const threshold = levelDef.threshold;
+  let unlockedWeapon = null;
+  for (const id of TYPE_ORDER) {
+    if (PROJ_DEFS[id].unlockScore === threshold) { unlockedWeapon = PROJ_DEFS[id]; break; }
+  }
+
+  document.getElementById('lu-num').textContent = lvl;
+
+  const titleEl = document.getElementById('lu-unlock-title');
+  const cardEl  = document.getElementById('lu-card');
+  const nameEl  = document.getElementById('lu-card-name');
+  const descEl  = document.getElementById('lu-card-desc');
+
+  if (unlockedWeapon) {
+    titleEl.textContent = 'NOUVEAU PROJECTILE !';
+    nameEl.textContent  = unlockedWeapon.label.toUpperCase();
+    descEl.textContent  = unlockedWeapon.desc || '';
+    cardEl.style.display = 'flex';
+    // Draw weapon icon on mini canvas
+    luIconCtx.clearRect(0, 0, 90, 90);
+    luIconCtx.save();
+    luIconCtx.fillStyle = unlockedWeapon.col + 'cc';
+    luIconCtx.beginPath(); luIconCtx.roundRect(0, 0, 90, 90, 14); luIconCtx.fill();
+    drawProjIcon(Object.keys(PROJ_DEFS).find(k => PROJ_DEFS[k] === unlockedWeapon), 45, 45, 28, luIconCtx);
+    luIconCtx.restore();
+  } else if (levelDef.desc) {
+    titleEl.textContent = 'AMÉLIORATION !';
+    nameEl.textContent  = '';
+    descEl.textContent  = levelDef.desc;
+    cardEl.style.display = 'flex';
+    luIconCtx.clearRect(0, 0, 90, 90);
+    luIconCtx.font = '52px Arial'; luIconCtx.textAlign = 'center'; luIconCtx.textBaseline = 'middle';
+    luIconCtx.fillText('⬆️', 45, 45);
+  } else {
+    titleEl.textContent = '';
+    cardEl.style.display = 'none';
+  }
+
+  // Confetti
+  const conf = document.getElementById('lu-confetti');
+  conf.innerHTML = '';
+  const cols = ['#ff3ea5','#ffce3a','#26c6f7','#7b3ff2','#ff8a48','#5fcc52'];
+  for (let i = 0; i < 28; i++) {
+    const p = document.createElement('div');
+    p.className = 'lu-conf-piece';
+    p.style.cssText = `left:${Math.random()*100}%;top:0;background:${cols[i%cols.length]};animation-duration:${1.8+Math.random()*1.8}s;animation-delay:${Math.random()*.6}s;transform:rotate(${Math.random()*360}deg)`;
+    conf.appendChild(p);
+  }
+
+  levelUpPaused = true;
+  luOverlay.classList.add('show');
 }
 
 function applyBonus(bonus) {
@@ -1246,37 +1417,34 @@ function drawInventory() {
       drawProjIcon(id, sx, sy, slotR * 0.6);
       ctx.globalAlpha = 1;
 
-      // Overlay sombre si vide
-      if (def.stock === 0) {
-        ctx.save();
-        ctx.beginPath(); ctx.arc(sx, sy, slotR, 0, Math.PI*2); ctx.clip();
-        ctx.fillStyle = 'rgba(20,10,40,0.55)';
-        ctx.fillRect(sx - slotR, sy - slotR, slotR*2, slotR*2);
-        ctx.restore();
-      }
 
-      // Arc de recharge — épais, doré, bien visible
+      // Cooldown pie-chart — secteur sombre qui se résorbe
       if (def.stock < def.maxStock && rechargeTimers[id] > 0) {
-        const pct = 1 - rechargeTimers[id] / def.recharge;
-        const arcR = slotR + (isSelected ? 7 : 5);
-        // Track gris
-        ctx.strokeStyle = 'rgba(42,27,74,0.28)'; ctx.lineWidth = 5;
-        ctx.beginPath(); ctx.arc(sx, sy, arcR, -Math.PI/2, -Math.PI/2 + Math.PI*2); ctx.stroke();
-        // Progress doré
-        ctx.strokeStyle = '#ffce3a'; ctx.lineWidth = 5;
-        ctx.lineCap = 'round';
-        ctx.shadowColor = '#ffce3a'; ctx.shadowBlur = 8;
-        ctx.beginPath(); ctx.arc(sx, sy, arcR, -Math.PI/2, -Math.PI/2 + pct*Math.PI*2); ctx.stroke();
-        ctx.shadowBlur = 0; ctx.lineCap = 'butt';
-        // Secondes restantes sous le slot si vide
-        if (def.stock === 0) {
-          const secsLeft = Math.ceil(rechargeTimers[id]);
-          ctx.font = `800 ${Math.round(slotR*.52)}px "Baloo 2",Arial`;
-          ctx.fillStyle = '#ffce3a'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-          ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 4;
-          ctx.fillText(`${secsLeft}s`, sx, sy);
-          ctx.shadowBlur = 0;
-        }
+        const remaining = rechargeTimers[id] / def.recharge; // 1→0
+        ctx.save();
+        ctx.beginPath(); ctx.arc(sx, sy, slotR - 1, 0, Math.PI*2); ctx.clip();
+        // Secteur sombre (portion restante)
+        ctx.fillStyle = 'rgba(20,10,50,0.72)';
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.arc(sx, sy, slotR, -Math.PI/2, -Math.PI/2 + remaining * Math.PI*2);
+        ctx.closePath();
+        ctx.fill();
+        // Bord blanc entre les deux zones
+        ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.lineTo(sx + Math.cos(-Math.PI/2 + remaining * Math.PI*2) * slotR,
+                   sy + Math.sin(-Math.PI/2 + remaining * Math.PI*2) * slotR);
+        ctx.stroke();
+        ctx.restore();
+        // Secondes restantes centrées
+        const secsLeft = Math.ceil(rechargeTimers[id]);
+        ctx.font = `900 ${Math.round(slotR*.58)}px "Baloo 2",Arial`;
+        ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.shadowColor = 'rgba(0,0,0,0.7)'; ctx.shadowBlur = 5;
+        ctx.fillText(`${secsLeft}s`, sx, sy);
+        ctx.shadowBlur = 0;
       }
 
       // Label below
@@ -1476,7 +1644,7 @@ function loop(ts) {
   drawBackground();
   drawXPBar();
 
-  if (gameOver) { requestAnimationFrame(loop); return; }
+  if (gameOver || levelUpPaused) { requestAnimationFrame(loop); return; }
 
   // Spawn cats
   spawnTimer-=dt;
@@ -2018,6 +2186,10 @@ canvas.addEventListener('pointerdown', () => {
 }, { once: true });
 
 document.getElementById('replay-btn').addEventListener('click', resetGame);
+document.getElementById('continuer-btn').addEventListener('click', () => {
+  levelUpPaused = false;
+  luOverlay.classList.remove('show');
+});
 updateHUD();
 requestAnimationFrame(loop);
 </script>
