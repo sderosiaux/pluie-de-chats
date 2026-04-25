@@ -1,7 +1,7 @@
 import { state } from './state';
 import { ctx } from './canvas';
 import { PROJ_DEFS } from './data';
-import { WEAPON_SPRITES, OBJECT_SPRITES } from './sprites';
+import { WEAPON_SPRITES } from './sprites';
 import type { Projectile, Effect } from './types';
 
 // ── Projectile drawing ────────────────────────────────────────────────────────
@@ -203,28 +203,6 @@ export function drawEffect(e: Effect): void {
       ctx.fillStyle = '#FF1744';
       ctx.beginPath(); ctx.arc(ex, ey, 3, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
-      break;
-    }
-    case 'ground_decor': {
-      const ex = e.x || 0, ey = e.y || 0;
-      const sz = e.size || 30;
-      // Lure aura (faint)
-      if (e.lureKind && e.lureRadius) {
-        const ringCol = e.lureKind === 'attract' ? 'rgba(255,206,58,' : 'rgba(91,182,232,';
-        const halo = ctx.createRadialGradient(ex, ey, sz * 0.5, ex, ey, e.lureRadius);
-        halo.addColorStop(0, ringCol + (e.life * 0.22) + ')');
-        halo.addColorStop(1, ringCol + '0)');
-        ctx.fillStyle = halo;
-        ctx.beginPath(); ctx.arc(ex, ey, e.lureRadius, 0, Math.PI * 2); ctx.fill();
-      }
-      // Sprite (croquettes / souris / plume)
-      const spr = e.spriteId ? OBJECT_SPRITES[e.spriteId] : null;
-      if (spr && spr.complete && spr.naturalWidth > 0) {
-        ctx.save();
-        ctx.globalAlpha = Math.min(1, e.life * 1.5);
-        ctx.drawImage(spr, ex - sz, ey - sz, sz * 2, sz * 2);
-        ctx.restore();
-      }
       break;
     }
     case 'carton_box': {

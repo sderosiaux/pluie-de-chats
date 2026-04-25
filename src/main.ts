@@ -176,16 +176,16 @@ function loop(ts: number): void {
       }
       // Shield flash decay
       if (c.shieldFlash>0) c.shieldFlash-=dt*5;
-      // Lure forces des décors ground (croquettes attire, souris repousse)
+      // Lure forces : croquettes attire, souris repousse — pendant qu'elles tombent, pas après.
       if (!c.isObject) {
-        for (const e of effects) {
-          if (e.type !== 'ground_decor' || !e.lureKind || !e.lureRadius) continue;
-          const lx = e.x || 0, ly = e.y || 0;
-          const dx = lx - c.x, dy = ly - c.y;
+        const LURE_R = 180;
+        for (const o of cats) {
+          if (o === c || !o.type.unbreakable || !o.type.lureKind) continue;
+          const dx = o.x - c.x, dy = o.y - c.y;
           const dist = Math.hypot(dx, dy);
-          if (dist > e.lureRadius || dist < 1) continue;
-          const force = (1 - dist / e.lureRadius) * 0.18;
-          const sign = e.lureKind === 'attract' ? 1 : -1;
+          if (dist > LURE_R || dist < 1) continue;
+          const force = (1 - dist / LURE_R) * 0.22;
+          const sign = o.type.lureKind === 'attract' ? 1 : -1;
           c.vx += (dx / dist) * force * sign;
           c.vy += (dy / dist) * force * sign;
         }
@@ -294,18 +294,9 @@ function loop(ts: number): void {
         }
       }
       if(c.x<c.size||c.x>state.W-c.size){c.vx*=-1;c.x=Math.max(c.size,Math.min(state.W-c.size,c.x));}
-      // Indestructibles : au contact du sol → se transforment en décor (lure attract/repel) puis disparaissent du pool cats
+      // Indestructibles : au contact du sol → disparaissent (pas de décor permanent)
       if (c.type.unbreakable && c.y >= state.H - state.DECOR_H + c.size * 0.4) {
-        effects.push({
-          type: 'ground_decor',
-          x: c.x, y: state.H - state.DECOR_H + c.size * 0.4,
-          spriteId: c.type.id,
-          lureKind: c.type.lureKind || null,
-          lureRadius: c.type.lureKind ? 140 : 0,
-          size: c.size * 1.6,
-          life: 1, dur: 8, age: 0,
-        });
-        cats.splice(i,1);continue;
+        cats.splice(i, 1); continue;
       }
       if(c.y>state.H+c.size){
         // Bombe tombée au sol = esquivée, aucun malus
