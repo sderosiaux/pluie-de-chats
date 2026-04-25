@@ -3117,7 +3117,24 @@ function loop(ts) {
     e.life=Math.max(0,1-e.age/e.dur);
     if(e.life<=0){effects.splice(i,1);continue;}
 
-
+    // laser: continuous hit detection while beam is alive
+    if(e.type==='active_laser'){
+      const segDx=e.x2-e.x1, segDy=e.y2-e.y1, segLen2=segDx*segDx+segDy*segDy;
+      for(const cat of cats){
+        if(cat.caught||e.caughtIds.has(cat.id))continue;
+        if(cat.type.id==='furtif'&&!cat.visible)continue;
+        const proj=((cat.x-e.x1)*segDx+(cat.y-e.y1)*segDy)/segLen2;
+        const cp=Math.max(0,Math.min(1,proj));
+        const cx2=e.x1+cp*segDx, cy2=e.y1+cp*segDy;
+        if(Math.hypot(cat.x-cx2,cat.y-cy2)<cat.size*1.1+laserHitWidth){
+          e.caughtIds.add(cat.id);
+          catchCat(cat,cat.x,cat.y,e.caught>0);
+          e.caught++;
+        }
+      }
+      if(e.age>e.dur-0.05&&e.caught===0&&!e.shownMissMsg){e.shownMissMsg=true;spawnPopup(e.x1,e.y1-40,'Raté !','rgba(255,255,255,0.8)');}
+      if(e.caught>=3&&!e.shownMultiMsg){e.shownMultiMsg=true;spawnPopup(e.x1,e.y1-60,`LASER ×${e.caught} !!`,'#FF1744');}
+    }
 
     // carton: pull cats
     if(e.type==='carton_box'){
