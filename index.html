@@ -384,7 +384,7 @@ let levelUpPaused = false;
 // INV_H adapté à la taille d'écran + safe area iPhone
 const DIAL_R = 62;         // ring radius
 const DIAL_HUB_R = 32;    // center hub radius
-const DIAL_ANGLES = [-120, -40, 40, 120]; // degrees per TYPE_ORDER slot
+const DIAL_ANGLES = [-90, 0, 90, 180]; // degrees per TYPE_ORDER slot
 
 function getInvH() {
   const safeBottom = parseInt(getComputedStyle(document.documentElement)
@@ -2022,7 +2022,9 @@ function resetGame() {
     rechargeTimers[id] = 0;
   }
   runId++;
+  selectedType = 'pelote';
   unlockedTypes.clear(); unlockedTypes.add('pelote');
+  activeEvent = null; eventBanner = null; eventNextIn = 35 + Math.random()*20;
   checkUnlocks();
   updateHUD();
   document.getElementById('gameover-overlay').classList.remove('show');
@@ -2298,7 +2300,6 @@ function buildBestiary() {
 }
 
 // ── Unlock system ─────────────────────────────────────────────────────────────
-let lastUnlockCheck = -1;
 function checkUnlocks() {
   for (const [id, def] of Object.entries(PROJ_DEFS)) {
     if (!unlockedTypes.has(id) && score >= def.unlockScore) {
