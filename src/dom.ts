@@ -1,5 +1,5 @@
-// @ts-nocheck
 // DOM element bindings — shared across modules.
+// Tous peuvent être null si le HTML manque l'élément (cas du Record retiré du HUD).
 export const scoreEl    = document.getElementById('score-val');
 export const comboEl    = document.getElementById('combo');
 export const hiValEl    = document.getElementById('hi-val');

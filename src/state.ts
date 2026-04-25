@@ -1,51 +1,110 @@
 // État global mutable. Tous les modules importent et mutent ce singleton.
-export const state: any = {
+import type {
+  Cat, Projectile, Effect, Particle, Popup, Hairball, Cloud, Floater,
+  ActiveEvent, EventBanner, StaticMsg, SceneId, Pos
+} from './types';
+
+export interface GameState {
   // Score / progression
-  score: 0, combo: 0, comboTimer: 0, gameTime: 0, spawnTimer: 0, objectSpawnTimer: 10,
-  level: 1, laserHitWidth: 6,
-  lives: 5, hiScore: parseInt(localStorage.getItem('pdc_hi') || '0', 10) || 0,
+  score: number;
+  combo: number;
+  comboTimer: number;
+  gameTime: number;
+  spawnTimer: number;
+  objectSpawnTimer: number;
+  level: number;
+  laserHitWidth: number;
+  lives: number;
+  hiScore: number;
+  MAX_LIVES: number;
+  catsForRegen: number;
+  gameOver: boolean;
+  levelUpPaused: boolean;
+  menuActive: boolean;
+  // Input / aim
+  isDragging: boolean;
+  dragPos: Pos | null;
+  pointerDown: boolean;
+  selectedType: string;
+  activeSteerLaser: Effect | null;
+  runId: number;
+  // Layout (set by canvas.resize)
+  W: number;
+  H: number;
+  LAUNCHER: Pos;
+  DECOR_H: number;
+  INV_H: number;
+  DIAL_CY: number;
+  // Time
+  timeScale: number;
+  slowMoTimer: number;
+  // Trap effects
+  wetTimer: number;
+  spicyTimer: number;
+  // Events
+  activeEvent: ActiveEvent | null;
+  eventBanner: EventBanner | null;
+  eventNextIn: number;
+  // Misc
+  _catIdCounter: number;
+  _cheatBuf: string;
+  currentScene: SceneId;
+  staticMsg: StaticMsg | null;
+}
+
+export const state: GameState = {
+  score: 0,
+  combo: 0,
+  comboTimer: 0,
+  gameTime: 0,
+  spawnTimer: 0,
+  objectSpawnTimer: 10,
+  level: 1,
+  laserHitWidth: 6,
+  lives: 5,
+  hiScore: parseInt(localStorage.getItem('pdc_hi') || '0', 10) || 0,
   MAX_LIVES: 7,
   catsForRegen: 0,
-  gameOver: false, levelUpPaused: false, menuActive: true,
-  // Input / aim
-  isDragging: false, dragPos: null as any,
+  gameOver: false,
+  levelUpPaused: false,
+  menuActive: true,
+  isDragging: false,
+  dragPos: null,
   pointerDown: false,
   selectedType: 'pelote',
-  activeSteerLaser: null as any,
+  activeSteerLaser: null,
   runId: 0,
-  // Layout (set by canvas.resize)
-  W: 0, H: 0, LAUNCHER: { x: 0, y: 0 },
-  DECOR_H: 150, INV_H: 280, DIAL_CY: 0,
-  // Time
-  timeScale: 1, slowMoTimer: 0,
-  // Trap effects
-  wetTimer: 0, spicyTimer: 0,
-  // Events
-  activeEvent: null as any,
-  eventBanner: null as any,
+  W: 0,
+  H: 0,
+  LAUNCHER: { x: 0, y: 0 },
+  DECOR_H: 150,
+  INV_H: 280,
+  DIAL_CY: 0,
+  timeScale: 1,
+  slowMoTimer: 0,
+  wetTimer: 0,
+  spicyTimer: 0,
+  activeEvent: null,
+  eventBanner: null,
   eventNextIn: 35 + Math.random() * 20,
-  // Misc
-  _catIdCounter: 0, _cheatBuf: '',
+  _catIdCounter: 0,
+  _cheatBuf: '',
   currentScene: 'city',
   staticMsg: null,
 };
 
 // Collections — mutées par push/splice. Const car la référence ne change pas.
-export const cats: any[] = [];
-export const projectiles: any[] = [];
-export const effects: any[] = [];
-export const particles: any[] = [];
-export const popups: any[] = [];
-export const hairballs: any[] = [];
-export const clouds: any[] = [];
-export const bgFloaters: any[] = [];
+export const cats: Cat[] = [];
+export const projectiles: Projectile[] = [];
+export const effects: Effect[] = [];
+export const particles: Particle[] = [];
+export const popups: Popup[] = [];
+export const hairballs: Hairball[] = [];
+export const clouds: Cloud[] = [];
+export const bgFloaters: Floater[] = [];
 export const unlockedTypes = new Set<string>(['pelote']);
 export const caughtTypes = new Set<string>();
 export const rechargeTimers: Record<string, number> = {};
-export const upgradeFlags: any = {};
+export const upgradeFlags: Record<string, any> = {};
 export const pickCounts: Record<string, number> = {};
-export const pendingLevelUps: any[] = [];
-
-// DOM elements (set by main during init)
-export const dom: any = {};
-export const stateExt: any = { staticMsg: null };
+export const pendingLevelUps: Array<{ lvl: number; def: any; newWeapon?: string }> = [];

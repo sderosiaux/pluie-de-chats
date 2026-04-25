@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Canvas, ctx, et logique de resize. Met à jour state.W / state.H / state.LAUNCHER / state.DIAL_CY.
 import { state } from './state';
 import { DIAL_R } from './config';
