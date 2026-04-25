@@ -1,6 +1,5 @@
 import { state, upgradeFlags } from './state';
 import { GRAVITY, TYPE_ORDER } from './config';
-import { updateHUD } from './catch';
 import type { ProjDef, CatType, ObjectType, Upgrade } from './types';
 
 export const PROJ_DEFS: Record<string, ProjDef> = {
@@ -235,7 +234,7 @@ export const UPGRADES: Upgrade[] = [
   // Survivant
   { id:'max_life',      family:'Survivant', emoji:'❤️', col:'#3DC47E',
     label:'+1 Cœur Max',        desc:'Vie maximum +1 (et +1 vie maintenant)', max:4,
-    apply:()=>{ state.MAX_LIVES++; state.lives = Math.min(state.lives + 1, state.MAX_LIVES); updateHUD(); } },
+    apply:()=>{ state.MAX_LIVES++; state.lives = Math.min(state.lives + 1, state.MAX_LIVES); } },
   { id:'slowmo_early',  family:'Survivant', emoji:'🐌', col:'#3DC47E',
     label:'Réflexes++',         desc:'Slow-mo déclenché dès 2 vies restantes', max:1,
     apply:()=>{ upgradeFlags.slowMoLives=2; } },
