@@ -193,38 +193,56 @@
     position: relative; z-index: 2; margin-top: 4px;
     letter-spacing: 1px;
   }
-  .lu-card {
+  .lu-pick-label {
     position: relative; z-index: 2;
-    display: flex; flex-direction: column; align-items: center; gap: 8px;
-    background: rgba(255,255,255,0.08);
-    border: 3px solid rgba(255,206,58,0.6);
-    border-radius: 20px; padding: 18px 28px;
-    box-shadow: 0 0 40px rgba(255,206,58,0.25), 0 8px 0 rgba(0,0,0,.2);
-    animation: lu-pop 0.5s 0.15s cubic-bezier(.17,.67,.35,1.4) both;
-    min-width: 160px;
+    font-family: 'Fredoka', sans-serif; font-weight: 600;
+    font-size: clamp(12px,3vw,14px); color: rgba(255,248,230,0.7);
+    letter-spacing: 3px; text-transform: uppercase; margin-top: 2px;
   }
-  .lu-card canvas { border-radius: 12px; }
-  .lu-card-name {
+  #lu-choices {
+    position: relative; z-index: 2;
+    display: flex; flex-direction: row; gap: 10px;
+    padding: 0 10px; max-width: 420px; width: 100%;
+    justify-content: center;
+  }
+  .lu-choice {
+    flex: 1; min-width: 0; max-width: 120px;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    border-radius: 18px; padding: 14px 8px 12px;
+    background: rgba(255,255,255,0.07);
+    border: 3px solid rgba(255,255,255,0.18);
+    cursor: pointer; transition: transform .12s, box-shadow .12s, border-color .12s;
+    animation: lu-pop 0.45s cubic-bezier(.17,.67,.35,1.4) both;
+  }
+  .lu-choice:nth-child(1) { animation-delay: .05s; }
+  .lu-choice:nth-child(2) { animation-delay: .13s; }
+  .lu-choice:nth-child(3) { animation-delay: .21s; }
+  .lu-choice:active { transform: scale(0.95) translateY(3px); }
+  .lu-choice-top {
+    width: 100%; border-radius: 10px; padding: 3px 6px;
+    text-align: center;
+    font-family: 'Fredoka', sans-serif; font-weight: 700;
+    font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: #fff;
+    margin-bottom: 2px;
+  }
+  .lu-choice-emoji { font-size: 32px; line-height: 1; }
+  .lu-choice-name {
     font-family: 'Baloo 2', sans-serif; font-weight: 900;
-    font-size: clamp(16px,4.5vw,20px); color: #fff;
-    letter-spacing: 1px; text-transform: uppercase;
+    font-size: clamp(12px,3vw,14px); color: #fff;
+    text-align: center; line-height: 1.2;
   }
-  .lu-card-desc {
+  .lu-choice-desc {
     font-family: 'Fredoka', sans-serif; font-weight: 500;
-    font-size: clamp(13px,3.5vw,15px); color: rgba(255,248,230,0.82);
-    text-align: center; max-width: 200px;
+    font-size: clamp(11px,2.8vw,13px); color: rgba(255,248,230,0.75);
+    text-align: center; line-height: 1.3;
   }
-  #continuer-btn {
+  .lu-unlock-banner {
     position: relative; z-index: 2;
-    font-family: 'Baloo 2', sans-serif; font-weight: 800;
-    font-size: clamp(16px,4vw,20px); color: #2a1b4a;
-    background: linear-gradient(180deg, #ffce3a, #e8a820);
-    border: none; padding: 14px 40px; border-radius: 30px;
-    box-shadow: 0 6px 0 #a87820, 0 10px 24px rgba(255,206,58,.35);
-    cursor: pointer; margin-top: 8px; letter-spacing: 1px;
-    transition: transform .12s, box-shadow .12s;
+    background: rgba(255,206,58,0.18); border: 2px solid rgba(255,206,58,0.5);
+    border-radius: 14px; padding: 8px 18px;
+    font-family: 'Fredoka', sans-serif; font-weight: 600;
+    font-size: clamp(13px,3.5vw,15px); color: #ffce3a; text-align: center;
   }
-  #continuer-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #a87820; }
   #lu-confetti { position: absolute; inset: 0; pointer-events: none; z-index: 3; overflow: hidden; }
   .lu-conf-piece {
     position: absolute; width: 10px; height: 14px; border-radius: 2px;
@@ -249,15 +267,11 @@
 <div id="levelup-overlay">
   <div id="lu-rays"></div>
   <div id="lu-confetti"></div>
-  <div class="lu-sub">NIVEAU SUIVANT</div>
+  <div class="lu-sub">NIVEAU</div>
   <div class="lu-num" id="lu-num">1</div>
-  <div class="lu-unlock-title" id="lu-unlock-title"></div>
-  <div class="lu-card" id="lu-card">
-    <canvas id="lu-icon-canvas" width="90" height="90"></canvas>
-    <div class="lu-card-name" id="lu-card-name"></div>
-    <div class="lu-card-desc" id="lu-card-desc"></div>
-  </div>
-  <button id="continuer-btn">CONTINUER →</button>
+  <div class="lu-unlock-banner" id="lu-unlock-banner" style="display:none" id="lu-unlock-banner"></div>
+  <div class="lu-pick-label">CHOISIS TON AMÉLIORATION</div>
+  <div id="lu-choices"></div>
 </div>
 <div id="gameover-overlay">
   <div class="go-emoji">😿</div>
@@ -280,8 +294,6 @@ const levelBadge = document.getElementById('level-badge');
 const livesEl    = document.getElementById('lives-el');
 const toast      = document.getElementById('unlock-toast');
 const luOverlay  = document.getElementById('levelup-overlay');
-const luIconCanvas = document.getElementById('lu-icon-canvas');
-const luIconCtx  = luIconCanvas.getContext('2d');
 
 const HUD_H = 56;
 let levelUpPaused = false;
@@ -323,10 +335,13 @@ let hiScore = parseInt(localStorage.getItem('pdc_hi') || '0');
 let cats = [], projectiles = [], effects = [], particles = [], popups = [], clouds = [], hairballs = [];
 let _catIdCounter = 0;
 let lives = 5;
-const MAX_LIVES = 7;
+let MAX_LIVES = 7;
 let gameOver = false;
 let timeScale = 1, slowMoTimer = 0;
 let isDragging = false, dragPos = null;
+let upgradeFlags = {};
+let pickCounts   = {};
+let catsForRegen = 0;
 let selectedType = 'pelote';
 let unlockedTypes = new Set(['pelote']);
 hiValEl.textContent = hiScore;
@@ -394,6 +409,82 @@ const LEVELS = [
   { threshold: 240, bonus: 'artifice_stock',  desc: "🎆 +1 Feu d'artifice en réserve" },
   { threshold: 320, bonus: 'mega_recharge',   desc: '⭐ Recharge ultra-rapide !' },
 ];
+
+// ── Upgrade pool (roguelite choices) ─────────────────────────────────────────
+const UPGRADES = [
+  // Artilleur
+  { id:'bounce2',       family:'Artilleur', emoji:'🧶', col:'#FF6B35',
+    label:'Élastique++',        desc:'Pelote rebondit 2× de plus',
+    apply:()=>{ PROJ_DEFS.pelote.bounces=(PROJ_DEFS.pelote.bounces||3)+2; } },
+  { id:'blast30',       family:'Artilleur', emoji:'💥', col:'#FF6B35',
+    label:'Méga-Blast',         desc:'Explosion +30px de rayon',
+    apply:()=>{ PROJ_DEFS.artifice.blastR+=30; } },
+  { id:'artifice_stock',family:'Artilleur', emoji:'🎆', col:'#FF6B35',
+    label:'+1 Feu d\'artifice', desc:'+1 munition en réserve', max:3,
+    apply:()=>{ PROJ_DEFS.artifice.maxStock++; PROJ_DEFS.artifice.stock++; } },
+  { id:'carton_big',    family:'Artilleur', emoji:'📦', col:'#FF6B35',
+    label:'Méga-Carton',        desc:'Carton aspire +70px de plus',
+    apply:()=>{ PROJ_DEFS.carton.pullR+=70; } },
+  // Sniper
+  { id:'laser_wide',    family:'Sniper', emoji:'🔴', col:'#7B3FF2',
+    label:'Laser XXL',          desc:'Laser 2× plus large',
+    apply:()=>{ laserHitWidth+=8; } },
+  { id:'recharge_fast', family:'Sniper', emoji:'⚡', col:'#7B3FF2',
+    label:'Turbo-Recharge',     desc:'Recharge 25% plus rapide',
+    apply:()=>{ for(const id of TYPE_ORDER) PROJ_DEFS[id].recharge*=0.75; } },
+  { id:'pelote_stock',  family:'Sniper', emoji:'🧶', col:'#7B3FF2',
+    label:'+1 Pelote',          desc:'+1 pelote en réserve', max:3,
+    apply:()=>{ PROJ_DEFS.pelote.maxStock++; PROJ_DEFS.pelote.stock++; } },
+  { id:'slow_aim',      family:'Sniper', emoji:'🎯', col:'#7B3FF2',
+    label:'Visée Zen',          desc:'Ralenti ×0.5 pendant la visée', max:1,
+    apply:()=>{ upgradeFlags.slowAim=true; } },
+  { id:'catnip_stock',  family:'Sniper', emoji:'🌿', col:'#7B3FF2',
+    label:'+1 Catnip',          desc:'+1 catnip en réserve', max:2,
+    apply:()=>{ PROJ_DEFS.catnip.maxStock++; PROJ_DEFS.catnip.stock++; } },
+  // Chanceux
+  { id:'lucky_rate',    family:'Chanceux', emoji:'⭐', col:'#FFCE3A',
+    label:'Porte-Bonheur',      desc:'Chats lucky 2× plus fréquents',
+    apply:()=>{ upgradeFlags.luckyRate=(upgradeFlags.luckyRate||0.05)*2; } },
+  { id:'combo_time',    family:'Chanceux', emoji:'🔥', col:'#FFCE3A',
+    label:'Combo Durable',      desc:'Le combo tient 1.5s de plus',
+    apply:()=>{ upgradeFlags.comboBonusTime=(upgradeFlags.comboBonusTime||0)+1.5; } },
+  { id:'lucky_mult',    family:'Chanceux', emoji:'🌟', col:'#FFCE3A',
+    label:'Jackpot',            desc:'Chats lucky valent +1× (cumul)', max:4,
+    apply:()=>{ upgradeFlags.luckyMult=(upgradeFlags.luckyMult||5)+1; } },
+  { id:'catnip_radius', family:'Chanceux', emoji:'🌿', col:'#FFCE3A',
+    label:'Catnip XL',          desc:'Catnip attire +50px plus loin',
+    apply:()=>{ PROJ_DEFS.catnip.cloudR+=50; } },
+  // Survivant
+  { id:'max_life',      family:'Survivant', emoji:'❤️', col:'#3DC47E',
+    label:'+1 Cœur Max',        desc:'Vie maximum +1 (et +1 vie maintenant)', max:4,
+    apply:()=>{ MAX_LIVES++; lives=Math.min(lives+1,MAX_LIVES); updateHUD(); } },
+  { id:'slowmo_early',  family:'Survivant', emoji:'🐌', col:'#3DC47E',
+    label:'Réflexes++',         desc:'Slow-mo déclenché dès 2 vies restantes', max:1,
+    apply:()=>{ upgradeFlags.slowMoLives=2; } },
+  { id:'regen',         family:'Survivant', emoji:'💚', col:'#3DC47E',
+    label:'Régénération',       desc:'Récupère 1❤️ tous les 12 chats attrapés', max:1,
+    apply:()=>{ upgradeFlags.regen=true; } },
+];
+
+function pickUpgrades(n) {
+  const available = UPGRADES.filter(u => (pickCounts[u.id]||0) < (u.max||99));
+  const shuffled = available.sort(()=>Math.random()-.5);
+  // Ensure family diversity when possible
+  const picks = [], usedFamilies = new Set();
+  for (const u of shuffled) {
+    if (picks.length >= n) break;
+    if (!usedFamilies.has(u.family) || picks.length === n-1) {
+      picks.push(u); usedFamilies.add(u.family);
+    }
+  }
+  while (picks.length < n && picks.length < available.length) {
+    const extra = shuffled.find(u=>!picks.includes(u));
+    if (!extra) break;
+    picks.push(extra);
+  }
+  return picks;
+}
+
 const rechargeTimers = {};
 TYPE_ORDER.forEach(t => { rechargeTimers[t] = 0; });
 
@@ -1009,7 +1100,7 @@ function spawnCat(forcedType) {
     hp: type.hp || 1, maxHp: type.hp || 1, shieldFlash: 0,
     visible: true, visTimer: 1.2 + Math.random() * 0.6,
     spitTimer: type.id === 'crachat' ? 2.2 + Math.random() * 1.5 : 0,
-    lucky: type.id !== 'boss' && Math.random() < 0.05,
+    lucky: type.id !== 'boss' && Math.random() < (upgradeFlags.luckyRate||0.05),
   });
 }
 
@@ -1270,7 +1361,8 @@ function loseLife() {
   spawnPopup(LAUNCHER.x, LAUNCHER.y - 50, '−1 ❤️', '#FF4444');
   effects.push({ type:'hit_flash', life:1, dur:0.35, age:0 });
   if (navigator.vibrate) navigator.vibrate(40);
-  if (lives === 1) { timeScale = 0.32; slowMoTimer = 3.0; }
+  const slowTrigger = upgradeFlags.slowMoLives || 1;
+  if (lives <= slowTrigger && lives > 0) { timeScale = 0.32; slowMoTimer = 3.0; }
   if (lives <= 0) triggerGameOver();
 }
 
@@ -1289,6 +1381,7 @@ function triggerGameOver() {
 
 function resetGame() {
   score = 0; combo = 0; level = 1; lives = 5; gameOver = false; levelUpPaused = false; timeScale = 1; slowMoTimer = 0;
+  upgradeFlags = {}; pickCounts = {}; catsForRegen = 0; MAX_LIVES = 7;
   cats = []; projectiles = []; effects = []; particles = []; popups = []; hairballs = [];
   TYPE_ORDER.forEach(id => {
     const d = PROJ_DEFS[id];
@@ -1313,54 +1406,53 @@ function checkLevelUp() {
   if (score >= LEVELS[level].threshold) {
     level++;
     const def = LEVELS[level - 1];
-    applyBonus(def.bonus);
     checkUnlocks();
     Music.sfxLevelUp();
-    if (level % 3 === 0) gainLife();
     updateHUD();
     showLevelUpScreen(level, def);
   }
 }
 
 function showLevelUpScreen(lvl, levelDef) {
-  // Find weapon unlocked at this level's threshold (if any)
+  document.getElementById('lu-num').textContent = lvl;
+
+  // Weapon unlock banner
+  const banner = document.getElementById('lu-unlock-banner');
   const threshold = levelDef.threshold;
   let unlockedWeapon = null;
   for (const id of TYPE_ORDER) {
     if (PROJ_DEFS[id].unlockScore === threshold) { unlockedWeapon = PROJ_DEFS[id]; break; }
   }
-
-  document.getElementById('lu-num').textContent = lvl;
-
-  const titleEl = document.getElementById('lu-unlock-title');
-  const cardEl  = document.getElementById('lu-card');
-  const nameEl  = document.getElementById('lu-card-name');
-  const descEl  = document.getElementById('lu-card-desc');
-
   if (unlockedWeapon) {
-    titleEl.textContent = 'NOUVEAU PROJECTILE !';
-    nameEl.textContent  = unlockedWeapon.label.toUpperCase();
-    descEl.textContent  = unlockedWeapon.desc || '';
-    cardEl.style.display = 'flex';
-    // Draw weapon icon on mini canvas
-    luIconCtx.clearRect(0, 0, 90, 90);
-    luIconCtx.save();
-    luIconCtx.fillStyle = unlockedWeapon.col + 'cc';
-    luIconCtx.beginPath(); luIconCtx.roundRect(0, 0, 90, 90, 14); luIconCtx.fill();
-    drawProjIcon(Object.keys(PROJ_DEFS).find(k => PROJ_DEFS[k] === unlockedWeapon), 45, 45, 28, luIconCtx);
-    luIconCtx.restore();
-  } else if (levelDef.desc) {
-    titleEl.textContent = 'AMÉLIORATION !';
-    nameEl.textContent  = '';
-    descEl.textContent  = levelDef.desc;
-    cardEl.style.display = 'flex';
-    luIconCtx.clearRect(0, 0, 90, 90);
-    luIconCtx.font = '52px Arial'; luIconCtx.textAlign = 'center'; luIconCtx.textBaseline = 'middle';
-    luIconCtx.fillText('⬆️', 45, 45);
+    banner.textContent = `🎁 NOUVEAU : ${unlockedWeapon.emoji} ${unlockedWeapon.label} débloqué !`;
+    banner.style.display = 'block';
   } else {
-    titleEl.textContent = '';
-    cardEl.style.display = 'none';
+    banner.style.display = 'none';
   }
+
+  // 3 upgrade choices
+  const choices = pickUpgrades(3);
+  const choicesEl = document.getElementById('lu-choices');
+  choicesEl.innerHTML = '';
+  choices.forEach(upg => {
+    const card = document.createElement('div');
+    card.className = 'lu-choice';
+    card.style.borderColor = upg.col + '88';
+    card.innerHTML = `
+      <div class="lu-choice-top" style="background:${upg.col}">${upg.family}</div>
+      <div class="lu-choice-emoji">${upg.emoji}</div>
+      <div class="lu-choice-name">${upg.label}</div>
+      <div class="lu-choice-desc">${upg.desc}</div>
+    `;
+    card.addEventListener('click', () => {
+      pickCounts[upg.id] = (pickCounts[upg.id]||0) + 1;
+      upg.apply();
+      luOverlay.classList.remove('show');
+      levelUpPaused = false;
+      updateHUD();
+    });
+    choicesEl.appendChild(card);
+  });
 
   // Confetti
   const conf = document.getElementById('lu-confetti');
@@ -1377,39 +1469,6 @@ function showLevelUpScreen(lvl, levelDef) {
   luOverlay.classList.add('show');
 }
 
-function applyBonus(bonus) {
-  switch (bonus) {
-    case 'bounce':
-      PROJ_DEFS.pelote.bounces = (PROJ_DEFS.pelote.bounces || 3) + 2;
-      break;
-    case 'blast':
-      PROJ_DEFS.artifice.blastR += 30;
-      break;
-    case 'recharge':
-      for (const id of TYPE_ORDER) PROJ_DEFS[id].recharge *= 0.75;
-      break;
-    case 'pelote_stock':
-      PROJ_DEFS.pelote.maxStock++;
-      PROJ_DEFS.pelote.stock++;
-      break;
-    case 'laser_width':
-      laserHitWidth += 10;
-      break;
-    case 'catnip_radius':
-      PROJ_DEFS.catnip.cloudR += 50;
-      break;
-    case 'carton_radius':
-      PROJ_DEFS.carton.pullR += 60;
-      break;
-    case 'artifice_stock':
-      PROJ_DEFS.artifice.maxStock++;
-      PROJ_DEFS.artifice.stock++;
-      break;
-    case 'mega_recharge':
-      for (const id of TYPE_ORDER) PROJ_DEFS[id].recharge *= 0.5;
-      break;
-  }
-}
 
 // ── Unlock system ─────────────────────────────────────────────────────────────
 let lastUnlockCheck = -1;
@@ -1772,15 +1831,16 @@ function catchCat(cat, px, py, silent) {
   const pts = cat.type.pts;
   if (pts > 0) {
     const baseMult = comboMult();
-    const luckyMult = cat.lucky ? 5 : 1;
+    const luckyMult = cat.lucky ? (upgradeFlags.luckyMult||5) : 1;
     const mult = baseMult * luckyMult;
     const earned = pts * mult;
     score += earned;
     combo++;
     if (cat.type.heals) gainLife();
+    if (upgradeFlags.regen) { catsForRegen++; if (catsForRegen>=12){ catsForRegen=0; gainLife(); } }
     spawnParticles(cat.x, cat.y, cat.lucky ? 35 : pts>=5 ? 20 : pts>=3 ? 12 : 7, false);
     if (cat.lucky) {
-      spawnPopup(px||cat.x, (py||cat.y)-20, '⭐ LUCKY ×5 !', '#ffce3a');
+      spawnPopup(px||cat.x, (py||cat.y)-20, `⭐ LUCKY ×${upgradeFlags.luckyMult||5} !`, '#ffce3a');
       for (let i=0;i<40;i++) {
         const a=Math.random()*Math.PI*2, spd=4+Math.random()*9;
         particles.push({x:cat.x,y:cat.y,vx:Math.cos(a)*spd,vy:Math.sin(a)*spd-4,
@@ -1931,7 +1991,10 @@ function loop(ts) {
   if (slowMoTimer > 0) {
     slowMoTimer -= dt;
     if (slowMoTimer <= 0) { timeScale = 1; slowMoTimer = 0; }
-    else timeScale += (0.32 - timeScale) * 0; // hold
+  }
+  // Slow-aim (upgrade Visée Zen)
+  if (upgradeFlags.slowAim && slowMoTimer <= 0) {
+    timeScale = isDragging ? 0.45 : 1;
   }
   dt *= timeScale;
   gameTime += dt;
@@ -1942,8 +2005,8 @@ function loop(ts) {
 
   if (gameOver || levelUpPaused) { requestAnimationFrame(loop); return; }
 
-  // Vignette rouge pulsante — 1 vie restante
-  if (lives === 1) {
+  // Vignette rouge pulsante — vies critiques
+  if (lives <= (upgradeFlags.slowMoLives||1)) {
     const pulse = 0.18 + Math.sin(gameTime * 4.5) * 0.1;
     const vg = ctx.createRadialGradient(W/2, H/2, H*0.28, W/2, H/2, H*0.82);
     vg.addColorStop(0, 'rgba(255,0,0,0)');
@@ -2520,10 +2583,6 @@ canvas.addEventListener('pointerdown', () => {
 }, { once: true });
 
 document.getElementById('replay-btn').addEventListener('click', resetGame);
-document.getElementById('continuer-btn').addEventListener('click', () => {
-  levelUpPaused = false;
-  luOverlay.classList.remove('show');
-});
 updateHUD();
 requestAnimationFrame(loop);
 </script>
