@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { toast } from './dom';
 import { state, unlockedTypes } from './state';
 import { PROJ_DEFS } from './data';
 

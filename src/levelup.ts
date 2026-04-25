@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { luOverlay } from './dom';
 import { updateHUD } from './catch';
 import { checkUnlocks } from './unlock';
 import { Music } from './audio';

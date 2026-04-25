@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { scoreEl, comboEl, hiValEl, levelBadge, livesEl } from './dom';
 import { markCaught } from './bestiary';
 import { ctx } from './canvas';
 import { checkUnlocks } from './unlock';

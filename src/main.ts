@@ -1,5 +1,6 @@
 // @ts-nocheck
 // Pluie de Chats — entry point (game loop + init)
+import { hiValEl, toast } from './dom';
 import { state, cats, projectiles, effects, particles, popups, hairballs, clouds, bgFloaters,
   unlockedTypes, caughtTypes, rechargeTimers, upgradeFlags, pickCounts, pendingLevelUps } from './state';
 import { HUD_H, DIAL_R, DIAL_HUB_R, DIAL_ANGLES, GRAVITY, MAX_PULL, MIN_SPEED, MAX_SPEED,
@@ -37,13 +38,6 @@ import './levelup';
 
 // DOM bindings
 window._gameCtx = ctx;
-const scoreEl    = document.getElementById('score-val');
-const comboEl    = document.getElementById('combo');
-const hiValEl    = document.getElementById('hi-val');
-const levelBadge = document.getElementById('level-badge');
-const livesEl    = document.getElementById('lives-el');
-const toast      = document.getElementById('unlock-toast');
-const luOverlay  = document.getElementById('levelup-overlay');
 if (hiValEl) hiValEl.textContent = state.hiScore;
 
 // ── Game loop ──────────────────────────────────────────────
