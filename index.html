@@ -1448,11 +1448,13 @@ function drawInventory() {
         ctx.shadowBlur = 0;
       }
 
-      // Label below
-      ctx.font = `600 ${Math.round(slotR*.5)}px "Fredoka",Arial`;
-      ctx.fillStyle = isSelected ? '#2a1b4a' : 'rgba(42,27,74,0.65)';
-      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-      ctx.fillText(def.label, sx, sy + slotR + 3);
+      // Label below — seulement si pas sélectionné (le centre affiche déjà le label actif)
+      if (!isSelected) {
+        ctx.font = `600 ${Math.round(slotR*.5)}px "Fredoka",Arial`;
+        ctx.fillStyle = 'rgba(42,27,74,0.65)';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        ctx.fillText(def.label, sx, sy + slotR + 3);
+      }
 
       // Count badge
       const bR = slotR * 0.38;
