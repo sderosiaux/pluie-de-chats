@@ -5,6 +5,7 @@ import { buildBestiary } from './bestiary';
 import { Music } from './audio';
 import { state } from './state';
 import { startMenuScene, stopMenuScene } from './menu-scene';
+import { stopGameoverScene } from './gameover-scene';
 
 export const startMenu = document.getElementById('start-menu-overlay')!;
 export const hsOverlay = document.getElementById('highscores-overlay')!;
@@ -66,11 +67,13 @@ hsOverlay.addEventListener('click', e => {
 
 bind('replay-btn', 'click', () => {
   document.getElementById('gameover-overlay')?.classList.remove('show');
+  stopGameoverScene();
   resetGame();
 });
 
 bind('go-menu-btn', 'click', () => {
   document.getElementById('gameover-overlay')?.classList.remove('show');
+  stopGameoverScene();
   resetGame();
   openStartMenu();
 });

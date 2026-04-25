@@ -2,9 +2,14 @@
 import type { SceneId } from './types';
 
 export const HUD_H = 56;
-export const DIAL_R = 62;
-export const DIAL_HUB_R = 32;
-export const DIAL_ANGLES: number[] = [-90, 0, 90, 180];
+export const SLOT_GAP = 78;        // espace horizontal entre centres de slots
+export const SLOT_R = 32;          // rayon d'un slot quand sélectionné
+export const LAUNCHER_GAP = 78;    // gap vertical entre slot row et launcher
+
+export function getSlotPos(i: number, n: number, W: number, dialCy: number): { x: number; y: number } {
+  const offset = (i - (n - 1) / 2) * SLOT_GAP;
+  return { x: W / 2 + offset, y: dialCy };
+}
 export const GRAVITY = 0.26;
 export const MAX_PULL = 140;
 export const MIN_SPEED = 6;

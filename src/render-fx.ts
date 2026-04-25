@@ -136,23 +136,69 @@ export function drawEffect(e: Effect): void {
     }
     case 'active_laser': {
       ctx.save();
-      const intensity = e.life > 0.4 ? 1 : e.life / 0.4;
-      ctx.globalAlpha = intensity;
       const lScale = state.laserHitWidth / 6;
       const x1 = e.x1 || 0, y1 = e.y1 || 0, x2 = e.x2 || 0, y2 = e.y2 || 0;
-      // wide outer glow
-      ctx.strokeStyle = `rgba(255,50,50,${0.25*intensity})`; ctx.lineWidth = 22 * lScale;
-      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
-      // mid glow
-      ctx.strokeStyle = `rgba(255,100,100,${0.4*intensity})`; ctx.lineWidth = 10 * lScale;
-      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
-      // core beam
-      ctx.strokeStyle = '#FF1744'; ctx.lineWidth = 3 * lScale;
-      ctx.shadowColor = '#FF1744'; ctx.shadowBlur = 25 * lScale;
-      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
-      // bright center
-      ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = lScale; ctx.shadowBlur = 0;
-      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+      const dx = x2 - x1, dy = y2 - y1;
+      const len = Math.hypot(dx, dy) || 1;
+      const ux = dx / len, uy = dy / len;
+      const age = e.age || 0;
+
+      // Flash d'amorce sur les 100 premières ms, puis pulse régulier
+      const ignite = age < 0.1 ? 1 - age / 0.1 : 0;
+      const pulse = 0.85 + 0.15 * Math.sin(age * 28);
+      const fade = e.life > 0.4 ? 1 : e.life / 0.4;
+      const intensity = fade * pulse;
+
+      ctx.lineCap = 'round';
+
+      // Halo glow externe — fin et propre, pas de gros cône
+      ctx.strokeStyle = `rgba(255,40,80,${0.18 * intensity})`;
+      ctx.lineWidth = (8 + 4 * ignite) * lScale;
+      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+
+      // Core rouge vif
+      ctx.strokeStyle = `rgba(255,30,80,${intensity})`;
+      ctx.lineWidth = 3.2 * lScale;
+      ctx.shadowColor = '#FF1744'; ctx.shadowBlur = 14 * lScale;
+      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+
+      // Cœur blanc incandescent
+      ctx.strokeStyle = `rgba(255,255,255,${intensity})`;
+      ctx.lineWidth = 1.2 * lScale;
+      ctx.shadowBlur = 0;
+      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+
+      // Burst à l'origine (canon) — radial gradient pulsé
+      const burstR = (16 + 10 * ignite) * lScale * pulse;
+      const og = ctx.createRadialGradient(x1, y1, 0, x1, y1, burstR);
+      og.addColorStop(0, `rgba(255,255,255,${0.95 * intensity})`);
+      og.addColorStop(0.35, `rgba(255,80,100,${0.6 * intensity})`);
+      og.addColorStop(1, 'rgba(255,30,60,0)');
+      ctx.fillStyle = og;
+      ctx.beginPath(); ctx.arc(x1, y1, burstR, 0, Math.PI * 2); ctx.fill();
+
+      // Burst d'impact (au bout du rayon)
+      const hitR = (12 + 8 * ignite) * lScale * pulse;
+      const hg = ctx.createRadialGradient(x2, y2, 0, x2, y2, hitR);
+      hg.addColorStop(0, `rgba(255,255,255,${intensity})`);
+      hg.addColorStop(0.4, `rgba(255,100,120,${0.55 * intensity})`);
+      hg.addColorStop(1, 'rgba(255,30,60,0)');
+      ctx.fillStyle = hg;
+      ctx.beginPath(); ctx.arc(x2, y2, hitR, 0, Math.PI * 2); ctx.fill();
+
+      // Particules d'énergie qui descendent le rayon (3 dots qui glissent)
+      const NDOTS = 3;
+      for (let i = 0; i < NDOTS; i++) {
+        const t = ((age * 1.6 + i / NDOTS) % 1);
+        const px = x1 + ux * len * t;
+        const py = y1 + uy * len * t;
+        const dotR = 3.2 * lScale * (1 - Math.abs(0.5 - t) * 0.6);
+        ctx.fillStyle = `rgba(255,255,255,${0.9 * intensity})`;
+        ctx.shadowColor = '#FF1744'; ctx.shadowBlur = 10 * lScale;
+        ctx.beginPath(); ctx.arc(px, py, dotR, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.shadowBlur = 0;
+
       ctx.restore();
       break;
     }

@@ -185,6 +185,68 @@ export const Music = (() => {
       if (!actx) init();
       sfx([G4, B4, D5, G5], 0.12, 0.25, 'square');
     },
+    /** Tir laser — "pew" descendant rapide. Faible vol (joué très souvent). */
+    sfxLaser() {
+      if (!actx) init();
+      if (actx.state === 'suspended') actx.resume();
+      const t = actx.currentTime;
+      const o = actx.createOscillator();
+      const g = actx.createGain();
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(1800, t);
+      o.frequency.exponentialRampToValueAtTime(180, t + 0.18);
+      g.gain.setValueAtTime(0.07, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+      o.connect(g); g.connect(master);
+      o.start(t); o.stop(t + 0.22);
+    },
+    /** Tir pelote — petit "thwip" mat. Très faible vol. */
+    sfxPelote() {
+      if (!actx) init();
+      if (actx.state === 'suspended') actx.resume();
+      const t = actx.currentTime;
+      const o = actx.createOscillator();
+      const g = actx.createGain();
+      o.type = 'triangle';
+      o.frequency.setValueAtTime(620, t);
+      o.frequency.exponentialRampToValueAtTime(220, t + 0.08);
+      g.gain.setValueAtTime(0.05, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+      o.connect(g); g.connect(master);
+      o.start(t); o.stop(t + 0.12);
+    },
+    /** Tir feu d'artifice — "fwip" montant pétillant. */
+    sfxArtifice() {
+      if (!actx) init();
+      if (actx.state === 'suspended') actx.resume();
+      const t = actx.currentTime;
+      const o = actx.createOscillator();
+      const g = actx.createGain();
+      o.type = 'square';
+      o.frequency.setValueAtTime(420, t);
+      o.frequency.linearRampToValueAtTime(960, t + 0.12);
+      g.gain.setValueAtTime(0.06, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+      o.connect(g); g.connect(master);
+      o.start(t); o.stop(t + 0.16);
+    },
+    /** Tir carton — "whoosh" feutré. */
+    sfxCarton() {
+      if (!actx) init();
+      if (actx.state === 'suspended') actx.resume();
+      const t = actx.currentTime;
+      const len = 0.18;
+      const buf = actx.createBuffer(1, Math.ceil(actx.sampleRate * len), actx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
+      const n = actx.createBufferSource(); n.buffer = buf;
+      const f = actx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 700; f.Q.value = 0.8;
+      const g = actx.createGain();
+      g.gain.setValueAtTime(0.08, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + len);
+      n.connect(f); f.connect(g); g.connect(master);
+      n.start(t); n.stop(t + len + 0.01);
+    },
     /** Petit miaou synthétique — pitch légèrement randomisé pour la variété. */
     sfxMeow() {
       if (!actx) init();

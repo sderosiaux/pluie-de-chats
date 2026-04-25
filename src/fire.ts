@@ -1,8 +1,9 @@
 import { state, projectiles, effects, rechargeTimers, upgradeFlags } from './state';
-import { MAX_PULL, HUD_H } from './config';
+import { MAX_PULL } from './config';
 import { PROJ_DEFS } from './data';
 import { WEAPON_SPRITES } from './sprites';
 import { spawnParticles, showStaticMsg } from './effects';
+import { Music } from './audio';
 import type { Pos, Effect } from './types';
 
 export function fire(fingerPos: Pos): void {
@@ -36,9 +37,13 @@ export function fire(fingerPos: Pos): void {
   }
 
   if (state.selectedType === 'laser') {
-    fireLaser(nx, ny, spd);
+    fireLaser(fingerPos);
     return;
   }
+
+  if (state.selectedType === 'pelote') Music.sfxPelote();
+  else if (state.selectedType === 'artifice') Music.sfxArtifice();
+  else if (state.selectedType === 'carton') Music.sfxCarton();
 
   // Charge bonus — hold-to-charge ratio appliqué selon l'arme
   // chargeBonus upgrade : étend la profondeur du bonus (+50% ou +100%)
@@ -73,41 +78,23 @@ export function fire(fingerPos: Pos): void {
   } as any);
 }
 
-export function computeLaserEnd(nx: number, ny: number): Pos {
+export function fireLaser(endPos: Pos): Effect {
   const lx = state.LAUNCHER.x;
   const ly = state.LAUNCHER.y;
-  let t = Infinity;
-  if (nx > 0) t = Math.min(t, (state.W - lx) / nx);
-  if (nx < 0) t = Math.min(t, (0 - lx) / nx);
-  if (ny > 0) t = Math.min(t, (state.H - ly) / ny);
-  if (ny < 0) t = Math.min(t, (HUD_H - ly) / ny);
-  return { x: lx + nx * t, y: ly + ny * t };
-}
-
-export function fireLaser(nx: number, ny: number, _spd: number): Effect {
-  const lx = state.LAUNCHER.x;
-  const ly = state.LAUNCHER.y;
-  const end = computeLaserEnd(nx, ny);
   const eff: Effect = {
     type: 'active_laser',
-    x1: lx, y1: ly, x2: end.x, y2: end.y,
+    x1: lx, y1: ly, x2: endPos.x, y2: endPos.y,
     life: 1, dur: 1.5, age: 0,
     caught: 0, caughtIds: new Set<number>(),
   };
   effects.push(eff);
-  spawnParticles(state.LAUNCHER.x, state.LAUNCHER.y, 8, false);
+  spawnParticles(lx, ly, 8, false);
+  Music.sfxLaser();
   return eff;
 }
 
 export function updateSteerLaser(pos: Pos): void {
   if (!state.activeSteerLaser) return;
-  const dx = pos.x - state.LAUNCHER.x;
-  const dy = pos.y - state.LAUNCHER.y;
-  const dist = Math.hypot(dx, dy);
-  if (dist < 8) return;
-  const nx = dx / dist;
-  const ny = dy / dist;
-  const end = computeLaserEnd(nx, ny);
-  state.activeSteerLaser.x2 = end.x;
-  state.activeSteerLaser.y2 = end.y;
+  state.activeSteerLaser.x2 = pos.x;
+  state.activeSteerLaser.y2 = pos.y;
 }

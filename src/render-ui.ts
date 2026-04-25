@@ -1,6 +1,6 @@
 import { state, unlockedTypes, rechargeTimers } from './state';
 import { ctx } from './canvas';
-import { HUD_H, DIAL_R, DIAL_ANGLES, MAX_PULL, TYPE_ORDER } from './config';
+import { HUD_H, MAX_PULL, TYPE_ORDER, getSlotPos } from './config';
 import { PROJ_DEFS } from './data';
 import { drawProjIcon } from './render-cats';
 import { WEAPON_SPRITES } from './sprites';
@@ -89,11 +89,24 @@ export function drawTrajectory(): void {
 }
 
 
-// ── Launcher visual ───────────────────────────────────────────────────────────
+// ── Launcher visual — un design par arme ──────────────────────────────────────
 export function drawLauncher(): void {
   const lx = state.LAUNCHER.x, ly = state.LAUNCHER.y;
   ctx.save();
+  switch (state.selectedType) {
+    case 'pelote':   drawSlingshot(lx, ly); break;
+    case 'artifice': drawMortar(lx, ly);    break;
+    case 'laser':    drawEmitter(lx, ly);   break;
+    case 'carton':   drawCatapult(lx, ly);  break;
+    default:         drawSlingshot(lx, ly);
+  }
+  ctx.restore();
+}
 
+function drawSlingshot(lx: number, ly: number): void {
+  // Charge tend l'élastique vers le bas
+  const cr = state.chargeRatio;
+  const elasticDip = -18 - cr * 14;
   // handle
   ctx.strokeStyle='#5D4037'; ctx.lineWidth=10; ctx.lineCap='round';
   ctx.beginPath(); ctx.moveTo(lx,ly+8); ctx.lineTo(lx,ly+38); ctx.stroke();
@@ -108,13 +121,114 @@ export function drawLauncher(): void {
   ctx.fillStyle='#3E2723';
   ctx.beginPath(); ctx.arc(lx-14,ly-22,5,0,Math.PI*2); ctx.fill();
   ctx.beginPath(); ctx.arc(lx+14,ly-22,5,0,Math.PI*2); ctx.fill();
-  // elastic — Candy Pop magenta/pink
+  // élastique — magenta candy pop
   ctx.strokeStyle='#ff3ea5'; ctx.lineWidth=2.5;
   ctx.setLineDash([4,3]);
-  ctx.beginPath(); ctx.moveTo(lx-14,ly-22); ctx.quadraticCurveTo(lx,ly-18,lx+14,ly-22); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(lx-14,ly-22); ctx.quadraticCurveTo(lx,ly+elasticDip,lx+14,ly-22); ctx.stroke();
   ctx.setLineDash([]);
+}
 
-  ctx.restore();
+function drawMortar(lx: number, ly: number): void {
+  const cr = state.chargeRatio;
+  // Base bois
+  ctx.fillStyle = '#5D4037';
+  ctx.beginPath(); ctx.ellipse(lx, ly+38, 24, 9, 0, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#6D4C41';
+  ctx.beginPath(); ctx.roundRect(lx-18, ly+18, 36, 22, 4); ctx.fill();
+  // Tube mortier (vertical, conique)
+  ctx.fillStyle = '#37474F';
+  ctx.beginPath();
+  ctx.moveTo(lx-11, ly+22);
+  ctx.lineTo(lx+11, ly+22);
+  ctx.lineTo(lx+9,  ly-22);
+  ctx.lineTo(lx-9,  ly-22);
+  ctx.closePath(); ctx.fill();
+  // Bouche du tube (ouverture sombre)
+  ctx.fillStyle = '#1a1a1a';
+  ctx.beginPath(); ctx.ellipse(lx, ly-22, 9, 3, 0, 0, Math.PI*2); ctx.fill();
+  // Cerclage métal en haut
+  ctx.strokeStyle = '#90A4AE'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.ellipse(lx, ly-21, 9, 3, 0, 0, Math.PI*2); ctx.stroke();
+  // Mèche sortant du côté — étincelle si on charge
+  ctx.strokeStyle = '#A66838'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(lx+9, ly-10); ctx.quadraticCurveTo(lx+22, ly-14, lx+24, ly-2); ctx.stroke();
+  // Étincelle sur la mèche pendant la charge
+  if (cr > 0) {
+    const flicker = 0.6 + Math.sin(state.gameTime * 28) * 0.4;
+    ctx.fillStyle = '#FFD700';
+    ctx.shadowColor = '#FF8800'; ctx.shadowBlur = 10;
+    ctx.beginPath(); ctx.arc(lx+24, ly-2, 2.5 + cr * 2 * flicker, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+}
+
+function drawEmitter(lx: number, ly: number): void {
+  // Trépied
+  ctx.strokeStyle = '#37474F'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(lx, ly+8);   ctx.lineTo(lx-16, ly+38); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(lx, ly+8);   ctx.lineTo(lx+16, ly+38); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(lx, ly+8);   ctx.lineTo(lx,    ly+40); ctx.stroke();
+  // Pieds
+  ctx.fillStyle = '#263238';
+  ctx.beginPath(); ctx.arc(lx-16, ly+38, 3, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(lx+16, ly+38, 3, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(lx,    ly+40, 3, 0, Math.PI*2); ctx.fill();
+  // Boîtier émetteur (disque vertical)
+  ctx.fillStyle = '#455A64';
+  ctx.beginPath(); ctx.roundRect(lx-14, ly-12, 28, 24, 4); ctx.fill();
+  ctx.strokeStyle = '#263238'; ctx.lineWidth = 1.5;
+  ctx.stroke();
+  // Anneau lumineux pulsant
+  const pulse = 0.55 + Math.sin(state.gameTime * 6) * 0.45;
+  ctx.strokeStyle = `rgba(255,40,80,${0.5 + pulse * 0.5})`;
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(lx, ly, 9, 0, Math.PI*2); ctx.stroke();
+  // Lentille rouge centrale
+  const lens = ctx.createRadialGradient(lx, ly, 0, lx, ly, 8);
+  lens.addColorStop(0, '#FFFFFF');
+  lens.addColorStop(0.4, '#FF1744');
+  lens.addColorStop(1, '#7A0024');
+  ctx.fillStyle = lens;
+  ctx.beginPath(); ctx.arc(lx, ly, 6.5, 0, Math.PI*2); ctx.fill();
+  // Halo (faible)
+  ctx.shadowColor = '#FF1744'; ctx.shadowBlur = 12;
+  ctx.beginPath(); ctx.arc(lx, ly, 4, 0, Math.PI*2); ctx.fill();
+  ctx.shadowBlur = 0;
+}
+
+function drawCatapult(lx: number, ly: number): void {
+  const cr = state.chargeRatio;
+  // Plus on charge, plus le bras est tiré en arrière (vers le bas)
+  const armAngle = -Math.PI/2 + cr * 0.9; // 0=vertical, charge=tiré
+  // Base bois
+  ctx.fillStyle = '#5D4037';
+  ctx.beginPath(); ctx.ellipse(lx, ly+38, 26, 9, 0, 0, Math.PI*2); ctx.fill();
+  // Cadre A (deux montants)
+  ctx.strokeStyle = '#4E342E'; ctx.lineWidth = 5; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(lx-16, ly+34); ctx.lineTo(lx-2, ly+4); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(lx+16, ly+34); ctx.lineTo(lx+2, ly+4); ctx.stroke();
+  // Pivot
+  ctx.fillStyle = '#FFC107';
+  ctx.beginPath(); ctx.arc(lx, ly+6, 3.5, 0, Math.PI*2); ctx.fill();
+  // Bras de catapulte pivotant
+  const armLen = 28;
+  const ax = lx + Math.cos(armAngle) * armLen;
+  const ay = (ly+6) + Math.sin(armAngle) * armLen;
+  ctx.strokeStyle = '#6D4C41'; ctx.lineWidth = 5; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(lx, ly+6); ctx.lineTo(ax, ay); ctx.stroke();
+  // Godet en bout de bras
+  ctx.fillStyle = '#8D6E63';
+  ctx.beginPath(); ctx.arc(ax, ay, 6, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = '#3E2723'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(ax, ay, 6, 0, Math.PI*2); ctx.stroke();
+  // Corde de tension (apparaît à mesure qu'on charge)
+  if (cr > 0.05) {
+    ctx.strokeStyle = `rgba(255,62,165,${0.4 + cr * 0.5})`;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([3, 2]);
+    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(lx, ly+34); ctx.stroke();
+    ctx.setLineDash([]);
+  }
 }
 
 
@@ -157,16 +271,12 @@ export function drawPadlock(cx: number, cy: number, size: number): void {
 }
 
 export function drawInventory(): void {
-  const dcx = state.W / 2, dcy = state.DIAL_CY;
-
   for (let i = 0; i < TYPE_ORDER.length; i++) {
     const id = TYPE_ORDER[i];
     const def = PROJ_DEFS[id];
     const locked = !unlockedTypes.has(id);
     const isSelected = !locked && state.selectedType === id;
-    const ang = DIAL_ANGLES[i] * Math.PI / 180;
-    const sx = dcx + Math.cos(ang) * DIAL_R;
-    const sy = dcy + Math.sin(ang) * DIAL_R;
+    const { x: sx, y: sy } = getSlotPos(i, TYPE_ORDER.length, state.W, state.DIAL_CY);
     const slotR = isSelected ? 34 : 28;
 
     ctx.save();
@@ -190,12 +300,8 @@ export function drawInventory(): void {
       const _wSpr = typeof WEAPON_SPRITES !== 'undefined' && WEAPON_SPRITES[id];
       const hasSprite = _wSpr && _wSpr.complete && _wSpr.naturalWidth > 0;
 
-      // Selected: outer glow rings
+      // Selected: anneau jaune qui entoure l'arme (le pulse extérieur faisait doublon)
       if (isSelected) {
-        const pulse = (Math.sin(state.gameTime * 4.5) + 1) * 0.5;
-        ctx.strokeStyle = tone + Math.round((pulse * 0.55 + 0.2) * 255).toString(16).padStart(2, '0');
-        ctx.lineWidth = 5;
-        ctx.beginPath(); ctx.arc(sx, sy, slotR + 10, 0, Math.PI * 2); ctx.stroke();
         ctx.strokeStyle = '#ffce3a'; ctx.lineWidth = 2.5;
         ctx.beginPath(); ctx.arc(sx, sy, slotR + 3, 0, Math.PI * 2); ctx.stroke();
       }

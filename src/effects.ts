@@ -7,6 +7,7 @@ import {
 } from './state';
 import { CONFETTI, SCENES } from './config';
 import { PROJ_DEFS, BASE_PROJ_DEFS } from './data';
+import { startGameoverScene, stopGameoverScene } from './gameover-scene';
 import type { Cat, Projectile } from './types';
 
 // ── Particles & popups ────────────────────────────────────────────────────────
@@ -55,7 +56,7 @@ export function triggerGameOver(): void {
   const goHi = document.getElementById('go-hi-val');
   if (goHi) goHi.textContent = String(state.hiScore);
   document.getElementById('gameover-overlay')?.classList.add('show');
-  // Tentative d'ajout au top 10 local — capture le score avant que resetGame ne le RAZ
+  startGameoverScene();
   const finalScore = state.score;
   setTimeout(() => maybeAddHighscore(finalScore), 100);
 }
@@ -91,6 +92,7 @@ export function resetGame(): void {
   checkUnlocks();
   updateHUD();
   document.getElementById('gameover-overlay')?.classList.remove('show');
+  stopGameoverScene();
 }
 
 

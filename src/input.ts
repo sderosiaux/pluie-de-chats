@@ -1,7 +1,7 @@
 import { showToast } from './unlock';
 import { state, upgradeFlags, unlockedTypes, rechargeTimers } from './state';
 import { canvas } from './canvas';
-import { DIAL_R, DIAL_ANGLES, TYPE_ORDER } from './config';
+import { TYPE_ORDER, getSlotPos } from './config';
 import { PROJ_DEFS } from './data';
 import { fire, fireLaser, updateSteerLaser } from './fire';
 import type { Pos } from './types';
@@ -21,12 +21,8 @@ export function getEventPos(e: MouseEvent | TouchEvent): Pos {
 export function handleDown(pos: Pos): void {
   // Sélection d'arme : uniquement si tap directement sur un slot du dial
   // (hit-radius généreux 44px). Tout le reste de l'écran = drag/fire.
-  const dcx = state.W / 2;
-  const dcy = state.DIAL_CY;
   for (let i = 0; i < TYPE_ORDER.length; i++) {
-    const ang = DIAL_ANGLES[i] * Math.PI / 180;
-    const sx = dcx + Math.cos(ang) * DIAL_R;
-    const sy = dcy + Math.sin(ang) * DIAL_R;
+    const { x: sx, y: sy } = getSlotPos(i, TYPE_ORDER.length, state.W, state.DIAL_CY);
     if (Math.hypot(pos.x - sx, pos.y - sy) < 44) {
       const id = TYPE_ORDER[i];
       if (unlockedTypes.has(id)) state.selectedType = id;
@@ -50,15 +46,13 @@ export function handleDown(pos: Pos): void {
       const dy = pos.y - state.LAUNCHER.y;
       const dist = Math.hypot(dx, dy);
       if (dist >= 8) {
-        const nx = dx / dist;
-        const ny = dy / dist;
         if (!upgradeFlags.cheatMode) {
           def.stock--;
           if (def.stock < def.maxStock && rechargeTimers[state.selectedType] <= 0) {
             rechargeTimers[state.selectedType] = def.recharge;
           }
         }
-        state.activeSteerLaser = fireLaser(nx, ny, 0);
+        state.activeSteerLaser = fireLaser(pos);
       }
     }
   }
@@ -108,13 +102,13 @@ document.addEventListener('keydown', e => {
         def.maxStock = 999;
         rechargeTimers[id] = 0;
       });
-      showToast('🐱 CHEAT ON — toutes les armes, munitions infinies');
+      showToast('⭐ CHEAT ON — toutes les armes, munitions infinies');
     } else {
       Object.assign((PROJ_DEFS as any).pelote,   { stock: 3, maxStock: 3 });
       Object.assign((PROJ_DEFS as any).artifice, { stock: 2, maxStock: 2 });
       Object.assign((PROJ_DEFS as any).laser,    { stock: 1, maxStock: 1 });
       Object.assign((PROJ_DEFS as any).carton,   { stock: 1, maxStock: 1 });
-      showToast('🐱 CHEAT OFF');
+      showToast('⭐ CHEAT OFF');
     }
     state._cheatBuf = '';
   }
