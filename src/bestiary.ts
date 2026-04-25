@@ -4,6 +4,21 @@ import { CAT_SPRITES } from './sprites';
 import { Music } from './audio';
 import type { CatType } from './types';
 
+type Rarity = 'common' | 'uncommon' | 'rare' | 'legendary';
+
+function getRarity(t: CatType): Rarity {
+  const w = t.w;
+  if (w === 0 || w <= 3) return 'legendary'; // boss + chats très rares
+  if (w <= 7) return 'rare';
+  if (w <= 13) return 'uncommon';
+  return 'common';
+}
+
+const RARITY_ORDER: Record<Rarity, number> = { legendary: 0, rare: 1, uncommon: 2, common: 3 };
+const RARITY_LABEL: Record<Rarity, string> = {
+  legendary: 'LÉGENDAIRE', rare: 'RARE', uncommon: 'PEU COMMUN', common: 'COMMUN',
+};
+
 // Hydrate caughtTypes from localStorage at module load
 try {
   const saved = JSON.parse(localStorage.getItem('pdc_caught') || '[]');
@@ -124,14 +139,26 @@ export function buildBestiary(): void {
   const countEl = document.getElementById('bst-count');
   if (countEl) countEl.textContent = `${found} / ${(CAT_TYPES as CatType[]).length} découverts`;
 
-  (CAT_TYPES as CatType[]).forEach(type => {
+  // Tri : rareté (légendaire d'abord) puis nom alphabétique dans chaque tier
+  const sorted = [...(CAT_TYPES as CatType[])].sort((a, b) => {
+    const rA = RARITY_ORDER[getRarity(a)];
+    const rB = RARITY_ORDER[getRarity(b)];
+    if (rA !== rB) return rA - rB;
+    const labelA = a.label || (CAT_LABELS as any)[a.id] || a.id;
+    const labelB = b.label || (CAT_LABELS as any)[b.id] || b.id;
+    return labelA.localeCompare(labelB);
+  });
+
+  sorted.forEach(type => {
     const caught = caughtTypes.has(type.id);
     const label = type.label || (CAT_LABELS as any)[type.id] || type.id;
     const cat = (CAT_CATEGORIES as any)[type.id] || 'Spécial';
     const catCol = (CAT_CATCOLS as any)[cat] || '#888';
+    const rarity = getRarity(type);
 
     const card = document.createElement('div');
-    card.className = 'bst-card' + (caught ? '' : ' unknown');
+    card.className = `bst-card bst-rar-${rarity}` + (caught ? '' : ' unknown');
+    if (caught) card.title = RARITY_LABEL[rarity];
 
     const badge = document.createElement('div');
     badge.className = 'bst-badge';
@@ -173,9 +200,19 @@ export function openBestiaryDetail(type: CatType): void {
   const label = type.label || (CAT_LABELS as any)[type.id] || type.id;
   const cat = (CAT_CATEGORIES as any)[type.id] || 'Spécial';
   const catCol = (CAT_CATCOLS as any)[cat] || '#888';
+  const rarity = getRarity(type);
+
+  // Applique la classe rareté sur la card du modal pour le glow
+  const card = document.getElementById('bst-detail-card');
+  if (card) {
+    card.classList.remove('bst-rar-common', 'bst-rar-uncommon', 'bst-rar-rare', 'bst-rar-legendary');
+    card.classList.add(`bst-rar-${rarity}`);
+  }
 
   const nameEl = document.getElementById('bst-detail-name');
-  if (nameEl) nameEl.textContent = label;
+  if (nameEl) {
+    nameEl.innerHTML = `${label} <span class="bst-detail-rarity bst-detail-rar-${rarity}">${RARITY_LABEL[rarity]}</span>`;
+  }
 
   const badge = document.getElementById('bst-detail-badge');
   if (badge) {

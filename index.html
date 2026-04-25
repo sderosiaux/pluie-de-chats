@@ -370,6 +370,36 @@
     border-color: rgba(255,255,255,0.05);
     opacity: 0.6;
   }
+  /* Rareté Diablo-like : commun → légendaire */
+  .bst-card.bst-rar-common {
+    border-color: rgba(255,255,255,0.18);
+  }
+  .bst-card.bst-rar-uncommon {
+    border-color: #5BB6E8;
+    box-shadow: 0 0 10px rgba(91,182,232,0.30);
+  }
+  .bst-card.bst-rar-rare {
+    border-color: #A876F2;
+    box-shadow: 0 0 14px rgba(168,118,242,0.45), inset 0 0 10px rgba(168,118,242,0.10);
+    background: linear-gradient(160deg, rgba(168,118,242,0.10), rgba(255,255,255,0.04));
+  }
+  .bst-card.bst-rar-legendary {
+    border-color: #FFB347;
+    background: linear-gradient(160deg, rgba(255,179,71,0.18), rgba(255,206,58,0.06));
+    box-shadow: 0 0 22px rgba(255,179,71,0.55), inset 0 0 14px rgba(255,206,58,0.18);
+    animation: bst-leg-pulse 2.4s ease-in-out infinite;
+  }
+  /* Cards inconnues : la teinte rareté reste discrète mais visible (= teaser) */
+  .bst-card.unknown.bst-rar-uncommon { box-shadow: 0 0 6px rgba(91,182,232,0.18); }
+  .bst-card.unknown.bst-rar-rare     { box-shadow: 0 0 8px rgba(168,118,242,0.22); }
+  .bst-card.unknown.bst-rar-legendary{
+    box-shadow: 0 0 12px rgba(255,179,71,0.32);
+    animation: bst-leg-pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes bst-leg-pulse {
+    0%,100% { box-shadow: 0 0 18px rgba(255,179,71,0.45), inset 0 0 10px rgba(255,206,58,0.14); }
+    50%     { box-shadow: 0 0 28px rgba(255,179,71,0.75), inset 0 0 18px rgba(255,206,58,0.24); }
+  }
   .bst-badge {
     font-size: 8px; font-family: 'Fredoka', sans-serif; font-weight: 700;
     letter-spacing: 1px; text-transform: uppercase;
@@ -404,7 +434,31 @@
     max-width: 460px; width: 100%;
     box-shadow: 0 18px 60px rgba(0,0,0,0.55);
     text-align: center;
+    transition: border-color .2s, box-shadow .2s;
   }
+  #bst-detail-card.bst-rar-uncommon {
+    border-color: #5BB6E8;
+    box-shadow: 0 18px 60px rgba(91,182,232,0.45);
+  }
+  #bst-detail-card.bst-rar-rare {
+    border-color: #A876F2;
+    box-shadow: 0 18px 60px rgba(168,118,242,0.55);
+  }
+  #bst-detail-card.bst-rar-legendary {
+    border-color: #FFB347;
+    box-shadow: 0 18px 60px rgba(255,179,71,0.65), inset 0 0 22px rgba(255,206,58,0.18);
+    animation: bst-leg-pulse 2.4s ease-in-out infinite;
+  }
+  .bst-detail-rarity {
+    display: inline-block; font-family: 'Fredoka', sans-serif;
+    font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+    padding: 3px 10px; border-radius: 8px; margin-left: 8px;
+    vertical-align: middle;
+  }
+  .bst-detail-rar-common    { background: rgba(255,255,255,0.18); color: #fff; }
+  .bst-detail-rar-uncommon  { background: #5BB6E8; color: #0a2a3a; }
+  .bst-detail-rar-rare      { background: #A876F2; color: #fff; }
+  .bst-detail-rar-legendary { background: linear-gradient(90deg, #FFB347, #ffce3a); color: #2a1b4a; }
   #bst-detail-badge {
     display: inline-block; font-family: 'Fredoka', sans-serif;
     font-size: 10px; font-weight: 700; letter-spacing: 1px;
