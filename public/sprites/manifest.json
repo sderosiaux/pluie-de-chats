@@ -1,0 +1,291 @@
+{
+  "cats": {
+    "astro": [
+      "cats/astro_sit.png",
+      "cats/astro_mid.png",
+      "cats/astro_tro.png"
+    ],
+    "bengal": [
+      "cats/bengal_sit.png",
+      "cats/bengal_mid.png",
+      "cats/bengal_tro.png"
+    ],
+    "blanc": [
+      "cats/blanc_sit.png",
+      "cats/blanc_mid.png",
+      "cats/blanc_tro.png"
+    ],
+    "boss": [
+      "cats/boss_sit.png",
+      "cats/boss_mid.png",
+      "cats/boss_tro.png"
+    ],
+    "bouclier": [
+      "cats/bouclier_sit.png",
+      "cats/bouclier_mid.png",
+      "cats/bouclier_tro.png"
+    ],
+    "crachat": [
+      "cats/crachat_sit.png",
+      "cats/crachat_mid.png",
+      "cats/crachat_tro.png"
+    ],
+    "fantome": [
+      "cats/fantome_sit.png",
+      "cats/fantome_mid.png",
+      "cats/fantome_tro.png"
+    ],
+    "faux": [
+      "cats/faux_sit.png",
+      "cats/faux_mid.png",
+      "cats/faux_tro.png"
+    ],
+    "furtif": [
+      "cats/furtif_sit.png",
+      "cats/furtif_mid.png",
+      "cats/furtif_tro.png"
+    ],
+    "griffeur": [
+      "cats/griffeur_sit.png",
+      "cats/griffeur_mid.png",
+      "cats/griffeur_tro.png"
+    ],
+    "gris": [
+      "cats/gris_sit.png",
+      "cats/gris_mid.png",
+      "cats/gris_tro.png"
+    ],
+    "medecin": [
+      "cats/medecin_sit.png",
+      "cats/medecin_mid.png",
+      "cats/medecin_tro.png"
+    ],
+    "micro": [
+      "cats/micro_sit.png",
+      "cats/micro_mid.png",
+      "cats/micro_tro.png"
+    ],
+    "noir": [
+      "cats/noir_sit.png",
+      "cats/noir_mid.png",
+      "cats/noir_tro.png"
+    ],
+    "persan": [
+      "cats/persan_sit.png",
+      "cats/persan_mid.png",
+      "cats/persan_tro.png"
+    ],
+    "rainbow": [
+      "cats/rainbow_sit.png",
+      "cats/rainbow_mid.png",
+      "cats/rainbow_tro.png"
+    ],
+    "rapide": [
+      "cats/rapide_sit.png",
+      "cats/rapide_mid.png",
+      "cats/rapide_tro.png"
+    ],
+    "scottish": [
+      "cats/scottish_sit.png",
+      "cats/scottish_mid.png",
+      "cats/scottish_tro.png"
+    ],
+    "siamois": [
+      "cats/siamois_sit.png",
+      "cats/siamois_mid.png",
+      "cats/siamois_tro.png"
+    ],
+    "sphynx": [
+      "cats/sphynx_sit.png",
+      "cats/sphynx_mid.png",
+      "cats/sphynx_tro.png"
+    ],
+    "tabby": [
+      "cats/tabby_sit.png",
+      "cats/tabby_mid.png",
+      "cats/tabby_tro.png"
+    ],
+    "zigzag": [
+      "cats/zigzag_sit.png",
+      "cats/zigzag_mid.png",
+      "cats/zigzag_tro.png"
+    ],
+    "pompier": [
+      "cats/pompier_sit.png",
+      "cats/pompier_mid.png",
+      "cats/pompier_tro.png"
+    ],
+    "boulanger": [
+      "cats/boulanger_sit.png",
+      "cats/boulanger_mid.png",
+      "cats/boulanger_tro.png"
+    ],
+    "ninja": [
+      "cats/ninja_sit.png",
+      "cats/ninja_mid.png",
+      "cats/ninja_tro.png"
+    ],
+    "detective": [
+      "cats/detective_sit.png",
+      "cats/detective_mid.png",
+      "cats/detective_tro.png"
+    ],
+    "pirate": [
+      "cats/pirate_sit.png",
+      "cats/pirate_mid.png",
+      "cats/pirate_tro.png"
+    ],
+    "policier": [
+      "cats/policier_sit.png",
+      "cats/policier_mid.png",
+      "cats/policier_tro.png"
+    ],
+    "magicien": [
+      "cats/magicien_sit.png",
+      "cats/magicien_mid.png",
+      "cats/magicien_tro.png"
+    ],
+    "cowboy": [
+      "cats/cowboy_sit.png",
+      "cats/cowboy_mid.png",
+      "cats/cowboy_tro.png"
+    ],
+    "viking": [
+      "cats/viking_sit.png",
+      "cats/viking_mid.png",
+      "cats/viking_tro.png"
+    ],
+    "sorciere": [
+      "cats/sorciere_sit.png",
+      "cats/sorciere_mid.png",
+      "cats/sorciere_tro.png"
+    ],
+    "marin": [
+      "cats/marin_sit.png",
+      "cats/marin_mid.png",
+      "cats/marin_tro.png"
+    ],
+    "gamer": [
+      "cats/gamer_sit.png",
+      "cats/gamer_mid.png",
+      "cats/gamer_tro.png"
+    ],
+    "scientifique": [
+      "cats/scientifique_sit.png",
+      "cats/scientifique_mid.png",
+      "cats/scientifique_tro.png"
+    ],
+    "artiste": [
+      "cats/artiste_sit.png",
+      "cats/artiste_mid.png",
+      "cats/artiste_tro.png"
+    ],
+    "jardinier": [
+      "cats/jardinier_sit.png",
+      "cats/jardinier_mid.png",
+      "cats/jardinier_tro.png"
+    ],
+    "chevalier": [
+      "cats/chevalier_sit.png",
+      "cats/chevalier_mid.png",
+      "cats/chevalier_tro.png"
+    ],
+    "musicien": [
+      "cats/musicien_sit.png",
+      "cats/musicien_mid.png",
+      "cats/musicien_tro.png"
+    ],
+    "cuisinier": [
+      "cats/cuisinier_sit.png",
+      "cats/cuisinier_mid.png",
+      "cats/cuisinier_tro.png"
+    ],
+    "clown": [
+      "cats/clown_sit.png",
+      "cats/clown_mid.png",
+      "cats/clown_tro.png"
+    ],
+    "robot": [
+      "cats/robot_sit.png",
+      "cats/robot_mid.png",
+      "cats/robot_tro.png"
+    ],
+    "sportif": [
+      "cats/sportif_sit.png",
+      "cats/sportif_mid.png",
+      "cats/sportif_tro.png"
+    ],
+    "professeur": [
+      "cats/professeur_sit.png",
+      "cats/professeur_mid.png",
+      "cats/professeur_tro.png"
+    ],
+    "facteur": [
+      "cats/facteur_sit.png",
+      "cats/facteur_mid.png",
+      "cats/facteur_tro.png"
+    ],
+    "samourai": [
+      "cats/samourai_sit.png",
+      "cats/samourai_mid.png",
+      "cats/samourai_tro.png"
+    ],
+    "infirmier": [
+      "cats/infirmier_sit.png",
+      "cats/infirmier_mid.png",
+      "cats/infirmier_tro.png"
+    ],
+    "batman": [
+      "cats/batman_sit.png",
+      "cats/batman_mid.png",
+      "cats/batman_tro.png"
+    ],
+    "catwoman": [
+      "cats/catwoman_sit.png",
+      "cats/catwoman_mid.png",
+      "cats/catwoman_tro.png"
+    ],
+    "flash": [
+      "cats/flash_sit.png",
+      "cats/flash_mid.png",
+      "cats/flash_tro.png"
+    ],
+    "hulk": [
+      "cats/hulk_sit.png",
+      "cats/hulk_mid.png",
+      "cats/hulk_tro.png"
+    ],
+    "spiderman": [
+      "cats/spiderman_sit.png",
+      "cats/spiderman_mid.png",
+      "cats/spiderman_tro.png"
+    ],
+    "superman": [
+      "cats/superman_sit.png",
+      "cats/superman_mid.png",
+      "cats/superman_tro.png"
+    ]
+  },
+  "weapons": {
+    "pelote": "weapons/pelote.png",
+    "artifice": "weapons/artifice.png",
+    "laser": "weapons/laser.png",
+    "carton": "weapons/carton.png"
+  },
+  "objects": {
+    "bombe": "objects/bombe.png",
+    "plume": "objects/plume.png",
+    "souris": "objects/souris.png",
+    "chien": "objects/chien.png",
+    "flaque": "objects/flaque.png",
+    "piment": "objects/piment.png",
+    "aspirateur": "objects/aspirateur.png"
+  },
+  "scenery": {
+    "city": "scenery/city.png",
+    "garden": "scenery/garden.png",
+    "home": "scenery/home.png",
+    "forest": "scenery/forest.png",
+    "moon": "scenery/moon.png"
+  }
+}
