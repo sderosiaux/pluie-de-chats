@@ -1,4 +1,10 @@
 // @ts-nocheck
+import { updateHUD } from './catch';
+import { resetGame } from './effects';
+import { renderHighscores } from './highscores';
+import { buildBestiary } from './bestiary';
+import { Music } from './audio';
+import { state } from './state';
 // ── Menu handlers ─────────────────────────────────────────────────────────
 export const startMenu = document.getElementById('start-menu-overlay');
 export const hsOverlay = document.getElementById('highscores-overlay');

@@ -1,4 +1,6 @@
 // @ts-nocheck
+import { spawnCat } from './spawn';
+import { Music } from './audio';
 import { state, cats } from './state';
 import { EVENT_POOL } from './config';
 import { CAT_TYPES } from './data';

@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { showToast } from './unlock';
 import { state, upgradeFlags, unlockedTypes, rechargeTimers } from './state';
 import { canvas } from './canvas';
 import { DIAL_R, DIAL_ANGLES, TYPE_ORDER } from './config';

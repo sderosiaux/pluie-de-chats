@@ -473,9 +473,7 @@ function loop(ts) {
 
   requestAnimationFrame(loop);
 }
-
 // ── Init ──────────────────────────────────────────────
-import { resetGame } from './effects';
-import { updateHUD } from './catch';
+state.currentScene = SCENES[Math.floor(Math.random() * SCENES.length)];
 updateHUD();
 requestAnimationFrame(loop);

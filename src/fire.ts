@@ -2,7 +2,7 @@
 import { state, projectiles, effects, rechargeTimers, upgradeFlags } from './state';
 import { GRAVITY, MAX_PULL, HUD_H } from './config';
 import { PROJ_DEFS } from './data';
-import { spawnParticles } from './effects';
+import { spawnParticles, showStaticMsg } from './effects';
 
 // ── Fire projectile ───────────────────────────────────────────────────────────
 export function fire(fingerPos) {

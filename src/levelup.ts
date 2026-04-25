@@ -1,4 +1,7 @@
 // @ts-nocheck
+import { updateHUD } from './catch';
+import { checkUnlocks } from './unlock';
+import { Music } from './audio';
 import { state, rechargeTimers, upgradeFlags, unlockedTypes, pickCounts, pendingLevelUps, caughtTypes } from './state';
 import { TYPE_ORDER, LEVELS } from './config';
 import { PROJ_DEFS, UPGRADES, CAT_TYPES } from './data';

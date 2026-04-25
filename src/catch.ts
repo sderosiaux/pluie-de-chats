@@ -1,7 +1,13 @@
 // @ts-nocheck
+import { markCaught } from './bestiary';
+import { ctx } from './canvas';
+import { checkUnlocks } from './unlock';
+import { checkLevelUp } from './levelup';
+import { Music } from './audio';
+import { HUD_H, LEVELS } from './config';
 import { state, cats, projectiles, effects, particles, popups, hairballs, caughtTypes, upgradeFlags, pickCounts, pendingLevelUps } from './state';
 import { CAT_TYPES } from './data';
-import { spawnParticles, spawnPopup, applyTrapEffect } from './effects';
+import { spawnParticles, spawnPopup, applyTrapEffect, gainLife } from './effects';
 
 // ── Catch cat ─────────────────────────────────────────────────────────────────
 export function comboMult() {
