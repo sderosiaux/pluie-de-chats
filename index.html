@@ -3102,7 +3102,7 @@ function loop(ts) {
 
     // off-screen (bottom or top after HUD)
     if(p.y>H+20||p.y<HUD_H){
-        else if(p.type==='carton')deployCarton(p);
+        if(p.type==='carton')deployCarton(p);
       projectiles.splice(i,1);continue;
     }
 
