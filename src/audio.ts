@@ -149,9 +149,22 @@ export const Music = (() => {
       init();
       if (actx.state === 'suspended') actx.resume();
       if (playing) return;
-      playing = true; until = actx.currentTime + 0.05; pump();
+      // Restore master gain (was 0 after stop)
+      master.gain.cancelScheduledValues(actx.currentTime);
+      master.gain.setValueAtTime(0.28, actx.currentTime);
+      playing = true;
+      until = actx.currentTime + 0.05;
+      pump();
     },
-    stop() { playing = false; if (timer) clearTimeout(timer); },
+    stop() {
+      playing = false;
+      if (timer) { clearTimeout(timer); timer = null; }
+      // Coupe instantanément les notes déjà schedulées dans le look-ahead (~6s)
+      if (actx) {
+        master.gain.cancelScheduledValues(actx.currentTime);
+        master.gain.setValueAtTime(0, actx.currentTime);
+      }
+    },
     toggle() { playing ? this.stop() : this.start(); return playing; },
     get on() { return playing; },
     sfxCatch(pts: number) {
