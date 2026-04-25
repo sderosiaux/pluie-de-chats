@@ -1,6 +1,7 @@
 import { state, projectiles, effects, rechargeTimers, upgradeFlags } from './state';
 import { MAX_PULL, HUD_H } from './config';
 import { PROJ_DEFS } from './data';
+import { WEAPON_SPRITES } from './sprites';
 import { spawnParticles, showStaticMsg } from './effects';
 import type { Pos, Effect } from './types';
 
@@ -12,7 +13,7 @@ export function fire(fingerPos: Pos): void {
   const def = (PROJ_DEFS as any)[state.selectedType];
   if (def.stock <= 0) {
     const secsLeft = Math.ceil(rechargeTimers[state.selectedType]);
-    showStaticMsg(state.LAUNCHER.x, state.LAUNCHER.y - 44, `${def.emoji} ${secsLeft}s`, '#ffce3a');
+    showStaticMsg(state.LAUNCHER.x, state.LAUNCHER.y - 44, `${secsLeft}s`, '#ffce3a', WEAPON_SPRITES[state.selectedType]);
     return;
   }
 

@@ -76,7 +76,7 @@ function loop(ts: number): void {
   drawXPBar();
   drawBossBar();
 
-  if (state.menuActive || state.gameOver || state.levelUpPaused) { requestAnimationFrame(loop); return; }
+  if (state.menuActive || state.gameOver || state.levelUpPaused || state.hudMenuOpen) { requestAnimationFrame(loop); return; }
 
   // Trap effect overlays
   if (state.wetTimer > 0) {
@@ -458,21 +458,35 @@ function loop(ts: number): void {
     ctx.restore();
   }
 
-  // Message statique (recharge)
+  // Message statique (recharge) — sprite + texte si fourni
   if (state.staticMsg) {
     state.staticMsg.age += dt;
     const t = state.staticMsg.age / state.staticMsg.dur;
     if (t >= 1) { state.staticMsg = null; }
     else {
+      const msg = state.staticMsg;
       const alpha = t < 0.15 ? t/0.15 : t > 0.7 ? 1-(t-0.7)/0.3 : 1;
       ctx.save(); ctx.globalAlpha = alpha;
       ctx.font = `900 24px "Baloo 2",Arial`;
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+
+      // Mesure le texte pour pouvoir centrer (sprite + texte) autour de msg.x
+      const textW = ctx.measureText(msg.text).width;
+      const sprite = msg.sprite;
+      const spriteSize = 36;
+      const gap = 8;
+      const totalW = (sprite ? spriteSize + gap : 0) + textW;
+      const startX = msg.x - totalW / 2;
+
+      if (sprite && sprite.complete && sprite.naturalWidth > 0) {
+        ctx.drawImage(sprite, startX, msg.y - spriteSize / 2, spriteSize, spriteSize);
+      }
+      const textX = startX + (sprite ? spriteSize + gap : 0);
       ctx.strokeStyle = '#2a1b4a'; ctx.lineWidth = 5; ctx.lineJoin = 'round';
-      ctx.strokeText(state.staticMsg.text, state.staticMsg.x, state.staticMsg.y);
-      ctx.fillStyle = state.staticMsg.col;
+      ctx.strokeText(msg.text, textX, msg.y);
+      ctx.fillStyle = msg.col;
       ctx.shadowColor = 'rgba(0,0,0,0.3)'; ctx.shadowBlur = 4;
-      ctx.fillText(state.staticMsg.text, state.staticMsg.x, state.staticMsg.y);
+      ctx.fillText(msg.text, textX, msg.y);
       ctx.restore();
     }
   }

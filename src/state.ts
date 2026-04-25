@@ -21,6 +21,7 @@ export interface GameState {
   gameOver: boolean;
   levelUpPaused: boolean;
   menuActive: boolean;
+  hudMenuOpen: boolean;
   // Input / aim
   isDragging: boolean;
   dragPos: Pos | null;
@@ -71,6 +72,7 @@ export const state: GameState = {
   gameOver: false,
   levelUpPaused: false,
   menuActive: true,
+  hudMenuOpen: false,
   isDragging: false,
   dragPos: null,
   pointerDown: false,

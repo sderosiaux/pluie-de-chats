@@ -195,6 +195,7 @@ export interface StaticMsg {
   col: string;
   age: number;
   dur: number;
+  sprite?: HTMLImageElement;
 }
 
 export type SceneId = 'city' | 'garden' | 'home' | 'forest';

@@ -94,27 +94,31 @@ document.getElementById('bst-detail-overlay')?.addEventListener('click', e => {
   }
 });
 
-// ── HUD burger menu (en jeu) ─────────────────────────────────────────────
+// ── HUD burger menu (in-game) — modal centré qui met le jeu en pause ────
 const hudPanel = document.getElementById('hud-menu-panel');
 const hudMenuMusicIcon = document.getElementById('hud-menu-music-icon');
 
 function refreshMusicIcons(): void {
   const icon = Music.on ? '🎵' : '🔇';
   if (hudMenuMusicIcon) hudMenuMusicIcon.textContent = icon;
-  const mb = document.getElementById('music-btn');
-  if (mb) mb.textContent = icon;
   const mmi = document.getElementById('menu-music-icon');
   if (mmi) mmi.textContent = icon;
 }
 
+function openHudPanel(): void {
+  state.hudMenuOpen = true;
+  hudPanel?.classList.add('show');
+  refreshMusicIcons();
+}
 function closeHudPanel(): void {
+  state.hudMenuOpen = false;
   hudPanel?.classList.remove('show');
 }
 
 bind('hud-menu-btn', 'click', e => {
   e.stopPropagation();
-  hudPanel?.classList.toggle('show');
-  refreshMusicIcons();
+  if (state.hudMenuOpen) closeHudPanel();
+  else openHudPanel();
 });
 bind('hud-menu-music', 'click', () => {
   Music.toggle();
@@ -130,10 +134,8 @@ bind('hud-menu-highscores', 'click', () => {
   renderHighscores();
   hsOverlay.classList.add('show');
 });
-// Click hors panel = ferme
-document.addEventListener('click', e => {
-  if (!hudPanel?.classList.contains('show')) return;
-  const t = e.target as HTMLElement;
-  if (t.closest('#hud-menu-panel') || t.closest('#hud-menu-btn')) return;
-  closeHudPanel();
+bind('hud-menu-resume', 'click', () => closeHudPanel());
+// Tap sur backdrop = ferme (mais pas sur la card ni les boutons)
+hudPanel?.addEventListener('click', e => {
+  if ((e.target as HTMLElement).id === 'hud-menu-panel') closeHudPanel();
 });

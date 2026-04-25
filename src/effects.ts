@@ -25,8 +25,8 @@ export function spawnPopup(x: number, y: number, text: string, col: string): voi
   popups.push({ x, y, text, col, life: 1, vy: -2.8 });
 }
 
-export function showStaticMsg(x: number, y: number, text: string, col: string): void {
-  state.staticMsg = { x, y, text, col, age: 0, dur: 1.4 };
+export function showStaticMsg(x: number, y: number, text: string, col: string, sprite?: HTMLImageElement): void {
+  state.staticMsg = { x, y, text, col, age: 0, dur: 1.4, sprite };
 }
 
 export function loseLife(): void {
