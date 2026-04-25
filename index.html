@@ -252,11 +252,94 @@
     0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
     100% { transform: translateY(110vh) rotate(720deg); opacity: 0.3; }
   }
+  /* ── Bestiary ───────────────────────────────────────────────────────────── */
+  #bestiary-btn {
+    background: #fff8e6; border: 3px solid #7b3ff2;
+    box-shadow: 0 4px 0 rgba(42,27,74,.18);
+    border-radius: 50%; width: 36px; height: 36px; min-width: 36px;
+    font-size: 17px; cursor: pointer; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform .1s;
+  }
+  #bestiary-btn:active { transform: scale(0.9); }
+  #bestiary-overlay {
+    display: none; position: fixed; inset: 0; z-index: 85;
+    background: #1a0a3a; flex-direction: column;
+    overflow-y: auto; -webkit-overflow-scrolling: touch;
+  }
+  #bestiary-overlay.show { display: flex; }
+  #bst-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 16px 10px;
+    background: rgba(0,0,0,0.35);
+    position: sticky; top: 0; z-index: 5;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  #bst-title {
+    font-family: 'Baloo 2', sans-serif; font-weight: 900;
+    font-size: 20px; color: #fff;
+  }
+  #bst-count {
+    font-family: 'Fredoka', sans-serif; font-size: 13px;
+    color: rgba(255,248,230,0.55); font-weight: 500; margin-top: 1px;
+  }
+  #bst-close {
+    background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.18);
+    border-radius: 50%; width: 36px; height: 36px; min-width: 36px;
+    font-size: 16px; color: #fff; cursor: pointer; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  #bst-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 10px; padding: 12px 10px 24px;
+  }
+  .bst-card {
+    border-radius: 14px; padding: 8px 6px 10px;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    background: rgba(255,255,255,0.06);
+    border: 2px solid rgba(255,255,255,0.12);
+  }
+  .bst-card.unknown {
+    background: rgba(0,0,0,0.25);
+    border-color: rgba(255,255,255,0.05);
+    opacity: 0.6;
+  }
+  .bst-badge {
+    font-size: 8px; font-family: 'Fredoka', sans-serif; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 8px; color: #fff;
+    width: 100%; text-align: center; box-sizing: border-box;
+  }
+  .bst-name {
+    font-family: 'Baloo 2', sans-serif; font-weight: 800;
+    font-size: 11px; color: #fff; text-align: center; line-height: 1.2;
+    margin-top: 1px;
+  }
+  .bst-pts {
+    font-family: 'Fredoka', sans-serif; font-size: 10px;
+    color: rgba(255,248,230,0.55); text-align: center;
+  }
+  .bst-hint {
+    font-family: 'Fredoka', sans-serif; font-size: 9px;
+    color: rgba(255,248,230,0.38); text-align: center; line-height: 1.3;
+    padding: 0 2px;
+  }
 </style>
 </head>
 <body>
+<div id="bestiary-overlay">
+  <div id="bst-header">
+    <div>
+      <div id="bst-title">📖 Bestiaire</div>
+      <div id="bst-count"></div>
+    </div>
+    <button id="bst-close">✕</button>
+  </div>
+  <div id="bst-grid"></div>
+</div>
 <div id="hud">
   <button id="music-btn" title="Musique">🔇</button>
+  <button id="bestiary-btn" title="Bestiaire">🐾</button>
   <div id="score"><span style="font-family:'Fredoka',sans-serif;font-size:0.55em;font-weight:500;opacity:.6;display:block;line-height:1;letter-spacing:.5px">SCORE</span><span id="score-val">0</span></div>
   <div id="level-badge">★ Niv. 1</div>
   <div id="combo"></div>
@@ -1470,6 +1553,127 @@ function showLevelUpScreen(lvl, levelDef) {
 }
 
 
+// ── Bestiary ──────────────────────────────────────────────────────────────────
+const CAT_LABELS = {
+  tabby:'Chat Tigré', noir:'Chat Noir', blanc:'Chat Blanc', gris:'Chat Gris',
+  fantome:'Fantôme', astro:'Astronaute', rainbow:'Arc-en-Ciel', micro:'Micro-Chat',
+  faux:'Chien déguisé',
+};
+const CAT_CATEGORIES = {
+  tabby:'Commun', noir:'Commun', blanc:'Commun', gris:'Commun',
+  fantome:'Spécial', astro:'Spécial', rainbow:'Spécial', micro:'Spécial', faux:'Piège',
+  zigzag:'Rare', rapide:'Rare', bouclier:'Rare', furtif:'Rare', boss:'Boss',
+  crachat:'Attaquant', griffeur:'Attaquant', medecin:'Attaquant',
+  siamois:'Race', sphynx:'Race', persan:'Race', scottish:'Race', bengal:'Race',
+};
+const CAT_CATCOLS = {
+  Commun:'#9BA7B0', Spécial:'#26c6f7', Piège:'#FF4444',
+  Rare:'#7b3ff2', Boss:'#C0392B', Attaquant:'#FF6B35', Race:'#ffce3a',
+};
+let caughtTypes = new Set(JSON.parse(localStorage.getItem('pdc_caught')||'[]'));
+
+function markCaught(typeId) {
+  if (caughtTypes.has(typeId)) return;
+  caughtTypes.add(typeId);
+  localStorage.setItem('pdc_caught', JSON.stringify([...caughtTypes]));
+}
+
+function drawCatPreview(cvs, type, caught) {
+  const tc = cvs.getContext('2d');
+  const w = cvs.width, h = cvs.height;
+  tc.clearRect(0,0,w,h);
+  if (!caught) {
+    tc.fillStyle='rgba(0,0,0,0.45)';
+    tc.beginPath(); tc.arc(w/2,h/2,w*.42,0,Math.PI*2); tc.fill();
+    tc.fillStyle='rgba(255,255,255,0.25)';
+    tc.font=`bold ${Math.round(w*.32)}px Arial`;
+    tc.textAlign='center'; tc.textBaseline='middle';
+    tc.fillText('?',w/2,h/2); return;
+  }
+  const cx=w/2, cy=h/2, s=w*.38;
+  const col = type.col==='rainbow'?'#ff69b4': type.col;
+  // Ears
+  tc.fillStyle=col;
+  [[-1],[1]].forEach(([dx])=>{
+    tc.beginPath();
+    tc.moveTo(cx+dx*s*.28, cy-s*.45);
+    tc.lineTo(cx+dx*s*.72, cy-s*1.05);
+    tc.lineTo(cx+dx*s*.76, cy-s*.38);
+    tc.fill();
+    tc.fillStyle='rgba(255,200,200,0.35)';
+    tc.beginPath();
+    tc.moveTo(cx+dx*s*.3,  cy-s*.5);
+    tc.lineTo(cx+dx*s*.62, cy-s*.93);
+    tc.lineTo(cx+dx*s*.65, cy-s*.44);
+    tc.fill();
+    tc.fillStyle=col;
+  });
+  // Head
+  tc.beginPath(); tc.arc(cx,cy,s*.7,0,Math.PI*2);
+  tc.fillStyle=col; tc.fill();
+  // Stripes
+  if (type.stripes) {
+    tc.strokeStyle='rgba(0,0,0,0.16)'; tc.lineWidth=s*.14;
+    for(let i=-1;i<=1;i++){
+      tc.beginPath(); tc.moveTo(cx+i*s*.28,cy-s*.58); tc.lineTo(cx+i*s*.22,cy-s*.1); tc.stroke();
+    }
+  }
+  // Eyes
+  const eyeCol = type.id==='siamois'?'#1a6ee8': type.id==='sphynx'?'#dba520':'#fff';
+  [-1,1].forEach(dx=>{
+    tc.fillStyle=eyeCol;
+    tc.beginPath(); tc.ellipse(cx+dx*s*.3,cy-s*.1,s*.15,s*.2,0,0,Math.PI*2); tc.fill();
+    tc.fillStyle='#111';
+    tc.beginPath(); tc.arc(cx+dx*s*.3,cy-s*.1,s*.09,0,Math.PI*2); tc.fill();
+    tc.fillStyle='rgba(255,255,255,0.85)';
+    tc.beginPath(); tc.arc(cx+dx*s*.3-s*.05,cy-s*.16,s*.035,0,Math.PI*2); tc.fill();
+  });
+  // Nose
+  tc.fillStyle='#ff9eb5';
+  tc.beginPath(); tc.moveTo(cx,cy+s*.12);
+  tc.lineTo(cx-s*.07,cy+s*.22); tc.lineTo(cx+s*.07,cy+s*.22); tc.fill();
+  // Whiskers
+  tc.strokeStyle='rgba(255,255,255,0.5)'; tc.lineWidth=s*.04;
+  [-1,1].forEach(dx=>{
+    tc.beginPath(); tc.moveTo(cx+dx*s*.15,cy+s*.2); tc.lineTo(cx+dx*s*.95,cy+s*.14); tc.stroke();
+    tc.beginPath(); tc.moveTo(cx+dx*s*.15,cy+s*.25); tc.lineTo(cx+dx*s*.9,cy+s*.36); tc.stroke();
+  });
+  if(type.id==='fantome'){tc.globalAlpha=.38;tc.fillStyle='#fff';tc.beginPath();tc.arc(cx,cy,s*.7,0,Math.PI*2);tc.fill();tc.globalAlpha=1;}
+  if(type.id==='rainbow'){const rg=tc.createLinearGradient(cx-s,cy,cx+s,cy);['#f00','#ff0','#0f0','#00f','#f0f'].forEach((c,i,a)=>rg.addColorStop(i/(a.length-1),c));tc.globalAlpha=.3;tc.fillStyle=rg;tc.beginPath();tc.arc(cx,cy,s*.7,0,Math.PI*2);tc.fill();tc.globalAlpha=1;}
+}
+
+function buildBestiary() {
+  const grid = document.getElementById('bst-grid');
+  grid.innerHTML='';
+  const found=CAT_TYPES.filter(t=>caughtTypes.has(t.id)).length;
+  document.getElementById('bst-count').textContent=`${found} / ${CAT_TYPES.length} découverts`;
+  CAT_TYPES.forEach(type=>{
+    const caught=caughtTypes.has(type.id);
+    const label=type.label||CAT_LABELS[type.id]||type.id;
+    const cat=CAT_CATEGORIES[type.id]||'Spécial';
+    const catCol=CAT_CATCOLS[cat]||'#888';
+    const card=document.createElement('div');
+    card.className='bst-card'+(caught?'':' unknown');
+    const badge=document.createElement('div');
+    badge.className='bst-badge';
+    badge.style.background=catCol;
+    badge.textContent=caught?cat:'???';
+    const cvs=document.createElement('canvas');
+    cvs.width=72;cvs.height=72;
+    cvs.style.cssText='border-radius:50%;margin:2px 0';
+    drawCatPreview(cvs,type,caught);
+    const name=document.createElement('div');
+    name.className='bst-name';
+    name.textContent=caught?label:'???';
+    const pts=document.createElement('div');
+    pts.className='bst-pts';
+    if(caught) pts.textContent=type.pts>0?`+${type.pts} pts`:`${type.pts} pts`;
+    card.append(badge,cvs,name,pts);
+    if(caught&&type.hint){const hint=document.createElement('div');hint.className='bst-hint';hint.textContent=type.hint;card.append(hint);}
+    grid.appendChild(card);
+  });
+}
+
 // ── Unlock system ─────────────────────────────────────────────────────────────
 let lastUnlockCheck = -1;
 function checkUnlocks() {
@@ -1858,6 +2062,7 @@ function catchCat(cat, px, py, silent) {
     spawnParticles(cat.x, cat.y, 8, true);
     if (!silent) spawnPopup(px||cat.x, py||cat.y, String(pts), '#FF4444');
   }
+  markCaught(cat.type.id);
   Music.sfxCatch(pts);
   if (score > hiScore) { hiScore=score; localStorage.setItem('pdc_hi',hiScore); hiValEl.textContent=hiScore; }
   checkUnlocks();
@@ -2583,6 +2788,8 @@ canvas.addEventListener('pointerdown', () => {
 }, { once: true });
 
 document.getElementById('replay-btn').addEventListener('click', resetGame);
+document.getElementById('bestiary-btn').addEventListener('click', ()=>{ buildBestiary(); document.getElementById('bestiary-overlay').classList.add('show'); });
+document.getElementById('bst-close').addEventListener('click', ()=>{ document.getElementById('bestiary-overlay').classList.remove('show'); });
 updateHUD();
 requestAnimationFrame(loop);
 </script>
