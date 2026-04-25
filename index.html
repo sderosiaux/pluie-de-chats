@@ -1241,32 +1241,63 @@ function drawInventory() {
       ctx.strokeStyle = isSelected ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.55)';
       ctx.lineWidth = isSelected ? 2 : 1.2;
       ctx.beginPath(); ctx.arc(sx, sy, slotR, 0, Math.PI*2); ctx.stroke();
-      // Icon
+      // Icon — grisé si vide
+      if (def.stock === 0) ctx.globalAlpha = 0.35;
       drawProjIcon(id, sx, sy, slotR * 0.6);
-      // Recharge arc
+      ctx.globalAlpha = 1;
+
+      // Overlay sombre si vide
+      if (def.stock === 0) {
+        ctx.save();
+        ctx.beginPath(); ctx.arc(sx, sy, slotR, 0, Math.PI*2); ctx.clip();
+        ctx.fillStyle = 'rgba(20,10,40,0.55)';
+        ctx.fillRect(sx - slotR, sy - slotR, slotR*2, slotR*2);
+        ctx.restore();
+      }
+
+      // Arc de recharge — épais, doré, bien visible
       if (def.stock < def.maxStock && rechargeTimers[id] > 0) {
         const pct = 1 - rechargeTimers[id] / def.recharge;
-        ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 2;
-        ctx.shadowColor = '#fff'; ctx.shadowBlur = 4;
-        ctx.beginPath(); ctx.arc(sx, sy, slotR + (isSelected ? 5 : 3), -Math.PI/2, -Math.PI/2 + pct*Math.PI*2);
-        ctx.stroke(); ctx.shadowBlur = 0;
+        const arcR = slotR + (isSelected ? 7 : 5);
+        // Track gris
+        ctx.strokeStyle = 'rgba(42,27,74,0.28)'; ctx.lineWidth = 5;
+        ctx.beginPath(); ctx.arc(sx, sy, arcR, -Math.PI/2, -Math.PI/2 + Math.PI*2); ctx.stroke();
+        // Progress doré
+        ctx.strokeStyle = '#ffce3a'; ctx.lineWidth = 5;
+        ctx.lineCap = 'round';
+        ctx.shadowColor = '#ffce3a'; ctx.shadowBlur = 8;
+        ctx.beginPath(); ctx.arc(sx, sy, arcR, -Math.PI/2, -Math.PI/2 + pct*Math.PI*2); ctx.stroke();
+        ctx.shadowBlur = 0; ctx.lineCap = 'butt';
+        // Secondes restantes sous le slot si vide
+        if (def.stock === 0) {
+          const secsLeft = Math.ceil(rechargeTimers[id]);
+          ctx.font = `800 ${Math.round(slotR*.52)}px "Baloo 2",Arial`;
+          ctx.fillStyle = '#ffce3a'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 4;
+          ctx.fillText(`${secsLeft}s`, sx, sy);
+          ctx.shadowBlur = 0;
+        }
       }
+
       // Label below
       ctx.font = `600 ${Math.round(slotR*.5)}px "Fredoka",Arial`;
       ctx.fillStyle = isSelected ? '#2a1b4a' : 'rgba(42,27,74,0.65)';
       ctx.textAlign = 'center'; ctx.textBaseline = 'top';
       ctx.fillText(def.label, sx, sy + slotR + 3);
+
       // Count badge
       const bR = slotR * 0.38;
       const bX = sx + slotR * 0.7, bY = sy - slotR * 0.7;
-      ctx.fillStyle = '#fff8e6';
-      ctx.shadowColor = 'rgba(42,27,74,0.25)'; ctx.shadowBlur = 4;
+      const isEmpty = def.stock === 0;
+      ctx.fillStyle = isEmpty ? '#FF3333' : '#fff8e6';
+      ctx.shadowColor = isEmpty ? '#FF3333' : 'rgba(42,27,74,0.25)';
+      ctx.shadowBlur = isEmpty ? 8 : 4;
       ctx.beginPath(); ctx.arc(bX, bY, bR + 2, 0, Math.PI*2); ctx.fill();
       ctx.shadowBlur = 0;
-      ctx.strokeStyle = '#2a1b4a'; ctx.lineWidth = 1.2;
+      ctx.strokeStyle = isEmpty ? '#fff' : '#2a1b4a'; ctx.lineWidth = isEmpty ? 1.5 : 1.2;
       ctx.beginPath(); ctx.arc(bX, bY, bR + 2, 0, Math.PI*2); ctx.stroke();
       ctx.font = `900 ${Math.round(bR*1.5)}px "Baloo 2",Arial`;
-      ctx.fillStyle = '#2a1b4a'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = isEmpty ? '#fff' : '#2a1b4a'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText(String(def.stock), bX, bY + 0.5);
     }
     ctx.restore();
