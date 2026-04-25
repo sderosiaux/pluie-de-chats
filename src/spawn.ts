@@ -12,7 +12,7 @@ export function spawnInterval() {
   return base;
 }
 
-export function spawnCat(forcedType) {
+export function spawnCat(forcedType?: any) {
   const type = forcedType || pickCatType();
   const s = Math.max(16, 22 * type.size);
   const margin = s + 8;
