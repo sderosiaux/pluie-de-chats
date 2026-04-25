@@ -14,7 +14,7 @@ function getRarity(t: CatType): Rarity {
   return 'common';
 }
 
-const RARITY_ORDER: Record<Rarity, number> = { legendary: 0, rare: 1, uncommon: 2, common: 3 };
+const RARITY_ORDER: Record<Rarity, number> = { common: 0, uncommon: 1, rare: 2, legendary: 3 };
 const RARITY_LABEL: Record<Rarity, string> = {
   legendary: 'LÉGENDAIRE', rare: 'RARE', uncommon: 'PEU COMMUN', common: 'COMMUN',
 };
