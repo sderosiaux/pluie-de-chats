@@ -76,8 +76,8 @@ function spawnCat(initial = false): void {
 }
 
 // Init : pré-remplir avec quelques nuages et chats déjà à l'écran (peu nombreux pour ne pas surcharger)
-for (let i = 0; i < 5; i++) spawnCloud(true);
-for (let i = 0; i < 3; i++) spawnCat(true);
+for (let i = 0; i < 4; i++) spawnCloud(true);
+for (let i = 0; i < 2; i++) spawnCat(true);
 
 function drawSky(): void {
   // Gradient candy pop
@@ -170,8 +170,8 @@ function updateAndDrawCats(dt: number): void {
     ctx.drawImage(img, -d / 2, -d / 2, d, d);
     ctx.restore();
   }
-  // Spawn doux : maintient ~3-5 chats à l'écran (peu, juste pour l'ambiance)
-  if (cats.length < 4 && Math.random() < 0.006) spawnCat();
+  // Spawn très espacé : max 3 chats simultanés, ~1 spawn toutes les 6s
+  if (cats.length < 3 && Math.random() < 0.003) spawnCat();
 }
 
 function loop(ts: number): void {
