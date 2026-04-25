@@ -61,7 +61,7 @@ export function triggerGameOver(): void {
 }
 
 export function resetGame(): void {
-  state.score = 0; state.combo = 0; state.comboTimer = 0; state.level = 1; state.lives = 5; state.gameOver = false;
+  state.score = 0; state.combo = 0; state.comboTimer = 0; state.level = 1; state.lives = 3; state.gameOver = false;
   state.levelUpPaused = false; state.timeScale = 1; state.slowMoTimer = 0;
   state.wetTimer = 0; state.spicyTimer = 0;
   // Reset input/transient state — évite de garder un drag/laser/static-message stale entre runs
@@ -73,7 +73,7 @@ export function resetGame(): void {
   state.chargeStart = 0;
   state.chargeRatio = 0;
   state.spawnTimer = 0; state.objectSpawnTimer = 10; state.gameTime = 0;
-  Object.keys(upgradeFlags).forEach(k => delete upgradeFlags[k]); Object.keys(pickCounts).forEach(k => delete pickCounts[k]); state.catsForRegen = 0; state.MAX_LIVES = 7;
+  Object.keys(upgradeFlags).forEach(k => delete upgradeFlags[k]); Object.keys(pickCounts).forEach(k => delete pickCounts[k]); state.catsForRegen = 0; state.MAX_LIVES = 3;
   pendingLevelUps.length = 0;
   cats.length = 0; projectiles.length = 0; effects.length = 0; particles.length = 0; popups.length = 0; hairballs.length = 0;
   state.laserHitWidth = 6;
