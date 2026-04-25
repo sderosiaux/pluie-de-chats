@@ -1475,33 +1475,6 @@ function drawInventory() {
     ctx.restore();
   }
 
-  // ── Center hub ────────────────────────────────────────────────────────────────
-  ctx.save();
-  // Glow
-  ctx.shadowColor = '#ffce3a'; ctx.shadowBlur = 28;
-  // Outer dark ring
-  ctx.fillStyle = '#2a1b4a';
-  ctx.beginPath(); ctx.arc(dcx, dcy, DIAL_HUB_R + 4, 0, Math.PI*2); ctx.fill();
-  ctx.shadowBlur = 0;
-  // Gold fill
-  const hubG = ctx.createLinearGradient(dcx, dcy - DIAL_HUB_R, dcx, dcy + DIAL_HUB_R);
-  hubG.addColorStop(0, '#ffd870'); hubG.addColorStop(0.55, '#e8b85c'); hubG.addColorStop(1, '#a87820');
-  ctx.fillStyle = hubG;
-  ctx.beginPath(); ctx.arc(dcx, dcy, DIAL_HUB_R, 0, Math.PI*2); ctx.fill();
-  // Cream border
-  ctx.strokeStyle = '#fff8e6'; ctx.lineWidth = 2.5;
-  ctx.beginPath(); ctx.arc(dcx, dcy, DIAL_HUB_R, 0, Math.PI*2); ctx.stroke();
-  // "ACTIF" text
-  ctx.font = `600 ${Math.round(DIAL_HUB_R*.28)}px "Fredoka",Arial`;
-  ctx.fillStyle = '#2a1b4a'; ctx.globalAlpha = 0.65; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText('ACTIF', dcx, dcy - DIAL_HUB_R*.28);
-  ctx.globalAlpha = 1;
-  // Current weapon label
-  ctx.font = `800 ${Math.round(DIAL_HUB_R*.38)}px "Baloo 2",Arial`;
-  ctx.fillStyle = '#2a1b4a'; ctx.shadowColor = 'rgba(0,0,0,0.15)'; ctx.shadowBlur = 2;
-  ctx.fillText(PROJ_DEFS[selectedType].label, dcx, dcy + DIAL_HUB_R*.24);
-  ctx.shadowBlur = 0;
-  ctx.restore();
 
   // Hint
   ctx.save();
