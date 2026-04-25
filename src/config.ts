@@ -11,6 +11,10 @@ export const MIN_SPEED = 6;
 export const MAX_SPEED = 22;
 export const CAT_SPAWN_Y = HUD_H - 10;
 
+// Charge mechanic (hold-to-charge)
+export const CHARGE_MAX_TIME = 1.5;       // secondes pour atteindre 100%
+export const CHARGE_DEAD_ZONE = 0.18;     // ms initiaux ignorés (évite charge accidentelle sur tap rapide)
+
 export const TYPE_ORDER: string[] = ['pelote', 'artifice', 'laser', 'carton'];
 
 export interface Level {

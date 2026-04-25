@@ -59,6 +59,19 @@ function loop(ts: number): void {
   if (state.wetTimer > 0)   state.wetTimer = Math.max(0, state.wetTimer - dt);
   if (state.spicyTimer > 0) state.spicyTimer = Math.max(0, state.spicyTimer - dt);
 
+  // Update charge ratio (hold-to-charge) pendant qu'on tient le drag
+  if (state.isDragging && state.chargeStart > 0 && state.selectedType !== 'laser') {
+    const elapsed = state.gameTime - state.chargeStart;
+    const dead = 0.18; // dead zone initiale
+    // Surchauffe étend, Charge Rapide raccourcit le temps max
+    const maxT = 1.5 * (1 + (upgradeFlags.chargeBonus || 0)) * (upgradeFlags.chargeSpeed || 1);
+    // Pré-charge donne un bonus de départ (0..1)
+    const baseRatio = upgradeFlags.precharge || 0;
+    state.chargeRatio = Math.max(0, Math.min(1, baseRatio + (elapsed - dead) / (maxT - dead)));
+  } else if (!state.isDragging) {
+    state.chargeRatio = 0;
+  }
+
   drawBackground();
   drawXPBar();
   drawBossBar();

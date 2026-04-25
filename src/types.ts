@@ -88,6 +88,10 @@ export interface Projectile {
   trail: Pos[];
   trailTimer: number;
   active: boolean;
+  // Charge mechanic (set au tir, lu par explode/deployCarton)
+  chargeBlastFactor?: number;    // multiplie blastR pour artifice
+  chargeCartonFactor?: number;   // multiplie pullR pour carton
+  chargeCartonDurBonus?: number; // ajoute des secondes à pullDur pour carton
 }
 
 export interface Effect {

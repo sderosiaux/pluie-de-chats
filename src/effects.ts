@@ -70,6 +70,8 @@ export function resetGame(): void {
   state.dragPos = null;
   state.activeSteerLaser = null;
   state.staticMsg = null;
+  state.chargeStart = 0;
+  state.chargeRatio = 0;
   state.spawnTimer = 0; state.objectSpawnTimer = 10; state.gameTime = 0;
   Object.keys(upgradeFlags).forEach(k => delete upgradeFlags[k]); Object.keys(pickCounts).forEach(k => delete pickCounts[k]); state.catsForRegen = 0; state.MAX_LIVES = 7;
   pendingLevelUps.length = 0;
@@ -152,11 +154,13 @@ export function applyTrapEffect(cat: Cat, px?: number, py?: number): void {
 // ── Effect spawners ───────────────────────────────────────────────────────────
 export function explode(p: Projectile): void {
   const def = (PROJ_DEFS as any).artifice;
-  effects.push({ type: 'explosion', x: p.x, y: p.y, maxR: def.blastR, life: 1, dur: 0.7, age: 0 });
+  // Charge bonus : agrandit le rayon d'explosion
+  const blastR = def.blastR * (p.chargeBlastFactor || 1);
+  effects.push({ type: 'explosion', x: p.x, y: p.y, maxR: blastR, life: 1, dur: 0.7, age: 0 });
   let caught = 0;
   for (const cat of cats) {
     if (cat.caught) continue;
-    if (Math.hypot(cat.x - p.x, cat.y - p.y) < def.blastR + cat.size * .5) {
+    if (Math.hypot(cat.x - p.x, cat.y - p.y) < blastR + cat.size * .5) {
       catchCat(cat, p.x, p.y, caught > 0);
       caught++;
     }
@@ -183,7 +187,10 @@ export function explode(p: Projectile): void {
 
 export function deployCarton(p: Projectile): void {
   const def = (PROJ_DEFS as any).carton;
-  effects.push({ type: 'carton_box', x: p.x, y: p.y, r: def.pullR, life: 1, dur: def.pullDur, age: 0 });
+  // Charge bonus : élargit le rayon d'aspiration ET prolonge la durée
+  const pullR = def.pullR * (p.chargeCartonFactor || 1);
+  const pullDur = def.pullDur + (p.chargeCartonDurBonus || 0);
+  effects.push({ type: 'carton_box', x: p.x, y: p.y, r: pullR, life: 1, dur: pullDur, age: 0 });
   spawnPopup(p.x, p.y - 40, '📦 Carton posé !', '#D4A017');
 }
 

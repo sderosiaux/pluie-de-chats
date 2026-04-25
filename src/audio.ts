@@ -4,6 +4,10 @@ import { canvas } from './canvas';
 export const Music = (() => {
   let actx: AudioContext;
   let master: GainNode;
+  // musicBus est un nœud dédié à la musique. On le disconnect sur stop()
+  // pour vraiment couper les notes déjà schedulées dans le look-ahead (~6s).
+  // Les SFX vont directement sur master, indépendants du toggle musique.
+  let musicBus: GainNode | null = null;
   let playing = false;
   let timer: ReturnType<typeof setTimeout> | null = null;
   let until = 0;
@@ -54,7 +58,7 @@ export const Music = (() => {
     master.connect(comp); comp.connect(actx.destination);
   }
 
-  function note(freq: number, t: number, dur: number, type: OscillatorType, vol: number, detune = 0) {
+  function note(freq: number, t: number, dur: number, type: OscillatorType, vol: number, detune = 0, dest: AudioNode = master) {
     if (!freq) return;
     const o = actx.createOscillator(), g = actx.createGain();
     o.type = type;
@@ -65,21 +69,21 @@ export const Music = (() => {
     g.gain.linearRampToValueAtTime(vol, t + att);
     g.gain.setValueAtTime(vol, t + dur - rel);
     g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    o.connect(g); g.connect(master);
+    o.connect(g); g.connect(dest);
     o.start(t); o.stop(t + dur + 0.01);
   }
 
-  function kick(t: number) {
+  function kick(t: number, dest: AudioNode) {
     const o = actx.createOscillator(), g = actx.createGain();
     o.frequency.setValueAtTime(180, t);
     o.frequency.exponentialRampToValueAtTime(1, t + 0.3);
     g.gain.setValueAtTime(0.85, t);
     g.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
-    o.connect(g); g.connect(master);
+    o.connect(g); g.connect(dest);
     o.start(t); o.stop(t + 0.31);
   }
 
-  function snare(t: number) {
+  function snare(t: number, dest: AudioNode) {
     const len = 0.14;
     const buf = actx.createBuffer(1, Math.ceil(actx.sampleRate * len), actx.sampleRate);
     const d = buf.getChannelData(0);
@@ -88,16 +92,16 @@ export const Music = (() => {
     const f = actx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 2600; f.Q.value = 0.7;
     const g = actx.createGain();
     g.gain.setValueAtTime(0.42, t); g.gain.exponentialRampToValueAtTime(0.001, t + len);
-    n.connect(f); f.connect(g); g.connect(master);
+    n.connect(f); f.connect(g); g.connect(dest);
     n.start(t); n.stop(t + len + 0.01);
     // tone body
     const o = actx.createOscillator(), g2 = actx.createGain();
     o.type = 'triangle'; o.frequency.value = 195;
     g2.gain.setValueAtTime(0.22, t); g2.gain.exponentialRampToValueAtTime(0.001, t + 0.065);
-    o.connect(g2); g2.connect(master); o.start(t); o.stop(t + 0.07);
+    o.connect(g2); g2.connect(dest); o.start(t); o.stop(t + 0.07);
   }
 
-  function hihat(t: number) {
+  function hihat(t: number, dest: AudioNode) {
     const len = 0.036;
     const buf = actx.createBuffer(1, Math.ceil(actx.sampleRate * len), actx.sampleRate);
     const d = buf.getChannelData(0);
@@ -106,25 +110,27 @@ export const Music = (() => {
     const f = actx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 8500;
     const g = actx.createGain();
     g.gain.setValueAtTime(0.14, t); g.gain.exponentialRampToValueAtTime(0.001, t + len);
-    n.connect(f); f.connect(g); g.connect(master);
+    n.connect(f); f.connect(g); g.connect(dest);
     n.start(t); n.stop(t + len + 0.01);
   }
 
   function scheduleLoop(start: number): number {
+    if (!musicBus) return MEL.length * S;
+    const bus = musicBus;
     const steps = MEL.length; // 64
     for (let i = 0; i < steps; i++) {
       const t = start + i * S;
       // Melody — square wave (authentic chiptune)
-      if (MEL[i]) note(MEL[i], t, S * 0.82, 'square', 0.14);
+      if (MEL[i]) note(MEL[i], t, S * 0.82, 'square', 0.14, 0, bus);
       // Counter-melody — triangle (warmth)
-      if (CTR[i]) note(CTR[i], t, S * 1.6, 'triangle', 0.07);
+      if (CTR[i]) note(CTR[i], t, S * 1.6, 'triangle', 0.07, 0, bus);
       // Bass — triangle
-      if (BAS[i % 16]) note(BAS[i % 16], t, S * 3.4, 'triangle', 0.22);
+      if (BAS[i % 16]) note(BAS[i % 16], t, S * 3.4, 'triangle', 0.22, 0, bus);
       // Drums
       const d = DRM[i % 16];
-      if (d === 'K') kick(t);
-      else if (d === 'S') snare(t);
-      else if (d === 'H') hihat(t);
+      if (d === 'K') kick(t, bus);
+      else if (d === 'S') snare(t, bus);
+      else if (d === 'H') hihat(t, bus);
     }
     return steps * S; // loop duration
   }
@@ -149,9 +155,11 @@ export const Music = (() => {
       init();
       if (actx.state === 'suspended') actx.resume();
       if (playing) return;
-      // Restore master gain (was 0 after stop)
-      master.gain.cancelScheduledValues(actx.currentTime);
-      master.gain.setValueAtTime(0.28, actx.currentTime);
+      // Crée un musicBus frais. Les anciennes notes (encore en queue) tournent
+      // sur l'ancien bus déjà disconnect → silencieuses.
+      musicBus = actx.createGain();
+      musicBus.gain.value = 1;
+      musicBus.connect(master);
       playing = true;
       until = actx.currentTime + 0.05;
       pump();
@@ -159,10 +167,10 @@ export const Music = (() => {
     stop() {
       playing = false;
       if (timer) { clearTimeout(timer); timer = null; }
-      // Coupe instantanément les notes déjà schedulées dans le look-ahead (~6s)
-      if (actx) {
-        master.gain.cancelScheduledValues(actx.currentTime);
-        master.gain.setValueAtTime(0, actx.currentTime);
+      // Disconnect le bus → tout ce qui est schedulé dessus est coupé instantanément.
+      if (musicBus) {
+        musicBus.disconnect();
+        musicBus = null;
       }
     },
     toggle() { playing ? this.stop() : this.start(); return playing; },

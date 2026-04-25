@@ -39,23 +39,37 @@ export function fire(fingerPos: Pos): void {
     return;
   }
 
+  // Charge bonus — hold-to-charge ratio appliqué selon l'arme
+  // chargeBonus upgrade : étend la profondeur du bonus (+50% ou +100%)
+  const charge = state.chargeRatio; // 0..1
+  const bonusMult = 1 + (upgradeFlags.chargeBonus || 0); // 1, 1.5, 2 selon stack
+
+  // Pelote : +2 rebonds à pleine charge
+  const peloteBonusBounces = state.selectedType === 'pelote' ? Math.round(2 * charge * bonusMult) : 0;
+  // Artifice : blastR x2, fuseDistance x1.4
+  const artificeBlastFactor = state.selectedType === 'artifice' ? (1 + charge * bonusMult) : 1;
+  const artificeFuseFactor  = state.selectedType === 'artifice' ? (1 + charge * 0.4 * bonusMult) : 1;
+
   projectiles.push({
     x: state.LAUNCHER.x, y: state.LAUNCHER.y,
     vx: nx * spd, vy: ny * spd,
     type: state.selectedType,
     r: state.selectedType === 'pelote' ? 11 : state.selectedType === 'carton' ? 18 : 13,
     gravity: def.gravity,
-    bounces: def.bounces || 0,
+    bounces: (def.bounces || 0) + peloteBonusBounces,
     fuseTimer: def.fuseTime || 999,
     fuseAngle: Math.atan2(ny, nx) + Math.PI,
     fuseDistance: state.selectedType === 'artifice'
-      ? spd * 42 + Math.random() * 70 + (upgradeFlags.artificeDistBonus || 0)
+      ? (spd * 42 + Math.random() * 70 + (upgradeFlags.artificeDistBonus || 0)) * artificeFuseFactor
       : 0,
     distTraveled: 0,
     rot: 0, rotSpd: (Math.random() - .5) * .18,
     trail: [], trailTimer: 0,
     active: true,
-  });
+    chargeBlastFactor: artificeBlastFactor,        // utilisé par explode() pour artifice
+    chargeCartonFactor: state.selectedType === 'carton' ? (1 + charge * 0.4 * bonusMult) : 1,
+    chargeCartonDurBonus: state.selectedType === 'carton' ? (charge * bonusMult) : 0, // +1s à pleine charge
+  } as any);
 }
 
 export function computeLaserEnd(nx: number, ny: number): Pos {

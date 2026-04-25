@@ -41,6 +41,9 @@ export interface GameState {
   // Trap effects
   wetTimer: number;
   spicyTimer: number;
+  // Charge mechanic — temps écoulé depuis le début du drag (en secondes)
+  chargeStart: number; // gameTime au début du drag courant, ou 0 si pas en charge
+  chargeRatio: number; // 0..1+, calculé par game loop pour feedback visuel
   // Events
   activeEvent: ActiveEvent | null;
   eventBanner: EventBanner | null;
@@ -84,6 +87,8 @@ export const state: GameState = {
   slowMoTimer: 0,
   wetTimer: 0,
   spicyTimer: 0,
+  chargeStart: 0,
+  chargeRatio: 0,
   activeEvent: null,
   eventBanner: null,
   eventNextIn: 35 + Math.random() * 20,

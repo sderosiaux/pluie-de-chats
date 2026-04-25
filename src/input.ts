@@ -36,6 +36,12 @@ export function handleDown(pos: Pos): void {
   state.pointerDown = true;
   state.isDragging = true;
   state.dragPos = pos;
+  // Démarre la charge (hold-to-charge) — appliquée au release dans fire().
+  // Pas pour le laser (qui tire dès le tap).
+  if (state.selectedType !== 'laser') {
+    state.chargeStart = state.gameTime;
+    state.chargeRatio = 0;
+  }
   // Laser : tire dès le tap pour pouvoir l'orienter pendant qu'on tient
   if (state.selectedType === 'laser' && state.wetTimer <= 0) {
     const def = (PROJ_DEFS as any)[state.selectedType];
@@ -76,6 +82,9 @@ export function handleUp(_pos: Pos): void {
     fire(state.dragPos);
   }
   state.dragPos = null;
+  // Reset la charge après tir
+  state.chargeStart = 0;
+  state.chargeRatio = 0;
 }
 
 canvas.addEventListener('mousedown', e => handleDown(getEventPos(e)));

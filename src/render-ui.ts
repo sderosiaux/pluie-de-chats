@@ -11,6 +11,35 @@ export function drawTrajectory(): void {
   const def = (PROJ_DEFS as any)[state.selectedType];
   if (def.stock <= 0) return;
 
+  // Charge ring autour du launcher (hold-to-charge)
+  if (state.selectedType !== 'laser' && state.chargeRatio > 0) {
+    const lx = state.LAUNCHER.x, ly = state.LAUNCHER.y;
+    const cr = state.chargeRatio;
+    // Couleur orange → jaune → blanc à pleine charge
+    const col = cr >= 1 ? '#fff8c0' : cr > 0.7 ? '#ffce3a' : '#ff8a48';
+    const ringR = 28 + cr * 18;
+    ctx.save();
+    // Halo pulsant à 100%
+    if (cr >= 1) {
+      const pulse = 0.6 + Math.sin(state.gameTime * 16) * 0.4;
+      ctx.globalAlpha = pulse * 0.5;
+      ctx.fillStyle = col;
+      ctx.beginPath(); ctx.arc(lx, ly, ringR + 8, 0, Math.PI * 2); ctx.fill();
+    }
+    // Ring de progression (arc)
+    ctx.globalAlpha = 0.85;
+    ctx.strokeStyle = col;
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.arc(lx, ly, ringR, -Math.PI / 2, -Math.PI / 2 + cr * Math.PI * 2);
+    ctx.stroke();
+    // Track de fond
+    ctx.globalAlpha = 0.2;
+    ctx.beginPath(); ctx.arc(lx, ly, ringR, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
+  }
+
   const dx = state.dragPos.x - state.LAUNCHER.x, dy = state.dragPos.y - state.LAUNCHER.y;
   const dist = Math.hypot(dx,dy);
   if (dist < 8) return;
