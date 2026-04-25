@@ -40,7 +40,7 @@ export const Music = (() => {
   ];
 
   // Drums (16-step, repeat)
-  //  K=kick  S=snare  state.H=hihat
+  //  K=kick  S=snare  H=hihat
   const DRM = ['K','_','H','_','S','_','H','H','K','H','_','H','S','_','H','_'];
 
   function init() {

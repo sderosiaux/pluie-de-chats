@@ -55,14 +55,21 @@ export function triggerGameOver(): void {
   const goHi = document.getElementById('go-hi-val');
   if (goHi) goHi.textContent = String(state.hiScore);
   document.getElementById('gameover-overlay')?.classList.add('show');
-  // Tentative d'ajout au top 10 local
-  setTimeout(() => maybeAddHighscore(state.score), 100);
+  // Tentative d'ajout au top 10 local — capture le score avant que resetGame ne le RAZ
+  const finalScore = state.score;
+  setTimeout(() => maybeAddHighscore(finalScore), 100);
 }
 
 export function resetGame(): void {
   state.score = 0; state.combo = 0; state.comboTimer = 0; state.level = 1; state.lives = 5; state.gameOver = false;
   state.levelUpPaused = false; state.timeScale = 1; state.slowMoTimer = 0;
   state.wetTimer = 0; state.spicyTimer = 0;
+  // Reset input/transient state — évite de garder un drag/laser/static-message stale entre runs
+  state.pointerDown = false;
+  state.isDragging = false;
+  state.dragPos = null;
+  state.activeSteerLaser = null;
+  state.staticMsg = null;
   state.spawnTimer = 0; state.objectSpawnTimer = 10; state.gameTime = 0;
   Object.keys(upgradeFlags).forEach(k => delete upgradeFlags[k]); Object.keys(pickCounts).forEach(k => delete pickCounts[k]); state.catsForRegen = 0; state.MAX_LIVES = 7;
   pendingLevelUps.length = 0;
