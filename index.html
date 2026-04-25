@@ -1495,12 +1495,6 @@ function loop(ts) {
     if (t >= 1) eventBanner = null;
   }
 
-  // Night overlay
-  if (activeEvent && activeEvent.id === 'nuit') {
-    ctx.fillStyle = 'rgba(8,4,28,0.72)';
-    ctx.fillRect(0, 0, W, H);
-  }
-
   // Update cats
   for(let i=cats.length-1;i>=0;i--){
     const c=cats[i];
@@ -1550,6 +1544,12 @@ function loop(ts) {
       if(c.catchAnim<=0){cats.splice(i,1);continue;}
     }
     renderCat(c);
+  }
+
+  // Night overlay — après les chats pour les assombrir
+  if (activeEvent && activeEvent.id === 'nuit') {
+    ctx.fillStyle = 'rgba(8,4,28,0.72)';
+    ctx.fillRect(0, 0, W, H);
   }
 
   // Draw trajectory preview
