@@ -30,14 +30,15 @@
   }
   #score {
     font-family: 'Baloo 2', sans-serif;
-    font-size: clamp(17px,4.5vw,24px); font-weight: 800; color: #2a1b4a;
-    background: #fff8e6; padding: 5px 14px; border-radius: 22px;
+    font-size: clamp(17px,4.5vw,24px); font-weight: 900; color: #2a1b4a;
+    background: #fff8e6; padding: 5px 18px; border-radius: 22px;
     border: 3px solid #7b3ff2;
     box-shadow: 0 4px 0 rgba(42,27,74,.2);
     white-space: nowrap; line-height: 1;
-    /* Stabilise la largeur quand le score change de digit count */
+    /* Largeur stable quel que soit le nombre de digits (jusqu'à 5) */
     font-variant-numeric: tabular-nums;
-    min-width: 4ch; text-align: center;
+    min-width: 5ch; text-align: center;
+    display: inline-flex; align-items: center; justify-content: center;
   }
   #score #score-val { font-variant-numeric: tabular-nums; }
   #combo {
@@ -686,7 +687,7 @@
 </div>
 <div id="hud">
   <button id="hud-menu-btn" title="Menu" aria-label="Menu">☰</button>
-  <div id="score"><span style="font-family:'Fredoka',sans-serif;font-size:0.55em;font-weight:500;opacity:.6;line-height:1;letter-spacing:.5px;margin-right:6px">SCORE</span><span id="score-val">0</span></div>
+  <div id="score" title="Score"><span id="score-val">0</span></div>
   <div id="level-badge">★ Niv. 1</div>
   <div id="combo"></div>
   <div id="lives-el">❤️❤️❤️</div>
