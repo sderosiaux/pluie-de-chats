@@ -349,6 +349,37 @@
   .lu-reveal-icon {
     flex: 0 0 auto; font-size: 16px; line-height: 1.2;
   }
+  /* ── Weapon reveal overlay (déblocage immédiat) ────────────────────────── */
+  /* Modal léger : pas de scrim, juste la carte centrée par-dessus le jeu */
+  #weapon-reveal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 95;
+    flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+    background: transparent;
+    pointer-events: none; /* laisse passer hors-carte (mais le tap sur "Compris !" capte via pointer-events:auto sur les enfants) */
+    padding: 20px;
+  }
+  #weapon-reveal-overlay.show { display: flex; }
+  #weapon-reveal-overlay > * { pointer-events: auto; }
+  #wr-card.lu-reveal {
+    background: linear-gradient(180deg, #fff8e6, #fff1d2);
+    border: 3px solid #7b3ff2;
+    box-shadow: 0 6px 0 rgba(42,27,74,.25), 0 14px 28px rgba(42,27,74,.22);
+  }
+  #wr-card.lu-reveal .lu-reveal-tag { color: #7b3ff2; }
+  #wr-card.lu-reveal .lu-reveal-name {
+    color: #2a1b4a; text-shadow: none;
+  }
+  #wr-card.lu-reveal .lu-reveal-row { color: #3a2a5a; }
+  #wr-card.lu-reveal .lu-reveal-row b { color: #ff3ea5; }
+  #wr-ok {
+    background: #ffce3a; border: none; border-radius: 14px;
+    padding: 12px 32px;
+    font-family: 'Baloo 2', sans-serif; font-weight: 900;
+    font-size: 16px; color: #2a1b4a; cursor: pointer;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.25);
+    transition: transform .1s, box-shadow .1s;
+  }
+  #wr-ok:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.25); }
   #lu-confetti { position: absolute; inset: 0; pointer-events: none; z-index: 3; overflow: hidden; }
   .lu-conf-piece {
     position: absolute; width: 10px; height: 14px; border-radius: 2px;
@@ -816,6 +847,10 @@
   <div class="lu-unlock-banner" id="lu-unlock-banner" style="display:none" id="lu-unlock-banner"></div>
   <div class="lu-pick-label">CHOISIS TON AMÉLIORATION</div>
   <div id="lu-choices"></div>
+</div>
+<div id="weapon-reveal-overlay">
+  <div id="wr-card"></div>
+  <button id="wr-ok">Compris !</button>
 </div>
 <div id="gameover-overlay">
   <canvas id="gameover-canvas" aria-hidden="true"></canvas>

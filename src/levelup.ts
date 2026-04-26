@@ -16,7 +16,7 @@ export function checkLevelUp(): void {
     state.level++;
     pendingLevelUps.push({ lvl: state.level, def: LEVELS[state.level - 1] });
   }
-  if (!state.levelUpPaused && pendingLevelUps.length) {
+  if (!state.levelUpPaused && !state.weaponRevealPaused && pendingLevelUps.length) {
     const next = pendingLevelUps.shift()!;
     const prevUnlocked = new Set(unlockedTypes);
     checkUnlocks();
@@ -31,56 +31,10 @@ export function showLevelUpScreen(lvl: number, _levelDef: Level, newWeapon: Proj
   const numEl = document.getElementById('lu-num');
   if (numEl) numEl.textContent = String(lvl);
 
-  // Weapon reveal card — sprite + nom + comment + astuce
+  // Note: la carte de déblocage d'arme est déclenchée par checkUnlocks()
+  // (modal séparé "Compris !"), pas inline ici.
   const banner = document.getElementById('lu-unlock-banner');
-  if (banner) {
-    if (newWeapon) {
-      banner.className = 'lu-reveal';
-      banner.innerHTML = '';
-      banner.style.display = 'flex';
-
-      const tag = document.createElement('div');
-      tag.className = 'lu-reveal-tag';
-      tag.textContent = '🎁 Nouvelle arme';
-
-      const head = document.createElement('div');
-      head.className = 'lu-reveal-head';
-      const wId = Object.keys(PROJ_DEFS).find(id => (PROJ_DEFS as any)[id] === newWeapon);
-      const spr = wId ? WEAPON_SPRITES[wId] : null;
-      if (spr && spr.complete && spr.naturalWidth > 0) {
-        const cvs = document.createElement('canvas');
-        cvs.width = 64; cvs.height = 64;
-        cvs.getContext('2d')!.drawImage(spr, 0, 0, 64, 64);
-        head.appendChild(cvs);
-      } else {
-        const em = document.createElement('div');
-        em.style.cssText = 'font-size:48px;line-height:1';
-        em.textContent = newWeapon.emoji;
-        head.appendChild(em);
-      }
-      const name = document.createElement('div');
-      name.className = 'lu-reveal-name';
-      name.textContent = newWeapon.label;
-      head.appendChild(name);
-
-      banner.append(tag, head);
-
-      if (newWeapon.usage) {
-        const row = document.createElement('div');
-        row.className = 'lu-reveal-row';
-        row.innerHTML = `<span class="lu-reveal-icon">🎯</span><span><b>Comment :</b> ${newWeapon.usage}</span>`;
-        banner.appendChild(row);
-      }
-      if (newWeapon.tip) {
-        const row = document.createElement('div');
-        row.className = 'lu-reveal-row';
-        row.innerHTML = `<span class="lu-reveal-icon">💡</span><span><b>Astuce :</b> ${newWeapon.tip}</span>`;
-        banner.appendChild(row);
-      }
-    } else {
-      banner.style.display = 'none';
-    }
-  }
+  if (banner) banner.style.display = 'none';
 
   // 3 upgrade choices
   const choices = pickUpgrades(3);

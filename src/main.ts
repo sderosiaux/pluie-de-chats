@@ -76,7 +76,7 @@ function loop(ts: number): void {
   drawXPBar();
   drawBossBar();
 
-  if (state.menuActive || state.gameOver || state.levelUpPaused || state.hudMenuOpen) { requestAnimationFrame(loop); return; }
+  if (state.menuActive || state.gameOver || state.levelUpPaused || state.hudMenuOpen || state.weaponRevealPaused) { requestAnimationFrame(loop); return; }
 
   // Trap effect overlays
   if (state.wetTimer > 0) {

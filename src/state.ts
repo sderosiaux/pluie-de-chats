@@ -22,6 +22,7 @@ export interface GameState {
   levelUpPaused: boolean;
   menuActive: boolean;
   hudMenuOpen: boolean;
+  weaponRevealPaused: boolean;
   // Input / aim
   isDragging: boolean;
   dragPos: Pos | null;
@@ -73,6 +74,7 @@ export const state: GameState = {
   levelUpPaused: false,
   menuActive: true,
   hudMenuOpen: false,
+  weaponRevealPaused: false,
   isDragging: false,
   dragPos: null,
   pointerDown: false,
@@ -115,3 +117,4 @@ export const rechargeTimers: Record<string, number> = {};
 export const upgradeFlags: Record<string, any> = {};
 export const pickCounts: Record<string, number> = {};
 export const pendingLevelUps: Array<{ lvl: number; def: any; newWeapon?: string }> = [];
+export const pendingWeaponReveals: string[] = [];
