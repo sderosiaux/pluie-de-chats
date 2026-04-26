@@ -74,6 +74,8 @@ export interface ProjDef {
   pullR?: number;
   pullDur?: number;
   desc: string;
+  usage?: string;   // "Comment" — geste / mécanique
+  tip?: string;     // "Astuce" — charge / quand l'utiliser
 }
 
 export interface Projectile {

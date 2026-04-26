@@ -10,6 +10,8 @@ export const PROJ_DEFS: Record<string, ProjDef> = {
     unlockScore: 0, unlockHint: null,
     unlockMsg: null, bounces: 3,
     desc: 'Rebondit sur les bords',
+    usage: 'Tire la corde du lanceur pour viser, relâche pour lancer.',
+    tip: 'Maintiens appuyé pour CHARGER : +2 rebonds à pleine charge.',
   },
   artifice: {
     label: "Feu d'artifice", emoji: '🎆', col: '#ff3ea5',
@@ -19,6 +21,8 @@ export const PROJ_DEFS: Record<string, ProjDef> = {
     unlockMsg: "🎆 Feu d'artifice débloqué !",
     fuseTime: 9, blastR: 100, bounces: 2,
     desc: 'Explose en zone',
+    usage: 'Lance vers un GROUPE de chats — explose tout seul à mi-vol et touche tout dans la zone.',
+    tip: 'CHARGE pour doubler le rayon d\'explosion et viser plus loin.',
   },
   laser: {
     label: 'Laser', emoji: '🔴', col: '#7b3ff2',
@@ -27,6 +31,8 @@ export const PROJ_DEFS: Record<string, ProjDef> = {
     unlockScore: 30, unlockHint: '30 pts',
     unlockMsg: '🔴 Pointeur Laser débloqué !',
     desc: 'Rayon qui perce tout',
+    usage: 'POINTE l\'écran — le rayon part instantané vers ton doigt et traverse en ligne droite.',
+    tip: 'Pas de charge. Idéal pour chats RAPIDES, en hauteur, ou en file indienne.',
   },
   carton: {
     label: 'Carton', emoji: '📦', col: '#D4A017',
@@ -36,6 +42,8 @@ export const PROJ_DEFS: Record<string, ProjDef> = {
     unlockMsg: '📦 Carton Magique débloqué !',
     pullR: 165, pullDur: 4.5, bounces: 3,
     desc: 'Aspire les chats proches',
+    usage: 'Lance n\'importe où — au contact, ASPIRE tous les chats dans un rayon pendant 4-5s.',
+    tip: 'CHARGE pour élargir le rayon (+40%) et prolonger l\'aspiration (+1s) — combo monstre.',
   },
 };
 

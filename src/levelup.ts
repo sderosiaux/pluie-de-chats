@@ -31,29 +31,52 @@ export function showLevelUpScreen(lvl: number, _levelDef: Level, newWeapon: Proj
   const numEl = document.getElementById('lu-num');
   if (numEl) numEl.textContent = String(lvl);
 
-  // Weapon unlock banner — sprite à la place de l'emoji
+  // Weapon reveal card — sprite + nom + comment + astuce
   const banner = document.getElementById('lu-unlock-banner');
   if (banner) {
     if (newWeapon) {
+      banner.className = 'lu-reveal';
       banner.innerHTML = '';
-      const txt1 = document.createElement('span');
-      txt1.textContent = '🎁 NOUVEAU : ';
+      banner.style.display = 'flex';
+
+      const tag = document.createElement('div');
+      tag.className = 'lu-reveal-tag';
+      tag.textContent = '🎁 Nouvelle arme';
+
+      const head = document.createElement('div');
+      head.className = 'lu-reveal-head';
       const wId = Object.keys(PROJ_DEFS).find(id => (PROJ_DEFS as any)[id] === newWeapon);
       const spr = wId ? WEAPON_SPRITES[wId] : null;
       if (spr && spr.complete && spr.naturalWidth > 0) {
         const cvs = document.createElement('canvas');
-        cvs.width = 36; cvs.height = 36;
-        cvs.style.cssText = 'vertical-align:middle;margin:0 6px';
-        cvs.getContext('2d')!.drawImage(spr, 0, 0, 36, 36);
-        banner.append(txt1, cvs);
+        cvs.width = 64; cvs.height = 64;
+        cvs.getContext('2d')!.drawImage(spr, 0, 0, 64, 64);
+        head.appendChild(cvs);
       } else {
-        txt1.textContent = `🎁 NOUVEAU : ${newWeapon.emoji} `;
-        banner.append(txt1);
+        const em = document.createElement('div');
+        em.style.cssText = 'font-size:48px;line-height:1';
+        em.textContent = newWeapon.emoji;
+        head.appendChild(em);
       }
-      const txt2 = document.createElement('span');
-      txt2.textContent = `${newWeapon.label} débloqué !`;
-      banner.append(txt2);
-      banner.style.display = 'block';
+      const name = document.createElement('div');
+      name.className = 'lu-reveal-name';
+      name.textContent = newWeapon.label;
+      head.appendChild(name);
+
+      banner.append(tag, head);
+
+      if (newWeapon.usage) {
+        const row = document.createElement('div');
+        row.className = 'lu-reveal-row';
+        row.innerHTML = `<span class="lu-reveal-icon">🎯</span><span><b>Comment :</b> ${newWeapon.usage}</span>`;
+        banner.appendChild(row);
+      }
+      if (newWeapon.tip) {
+        const row = document.createElement('div');
+        row.className = 'lu-reveal-row';
+        row.innerHTML = `<span class="lu-reveal-icon">💡</span><span><b>Astuce :</b> ${newWeapon.tip}</span>`;
+        banner.appendChild(row);
+      }
     } else {
       banner.style.display = 'none';
     }

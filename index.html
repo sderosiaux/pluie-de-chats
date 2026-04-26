@@ -311,6 +311,44 @@
     font-family: 'Fredoka', sans-serif; font-weight: 600;
     font-size: clamp(13px,3.5vw,15px); color: #ffce3a; text-align: center;
   }
+  /* ── Reveal weapon card (déblocage) ────────────────────────────────────── */
+  .lu-reveal {
+    position: relative; z-index: 2;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    background: linear-gradient(180deg, rgba(255,206,58,0.22), rgba(255,206,58,0.08));
+    border: 2px solid rgba(255,206,58,0.55);
+    border-radius: 18px;
+    padding: 14px 18px 12px;
+    max-width: min(92vw, 380px);
+    box-shadow: 0 0 28px rgba(255,206,58,0.35);
+    animation: lu-pop 0.5s cubic-bezier(.17,.67,.35,1.4) both;
+  }
+  .lu-reveal-tag {
+    font-family: 'Fredoka', sans-serif; font-weight: 700;
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    color: #ffce3a; opacity: 0.9;
+  }
+  .lu-reveal-head { display: flex; align-items: center; gap: 12px; }
+  .lu-reveal-head canvas { width: 64px; height: 64px; display: block; }
+  .lu-reveal-name {
+    font-family: 'Baloo 2', sans-serif; font-weight: 900;
+    font-size: clamp(20px,5vw,26px); color: #fff;
+    text-shadow: 0 0 14px rgba(255,206,58,0.6);
+  }
+  .lu-reveal-row {
+    display: flex; gap: 8px; align-items: flex-start;
+    width: 100%;
+    font-family: 'Fredoka', sans-serif; font-weight: 500;
+    font-size: clamp(12px,3vw,14px); color: rgba(255,248,230,0.92);
+    line-height: 1.35; text-align: left;
+  }
+  .lu-reveal-row b {
+    font-family: 'Baloo 2', sans-serif; font-weight: 800;
+    color: #ffce3a;
+  }
+  .lu-reveal-icon {
+    flex: 0 0 auto; font-size: 16px; line-height: 1.2;
+  }
   #lu-confetti { position: absolute; inset: 0; pointer-events: none; z-index: 3; overflow: hidden; }
   .lu-conf-piece {
     position: absolute; width: 10px; height: 14px; border-radius: 2px;
