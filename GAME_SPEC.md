@@ -291,7 +291,10 @@ Fixe, portrait, plein écran. Aucun zoom ni défilement.
 - **Local** (`localStorage`) : par averse, meilleures pattes, meilleur score et meilleure chaîne. Aussi : pages du carnet débloquées, pseudo, mode son.
 - **Serveur** (classement) : par averse, la meilleure soumission par pseudo.
 
-## 23. Classement (premier effet réseau)
+## 23. Classement — ABANDONNÉ (décision du 2026-10-06)
+
+Pas de classement ni de serveur. Le déterminisme (§24) reste utile pour les replays et le défi par lien. Le texte ci-dessous est conservé pour mémoire.
+
 
 - **Classement par averse** : top 50 et ton rang.
 - **Soumission** = `{ averseId, pseudo, inputs: [(tick, angle_quantifié)], scoreDéclaré }`. Le serveur **rejoue la simulation** avec ces entrées et refuse la soumission si le score ne correspond pas. C'est l'anti-triche, et c'est pour ça que le déterminisme est obligatoire (§24).
@@ -411,4 +414,4 @@ PASS  Après une averse ratée, le joueur appuie sur Rejouer dans les 3 s.
 - 2026-10-05 · §7 lois 2–3 : un chat devenu boulet pendant la phase « boulets » d'un tick ne bouge qu'au tick suivant, quel que soit son id (l'id ne sert qu'à départager les égalités).
 - 2026-10-05 · §8 / §17 / §30.8 : le chien porte un collier marron à médaille os 🦴. Le spec disait « aucun collier, oreilles tombantes », ce qui contredisait §30.8 (« reconnaissable par son collier ») ; le sprite `faux` a d'ailleurs les oreilles dressées.
 - 2026-10-05 · §24 : monde logique fixe 360×640, lanceur en (180, 610) ; angle de tir en dixièmes de degré entiers (900 = vers le haut).
-
+- 2026-10-06 · §23 / §28 P3 : classement et serveur abandonnés à la demande du propriétaire. Aucun service Cloudflare n'est utilisé.
