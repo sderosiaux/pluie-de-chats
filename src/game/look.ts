@@ -18,7 +18,8 @@ export const THEME = {
   progressTrack: 'rgba(59,47,74,0.12)',
   aim: 'rgba(59,47,74,0.7)',
   aimCancel: 'rgba(59,47,74,0.22)',
-  danger: '#e0303c',
+  // Encre sombre, pas rouge : le rouge est la couleur du collier du gros (§17, un code couleur = un sens).
+  danger: '#2b1a3f',
   blink: '#e0303c',
   neutralTrail: 'rgba(59,47,74,0.2)',
   aimShield: 'rgba(59,47,74,0.7)',

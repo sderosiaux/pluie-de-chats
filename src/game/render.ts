@@ -305,10 +305,13 @@ function drawAim(g: CanvasRenderingContext2D, aim: AimState, sim: SimState): voi
     g.fill();
   }
 
-  // Trouillards qui vont esquiver ce tir : « ! » au-dessus d'eux.
+  // Trouillards qui vont esquiver ce tir : « ! » au-dessus d'eux et marque barrée (§13), sauf s'ils sont
+  // finalement attrapés par cette pelote.
   for (const id of p.dodges) {
     const c = sim.cats.find(k => k.id === id);
-    if (c) bang(g, c.x, c.y - c.r * 1.6);
+    if (!c) continue;
+    bang(g, c.x, c.y - c.r * 1.6);
+    if (!(p.kind === 'catch' && p.catId === id)) crossMark(g, c.x, c.y);
   }
 
   if (p.kind === 'none') return;
@@ -330,15 +333,7 @@ function drawAim(g: CanvasRenderingContext2D, aim: AimState, sim: SimState): voi
     if (target) bang(g, target.x, target.y - r - 12);
     else bang(g, p.x, p.y - r - 14);
     if (p.kind === 'catch') arrow(g, p.x, p.y, p.dirX, p.dirY, r, color);
-    // Flèche barrée : départ annulé.
-    g.strokeStyle = THEME.danger;
-    g.lineWidth = 3.5;
-    g.beginPath();
-    g.moveTo(p.x - 9, p.y - 9);
-    g.lineTo(p.x + 9, p.y + 9);
-    g.moveTo(p.x + 9, p.y - 9);
-    g.lineTo(p.x - 9, p.y + 9);
-    g.stroke();
+    crossMark(g, p.x, p.y); // départ annulé
   } else if (p.kind === 'catch') {
     arrow(g, p.x, p.y, p.dirX, p.dirY, r, color);
   }
@@ -371,6 +366,17 @@ function arrow(g: CanvasRenderingContext2D, x: number, y: number, dx: number, dy
   g.fillStyle = color;
   head();
   g.fill();
+}
+
+function crossMark(g: CanvasRenderingContext2D, x: number, y: number): void {
+  g.strokeStyle = THEME.danger;
+  g.lineWidth = 3.5;
+  g.beginPath();
+  g.moveTo(x - 9, y - 9);
+  g.lineTo(x + 9, y + 9);
+  g.moveTo(x + 9, y - 9);
+  g.lineTo(x - 9, y + 9);
+  g.stroke();
 }
 
 function bang(g: CanvasRenderingContext2D, x: number, y: number): void {

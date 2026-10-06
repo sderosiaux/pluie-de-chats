@@ -123,6 +123,19 @@ export function mergeBest(a: AverseBest | undefined, b: AverseBest): AverseBest 
   };
 }
 
+/**
+ * Fusion de deux progressions (deux onglets ouverts) : le meilleur par averse, l'union des rencontres,
+ * des pages lues et des costumes. Le son suit `b`, la plus récente. Rien de ce qu'un onglet a gagné ne se perd.
+ */
+export function mergeProgress(a: Progress, b: Progress): Progress {
+  const averses: Record<string, AverseBest> = { ...a.averses };
+  for (const [id, best] of Object.entries(b.averses)) averses[id] = mergeBest(averses[id], best);
+  const union = <T>(x: readonly T[], y: readonly T[]): T[] => [...x, ...y.filter(v => !x.includes(v))];
+  const costumes: Partial<Record<CharacterId, readonly string[]>> = { ...a.costumes };
+  for (const [ch, list] of Object.entries(b.costumes) as Array<[CharacterId, readonly string[]]>) costumes[ch] = union(costumes[ch] ?? [], list);
+  return { averses, met: union(a.met, b.met), read: union(a.read, b.read), costumes, sound: b.sound };
+}
+
 export function recordResult(p: Progress, averseId: string, result: AverseBest): Progress {
   if (!isCampaignId(averseId)) return p;
   return { ...p, averses: { ...p.averses, [averseId]: mergeBest(p.averses[averseId], result) } };

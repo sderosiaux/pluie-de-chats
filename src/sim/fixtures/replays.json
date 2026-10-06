@@ -34,66 +34,50 @@
     "angleDeci": 495
    },
    {
-    "tick": 2500,
-    "angleDeci": 445
+    "tick": 2510,
+    "angleDeci": 1345
    },
    {
-    "tick": 3770,
-    "angleDeci": 545
+    "tick": 3860,
+    "angleDeci": 670
    },
    {
-    "tick": 5470,
-    "angleDeci": 470
+    "tick": 5480,
+    "angleDeci": 295
    },
    {
-    "tick": 5830,
-    "angleDeci": 520
-   },
-   {
-    "tick": 5890,
-    "angleDeci": 395
-   },
-   {
-    "tick": 5950,
-    "angleDeci": 795
+    "tick": 5540,
+    "angleDeci": 720
    }
   ],
-  "hash": "2d4288ea",
-  "score": 230
+  "hash": "9d425269",
+  "score": 265
  },
  {
   "averseId": "h3",
   "log": [
    {
-    "tick": 820,
-    "angleDeci": 1270
+    "tick": 860,
+    "angleDeci": 870
    },
    {
-    "tick": 2860,
+    "tick": 2850,
     "angleDeci": 1195
    },
    {
-    "tick": 3470,
-    "angleDeci": 445
+    "tick": 4290,
+    "angleDeci": 720
    },
    {
-    "tick": 5470,
-    "angleDeci": 1670
+    "tick": 5370,
+    "angleDeci": 1570
    },
    {
-    "tick": 5580,
-    "angleDeci": 520
-   },
-   {
-    "tick": 5950,
-    "angleDeci": 420
-   },
-   {
-    "tick": 6010,
-    "angleDeci": 820
+    "tick": 5630,
+    "angleDeci": 470
    }
   ],
-  "hash": "56a93ad3",
-  "score": 182
+  "hash": "b08a847a",
+  "score": 222
  }
 ]

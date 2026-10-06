@@ -81,8 +81,12 @@ describe('campagne : costumes rares (§8)', () => {
     expect(rareCostumesEnabled(withStars([['3-5', 1]]))).toBe(true);
   });
 
-  it('déterministes : même averse, même chat → même costume', () => {
-    for (let i = 0; i < 500; i++) expect(rareCostume('2-3', i)).toBe(rareCostume('2-3', i));
+  it('figés : une valeur connue ne change pas d’une version à l’autre (le joueur garde ses costumes vus)', () => {
+    expect(rareCostume('2-3', 0)).toBeNull();
+    expect(rareCostume('2-3', 13)).toBe('eiffel');
+    expect(rareCostume('2-3', 44)).toBe('sphinx');
+    expect(rareCostume('2-3', 59)).toBe('liberte');
+    expect(rareCostume('2-3', 79)).toBe('tireur');
   });
 
   it('environ un tigré sur 50, tous les costumes rares possibles', () => {

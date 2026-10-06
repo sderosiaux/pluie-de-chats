@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  STORAGE_KEY, emptyProgress, isNew, loadProgress, markRead, meet, mergeBest, parseProgress, recordResult,
+  STORAGE_KEY, emptyProgress, isNew, loadProgress, markRead, meet, mergeBest, mergeProgress, parseProgress, recordResult,
   saveProgress, seeCostume, serializeProgress, withSound,
 } from './progress';
 import type { Progress } from './progress';
@@ -141,3 +141,27 @@ describe('progression : stockage', () => {
     expect(saveProgress(broken, sample())).toBe(false);
   });
 });
+
+describe('deux onglets', () => {
+  it('la fusion garde le meilleur de chacun, sans rien perdre', () => {
+    const a = seeCostume(meet(recordResult(emptyProgress(), '1-1', { stars: 3, score: 120, chain: 6 }), 'gros'), 'gros', 'persan');
+    const b = seeCostume(meet(recordResult(emptyProgress(), '1-2', { stars: 1, score: 40, chain: 3 }), 'chaton'), 'gros', 'hulk');
+    const m = mergeProgress(a, recordResult(b, '1-1', { stars: 1, score: 200, chain: 2 }));
+    expect(m.averses['1-1']).toEqual({ stars: 3, score: 200, chain: 6 });
+    expect(m.averses['1-2']).toEqual({ stars: 1, score: 40, chain: 3 });
+    expect(m.met).toEqual(['gros', 'chaton']);
+    expect(m.costumes.gros).toEqual(['persan', 'hulk']);
+  });
+
+  it('un onglet périmé qui enregistre ne fait pas perdre les pattes de l’autre', () => {
+    const s = memoryStorage();
+    // Onglet B : 3 pattes sur 1-1, enregistrées.
+    saveProgress(s, recordResult(emptyProgress(), '1-1', { stars: 3, score: 150, chain: 7 }));
+    // Onglet A, chargé avant : il découvre un caractère et enregistre en fusionnant (comme commit()).
+    const staleA = meet(emptyProgress(), 'tigre');
+    saveProgress(s, mergeProgress(loadProgress(s), staleA));
+    expect(loadProgress(s).averses['1-1']?.stars).toBe(3);
+    expect(loadProgress(s).met).toContain('tigre');
+  });
+});
+

@@ -60,7 +60,8 @@ export function queueBanner(fx: Fx, icon: string, label: string, rule: string): 
   fx.banners.push({ icon, label, rule, life: 2, max: 2 });
 }
 
-export function updateFx(fx: Fx, dt: number): void {
+/** `realDt` : temps réel écoulé. Le bandeau de caractère dure 2 s RÉELLES, même en accéléré ou au ralenti (§13). */
+export function updateFx(fx: Fx, dt: number, realDt: number = dt): void {
   for (const p of fx.particles) {
     p.life -= dt;
     p.vy += 320 * dt;
@@ -81,7 +82,7 @@ export function updateFx(fx: Fx, dt: number): void {
   }
   const b = fx.banners[0];
   if (b) {
-    b.life -= dt;
+    b.life -= realDt;
     if (b.life <= 0) fx.banners.shift();
   }
   fx.shake = Math.max(0, fx.shake - dt * 30);

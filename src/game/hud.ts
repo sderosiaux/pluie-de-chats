@@ -105,7 +105,9 @@ export interface Dom {
   placeButtons(view: View, finish: boolean, toMap: boolean): void;
   showEnd(info: EndInfo): void;
   hideEnd(): void;
-  showError(msg: string): void;
+  /** `autoHideMs` : masque le message après ce délai (sinon il reste jusqu'au prochain lancement réussi). */
+  showError(msg: string, autoHideMs?: number): void;
+  hideError(): void;
 }
 
 export interface DomHandlers {
@@ -177,9 +179,13 @@ export function bindDom(handlers: DomHandlers): Dom {
     hideEnd() {
       end.hidden = true;
     },
-    showError(msg) {
+    showError(msg, autoHideMs) {
       error.textContent = msg;
       error.hidden = false;
+      if (autoHideMs) setTimeout(() => { if (error.textContent === msg) error.hidden = true; }, autoHideMs);
+    },
+    hideError() {
+      error.hidden = true;
     },
   };
 }

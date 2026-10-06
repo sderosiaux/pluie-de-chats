@@ -12,10 +12,10 @@ export interface CharacterDef {
   catchable: boolean; // compte dans les pattes
 }
 
-// Valeurs de GAME_SPEC §8 (durées converties en ticks à 120 Hz).
+// Valeurs de GAME_SPEC §8 (durées converties en ticks à 120 Hz). Vitesses de chute à ±20 % du tigré (§13).
 export const CHARACTERS: Readonly<Record<CharacterId, CharacterDef>> = {
   tigre: { id: 'tigre', label: 'Tigré', rule: '', mass: 1, transfer: 0.8, lifeTicks: 144, fallSpeed: 70, scale: 1, catchable: true },
-  gros: { id: 'gros', label: 'Gros', rule: 'traverse tout', mass: 3, transfer: 1, lifeTicks: 240, fallSpeed: 52, scale: 1.35, catchable: true },
+  gros: { id: 'gros', label: 'Gros', rule: 'traverse tout', mass: 3, transfer: 1, lifeTicks: 240, fallSpeed: 56, scale: 1.35, catchable: true },
   chaton: { id: 'chaton', label: 'Chaton', rule: "s'éteint vite", mass: 0.5, transfer: 0.5, lifeTicks: 84, fallSpeed: 80, scale: 0.7, catchable: true },
   chien: { id: 'chien', label: 'Chien déguisé', rule: 'ne pas toucher', mass: 1, transfer: 0, lifeTicks: 0, fallSpeed: 70, scale: 1, catchable: false },
   trouillard: { id: 'trouillard', label: 'Trouillard', rule: 'esquive la pelote', mass: 1, transfer: 0.8, lifeTicks: 144, fallSpeed: 72, scale: 1, catchable: true },

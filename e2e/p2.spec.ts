@@ -73,6 +73,7 @@ test('carte au lancement, 1-1 jouée → 1-2 débloquée et conservée après re
   await expect(tile(page, '1-2')).toBeDisabled();
   await expect(tile(page, '1-5')).toContainText('Grande averse');
   await expect(page.locator('#map-cta')).toContainText('Commence par la première averse');
+  await expect(page.locator('#map-cta')).not.toContainText('percute'); // §13 : la mécanique se découvre en jouant
 
   // 2. 1-1 jouée jusqu'à au moins une patte.
   await tile(page, '1-1').click();

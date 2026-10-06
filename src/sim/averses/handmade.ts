@@ -5,6 +5,10 @@ import { assemble, colonne, grappe, pluieFine, rideau, seconds, vForm } from '..
 import { createRng } from '../rng';
 import type { AverseDef, CharacterId } from '../types';
 
+// Hors tutoriel, grappes espacées comme dans la campagne (generator.ts) : la chaîne dépend de l'angle.
+const LOOSE_X = 50;
+const LOOSE_Y = 48;
+
 const T: CharacterId = 'tigre';
 const G: CharacterId = 'gros';
 const K: CharacterId = 'chaton';
@@ -34,10 +38,10 @@ function h2(): AverseDef {
       pluieFine(ctx, seconds(0.5), 5, [T, T]),
       colonne(ctx, seconds(6), 110, [T, T, T, T, G]),
       pluieFine(ctx, seconds(14), 5, [T, T]),
-      grappe(ctx, seconds(21), 200, [T, T, T, T, G, T, T]),
+      grappe(ctx, seconds(21), 200, [T, T, T, T, G, T, T], 3, LOOSE_X, LOOSE_Y),
       rideau(ctx, seconds(32), 180, [G, T, T, T, T, T]),
       pluieFine(ctx, seconds(39), 5, [T, T]),
-      grappe(ctx, seconds(46), 160, [T, T, T, T, T, T, T, G], 4),
+      grappe(ctx, seconds(46), 160, [T, T, T, T, T, T, T, G], 4, LOOSE_X, LOOSE_Y),
     ),
   };
 }
@@ -48,12 +52,12 @@ function h3(): AverseDef {
     id: 'h3', chapter: 4, pelotes: 8,
     spawns: assemble(
       pluieFine(ctx, seconds(0.5), 5, [T, K, T]),
-      grappe(ctx, seconds(7), 170, [T, T, T, D, T, T, T]),
+      grappe(ctx, seconds(7), 170, [T, T, T, D, T, T, T], 3, LOOSE_X, LOOSE_Y),
       colonne(ctx, seconds(16), 260, [T, T, G, K]),
       pluieFine(ctx, seconds(22), 5, [K, T]),
       rideau(ctx, seconds(29), 180, [T, K, T, D, T, G]),
       vForm(ctx, seconds(38), 200, [G, T, T, K, K]),
-      grappe(ctx, seconds(47), 150, [T, T, T, K, T, T, G, T], 4),
+      grappe(ctx, seconds(47), 150, [T, T, T, K, T, T, G, T], 4, LOOSE_X, LOOSE_Y),
     ),
   };
 }

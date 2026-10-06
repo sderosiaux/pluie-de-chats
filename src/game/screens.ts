@@ -134,7 +134,17 @@ export function bindScreens(h: ScreenHandlers): Screens {
   sound.addEventListener('click', () => h.onSound(!soundOn));
   openCarnet.addEventListener('click', () => h.onOpenCarnet());
   carnetBack.addEventListener('click', () => h.onCloseCarnet());
+  let opener: HTMLElement | null = null;
   pageClose.addEventListener('click', closePage);
+  // Piège à focus : Tab ne sort pas de la page ouverte (aria-modal).
+  page.addEventListener('keydown', e => {
+    if (e.key !== 'Tab' || page.hidden) return;
+    const focusables = [...page.querySelectorAll<HTMLElement>('button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])')];
+    if (!focusables.length) return;
+    const first = focusables[0], lastEl = focusables[focusables.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); lastEl.focus(); }
+    else if (!e.shiftKey && document.activeElement === lastEl) { e.preventDefault(); first.focus(); }
+  });
   page.addEventListener('click', e => { if (e.target === page) closePage(); });
   pagePrev.addEventListener('click', () => flip(-1));
   pageNext.addEventListener('click', () => flip(1));
@@ -213,7 +223,8 @@ export function bindScreens(h: ScreenHandlers): Screens {
       ctaGo.textContent = 'Reprendre';
       ctaAction = () => h.onResume();
     } else if (!anyPaw && suggested) {
-      ctaText.replaceChildren(make('b', '', 'Commence par la première averse'), document.createTextNode('Touche un chat : il percute ses voisins.'));
+      // Pas d'explication de la mécanique (§13 : la 1-1 se découvre en jouant) ; seulement où commencer.
+      ctaText.replaceChildren(make('b', '', 'Commence par la première averse'), document.createTextNode(`${averseLabel(suggested)} · ${chapterName(suggested.chapter)}`));
       ctaGo.textContent = `Jouer ${slotId(suggested)}`;
       ctaAction = () => h.onPlay(slotId(suggested));
     } else if (suggested) {
@@ -241,6 +252,7 @@ export function bindScreens(h: ScreenHandlers): Screens {
       const card = make('div', 'entry unknown');
       card.dataset.char = ch;
       card.dataset.state = 'unknown';
+      card.setAttribute('role', 'img');
       card.setAttribute('aria-label', `Caractère inconnu, chapitre ${chapter}`);
       const pic = make('div', 'entry-sprite');
       pic.append(sprite(costumesFor(ch, chapter)[0]), make('span', 'entry-q', '?'));
@@ -291,6 +303,7 @@ export function bindScreens(h: ScreenHandlers): Screens {
     pagePrev.disabled = i <= 0;
     pageNext.disabled = i >= met.length - 1;
     pagePos.textContent = `${i + 1} / ${met.length}`;
+    if (page.hidden) opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     page.hidden = false;
     pageClose.focus({ preventScroll: true });
     h.onReadPage(ch);
@@ -304,8 +317,12 @@ export function bindScreens(h: ScreenHandlers): Screens {
   }
 
   function closePage(): void {
+    const wasOpen = !page.hidden;
     page.hidden = true;
     pageChar = null;
+    // Le focus revient à la carte du carnet qui a ouvert la page (dialogue modal, WAI-ARIA).
+    if (wasOpen && opener?.isConnected) opener.focus({ preventScroll: true });
+    opener = null;
   }
 
   return {

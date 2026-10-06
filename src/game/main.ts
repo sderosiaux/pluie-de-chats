@@ -21,7 +21,7 @@ import { bindDom } from './hud';
 import { attachInput } from './input';
 import { BANNER_ICON, THEME } from './look';
 import {
-  emptyProgress, loadProgress, markRead, meet, parseProgress, recordResult, saveProgress, seeCostume, withSound,
+  STORAGE_KEY, emptyProgress, loadProgress, markRead, meet, mergeProgress, parseProgress, recordResult, saveProgress, seeCostume, withSound,
 } from './progress';
 import type { Progress } from './progress';
 import { render, updateLooks } from './render';
@@ -111,11 +111,28 @@ const storage = localStore();
 let progress: Progress = loadProgress(storage);
 setSoundEnabled(progress.sound);
 
+let saveWarned = false;
+
+/**
+ * Enregistre en fusionnant avec ce qu'un autre onglet a pu écrire entre-temps : sinon l'état en mémoire,
+ * périmé, écraserait ses pattes. Un échec d'écriture (quota, navigation privée) est signalé une fois.
+ */
 function commit(p: Progress): void {
   if (p === progress) return;
-  progress = p;
-  saveProgress(storage, p);
+  progress = mergeProgress(loadProgress(storage), p);
+  if (!saveProgress(storage, progress) && storage && !saveWarned) {
+    saveWarned = true;
+    dom.showError('Sauvegarde impossible sur cet appareil : ta progression sera perdue en fermant la page.', 6000);
+  }
 }
+
+// Un autre onglet a progressé : on fusionne et on redessine l'écran ouvert.
+window.addEventListener('storage', e => {
+  if (e.key !== STORAGE_KEY) return;
+  progress = mergeProgress(progress, loadProgress(storage));
+  if (screen === 'map') screens.showMap(progress, paused());
+  else if (screen === 'carnet') screens.refreshCarnet(progress);
+});
 
 // ── Écrans ──────────────────────────────────────────────────────────────────
 
@@ -140,10 +157,12 @@ const dom = bindDom({
 const screens = bindScreens({
   onPlay: launch,
   onResume() {
+    startToken++; // annule un lancement encore en chargement
     if (!run || run.sim.ended) return openMap();
     showPlay(run.averse.id);
   },
   onOpenCarnet() {
+    startToken++; // annule un lancement encore en chargement : il refermerait le carnet
     screen = 'carnet';
     screens.showCarnet(progress);
   },
@@ -174,6 +193,7 @@ function setUrlAverse(id: string | null): void {
 }
 
 function openMap(): void {
+  startToken++; // annule un lancement encore en chargement : il masquerait la carte
   screen = 'map';
   if (run) run.aim = null;
   dom.hideEnd();
@@ -241,6 +261,7 @@ async function start(id: string): Promise<void> {
     seenChars: new Set(),
   };
   dom.hideEnd();
+  dom.hideError();
   showPlay(id);
 }
 
@@ -396,7 +417,7 @@ function frame(t: number): void {
 
   const visDt = r.fast ? ticks * DT : realDt * scale;
   updateLooks(r.sim, r.looks, visDt);
-  updateFx(r.fx, visDt);
+  updateFx(r.fx, visDt, realDt);
 
   if (r.aim && r.aim.angle !== null) r.aim.pred = predictFirstContact(r.sim, r.aim.angle);
 
@@ -507,9 +528,10 @@ async function boot(): Promise<void> {
 }
 
 boot()
-  .then(() => (DEBUG ? exposeDebug() : undefined))
   .catch((err: unknown) => {
+    // Lancement direct raté (?averse=…) : on retombe sur la carte, avec le message, au lieu d'une page vide.
+    openMap();
     dom.showError(err instanceof Error ? err.message : String(err));
-    throw err;
-  });
+  })
+  .then(() => (DEBUG ? exposeDebug() : undefined));
 requestAnimationFrame(frame);

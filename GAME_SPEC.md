@@ -419,3 +419,8 @@ PASS  Après une averse ratée, le joueur appuie sur Rejouer dans les 3 s.
 - 2026-10-06 · §8 costumes rares : choisis côté client à partir de (averse, index du chat dans l'averse), jamais tirés par la sim (aucun effet de jeu, graines inchangées).
 - 2026-10-06 · §13 : pas de bandeau pour le tigré (règle vide, pas de texte en 1-1) ; il entre au carnet comme « le chat de référence ».
 - 2026-10-06 · §21 : bouton carte 🗺️ en jeu (sous la ligne des 7°, où aucun tir ne part) ; la carte propose « Reprendre » l'averse en pause.
+- 2026-10-06 · §22 : pas de pseudo (il ne servait qu'au classement, abandonné).
+- 2026-10-06 · §11 (audit et revue P2) : générateur refait. Densité croissante par budget (40 % des chats en 1re moitié, 60 % en 2e) étalé jusqu'à la finale ; formations rangées du plus rapide (bas) au plus lent (haut), écarts réglés sur la vitesse du chat du dessous et sur les rayons, formation recentrée en entier dans le monde ; une formation est redessinée si elle passerait trop près d'un chat déjà en chute. Grande averse : toutes les formations du chapitre. Nouveau caractère dans la première formation. « Piège à chatons » = gros escorté de chatons. Fantômes isolés en pluie fine, 3 au plus (4 en Grande averse).
+- 2026-10-06 · §11 gel : une graine n'est retenue que si l'averse passe aussi les contrôles de structure (src/sim/averses/structure.ts : densité, trou ≤ 9 s, écran vide ≤ 6 s, aucun chevauchement en chute, costumes, Grande averse complète, nouveau caractère dans le 1er tiers) ; chaque averse figée a une empreinte vérifiée par test. Tutoriel 1-1 : grappe de 6 entre 15 et 25 s, 8 pelotes, et tout débutant (bot naïf, 5 graines) y fait au moins 1 patte.
+- 2026-10-06 · §13 : vitesse de chute du gros 52 → 56 (±20 % autour du tigré).
+

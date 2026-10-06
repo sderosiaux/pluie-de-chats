@@ -28,9 +28,46 @@ function clampX(x: number, char: CharacterId): number {
   return x < m ? m : x > WORLD_W - m ? WORLD_W - m : x;
 }
 
-/** Ticks d'écart pour qu'un chat apparaisse `dy` px au-dessus d'un autre (même vitesse de chute). */
-function ticksForGap(dy: number, char: CharacterId): number {
-  return Math.round((dy / CHARACTERS[char].fallSpeed) * SEC);
+/**
+ * Ticks d'attente pour qu'un chat apparaisse `dy` px au-dessus de `below`, qui tombe déjà : c'est la vitesse
+ * du chat du DESSOUS qui fixe l'écart. Les membres étant rangés du plus rapide (bas) au plus lent (haut),
+ * cet écart ne fait ensuite que grandir : aucun chat ne rattrape celui du dessous.
+ */
+function ticksForGap(dy: number, below: CharacterId): number {
+  return Math.round((dy / CHARACTERS[below].fallSpeed) * SEC);
+}
+
+/** Rayon d'un caractère (comme dans la sim). */
+export function radiusOf(char: CharacterId): number {
+  return CAT_BASE_R * CHARACTERS[char].scale;
+}
+
+/** Distance minimale entre deux centres pour que deux chats ne se chevauchent pas à l'écran (marge de 2 px). */
+function minSep(a: CharacterId, b: CharacterId): number {
+  return radiusOf(a) + radiusOf(b) + 2;
+}
+
+/** Abscisses d'une rangée : `gap` entre voisins, élargi si deux gros chats se touchent. Centrées sur 0. */
+function rowXs(chars: readonly CharacterId[], gap: number): number[] {
+  const xs = [0];
+  for (let i = 1; i < chars.length; i++) xs.push(xs[i - 1] + Math.max(gap, minSep(chars[i - 1], chars[i])));
+  const mid = xs[xs.length - 1] / 2;
+  return xs.map(x => x - mid);
+}
+
+/** Du plus rapide au plus lent (tri stable). */
+function fastestFirst(chars: readonly CharacterId[]): CharacterId[] {
+  return chars.map((c, i) => ({ c, i })).sort((a, b) => CHARACTERS[b.c].fallSpeed - CHARACTERS[a.c].fallSpeed || a.i - b.i).map(e => e.c);
+}
+
+/**
+ * Recentre une formation de demi-largeur `halfW` pour qu'elle tienne entière dans le monde. Recadrer chaque
+ * membre séparément les empilerait contre le bord (deux chats au même endroit).
+ */
+function clampCenter(cx: number, halfW: number, chars: readonly CharacterId[]): number {
+  const m = Math.max(...chars.map(margin));
+  const lo = halfW + m, hi = WORLD_W - halfW - m;
+  return lo > hi ? WORLD_W / 2 : cx < lo ? lo : cx > hi ? hi : cx;
 }
 
 function sway(ctx: FormationCtx, amp: number): { swayAmp: number; swayPhase: number } {
@@ -56,57 +93,86 @@ export function pluieFine(ctx: FormationCtx, t0: number, durationS: number, char
 /** Rangée horizontale, même tick. */
 export function rideau(ctx: FormationCtx, t0: number, cx: number, chars: CharacterId[], gap = 46): FormationSpawn[] {
   const s = sway(ctx, ctx.rng.range(4, 10));
-  const w = (chars.length - 1) * gap;
-  return chars.map((char, i) => ({ tick: t0, char, costume: costume(ctx, char), x: clampX(cx - w / 2 + i * gap, char), ...s }));
+  const xs = rowXs(chars, gap);
+  const c = clampCenter(cx, xs[xs.length - 1] + s.swayAmp, chars);
+  return chars.map((char, i) => ({ tick: t0, char, costume: costume(ctx, char), x: c + xs[i], ...s }));
 }
 
-/** Pile verticale : le premier élément est en bas (apparaît le premier). */
+/** Pile verticale, du plus rapide (en bas, apparaît le premier) au plus lent (en haut). */
 export function colonne(ctx: FormationCtx, t0: number, x: number, chars: CharacterId[], gap = 50): FormationSpawn[] {
   const s = sway(ctx, ctx.rng.range(4, 10));
+  const ordered = fastestFirst(chars);
+  const cx = clampCenter(x, s.swayAmp, ordered);
   let t = t0;
-  return chars.map((char, i) => {
-    if (i > 0) t += ticksForGap(gap, char);
-    return { tick: t, char, costume: costume(ctx, char), x: clampX(x, char), ...s };
+  return ordered.map((char, i) => {
+    if (i > 0) t += ticksForGap(Math.max(gap, minSep(ordered[i - 1], char)), ordered[i - 1]);
+    return { tick: t, char, costume: costume(ctx, char), x: cx, ...s };
   });
 }
 
-/** Grappe serrée : rangées en quinconce, de bas en haut. `chars` est rempli rangée par rangée. */
+/** Grappe : rangées en quinconce, de bas en haut, du plus rapide au plus lent. */
 export function grappe(ctx: FormationCtx, t0: number, cx: number, chars: CharacterId[], perRow = 3, gapX = 42, gapY = 40): FormationSpawn[] {
   const s = sway(ctx, ctx.rng.range(4, 8));
+  const ordered = fastestFirst(chars);
+  const rows: CharacterId[][] = [];
+  for (let i = 0; i < ordered.length; i += perRow) rows.push(ordered.slice(i, i + perRow));
+  const rowsX = rows.map(r => rowXs(r, gapX));
+  const halfW = Math.max(...rowsX.map(xs => xs[xs.length - 1])) + gapX / 2;
+  const c = clampCenter(cx, halfW + s.swayAmp, ordered);
   const out: FormationSpawn[] = [];
   let t = t0;
-  for (let row = 0; row * perRow < chars.length; row++) {
-    const rowChars = chars.slice(row * perRow, row * perRow + perRow);
-    if (row > 0) t += ticksForGap(gapY, rowChars[0]);
+  rows.forEach((rowChars, row) => {
+    if (row > 0) {
+      const below = rows[row - 1];
+      const maxR = (cs: CharacterId[]) => Math.max(...cs.map(radiusOf));
+      // Écart réglé sur le plus lent de la rangée du dessous (pire cas), et assez grand pour les gros.
+      const dy = Math.max(gapY, maxR(below) + maxR(rowChars) + 2);
+      t += ticksForGap(dy, below[below.length - 1]);
+    }
     const off = row % 2 === 1 ? gapX / 2 : 0;
-    const w = (rowChars.length - 1) * gapX;
     rowChars.forEach((char, i) => {
-      out.push({ tick: t, char, costume: costume(ctx, char), x: clampX(cx - w / 2 + off + i * gapX, char), ...s });
+      out.push({ tick: t, char, costume: costume(ctx, char), x: c + rowsX[row][i] + off, ...s });
     });
-  }
-  return out;
-}
-
-/** V pointe en bas : la pointe apparaît la première. */
-export function vForm(ctx: FormationCtx, t0: number, cx: number, chars: CharacterId[], gapX = 36, gapY = 34): FormationSpawn[] {
-  const s = sway(ctx, ctx.rng.range(4, 8));
-  const out: FormationSpawn[] = [];
-  chars.forEach((char, i) => {
-    const level = Math.ceil(i / 2);
-    const side = i === 0 ? 0 : i % 2 === 1 ? -1 : 1;
-    out.push({ tick: t0 + ticksForGap(level * gapY, char), char, costume: costume(ctx, char), x: clampX(cx + side * level * gapX, char), ...s });
   });
   return out;
 }
 
-/** Maman + chatons en escorte (§8). Les chatons suivent la maman tant qu'elle tombe. */
-export function escorte(ctx: FormationCtx, t0: number, cx: number, kittens: number): FormationSpawn[] {
+/** V pointe en bas : la pointe (le plus rapide) apparaît la première. */
+export function vForm(ctx: FormationCtx, t0: number, cx: number, chars: CharacterId[], gapX = 36, gapY = 34): FormationSpawn[] {
+  const s = sway(ctx, ctx.rng.range(4, 8));
+  const ordered = fastestFirst(chars);
+  // Deux membres voisins d'un même côté sont distants de √(gapX² + gapY²) : on agrandit le V s'il y a des gros.
+  const need = Math.max(...ordered.map(radiusOf)) * 2 + 2;
+  const k = Math.max(1, need / Math.sqrt(gapX * gapX + gapY * gapY));
+  const gx = gapX * k, gy = gapY * k;
+  const maxLevel = Math.ceil((ordered.length - 1) / 2);
+  const c = clampCenter(cx, maxLevel * gx + s.swayAmp, ordered);
+  const out: FormationSpawn[] = [];
+  let t = t0;
+  let prevLevel = 0;
+  ordered.forEach((char, i) => {
+    const level = Math.ceil(i / 2);
+    const side = i === 0 ? 0 : i % 2 === 1 ? -1 : 1;
+    // Chaque niveau du V attend le précédent à sa vitesse (le plus lent du niveau du dessous).
+    if (level > prevLevel) { t += ticksForGap(gy, ordered[i - 1]); prevLevel = level; }
+    out.push({ tick: t, char, costume: costume(ctx, char), x: c + side * level * gx, ...s });
+  });
+  return out;
+}
+
+/**
+ * Chatons en escorte d'un meneur (§11). Avec une maman, les chatons la rejoignent quand elle est attrapée
+ * (§8). Avec un gros, c'est le « piège à chatons » : des chats légers qui étouffent la chaîne autour du gros.
+ */
+export function escorte(ctx: FormationCtx, t0: number, cx: number, kittens: number, leader: CharacterId = 'maman'): FormationSpawn[] {
   const s = sway(ctx, ctx.rng.range(4, 10));
-  const mom: FormationSpawn = { tick: t0, char: 'maman', costume: costume(ctx, 'maman'), x: clampX(cx, 'maman'), ...s };
   const offsets = [[-34, 8], [34, 8], [-18, -30], [18, -30]];
+  // L'escorte entière tient dans le monde : un meneur collé au mur écraserait ses chatons contre lui.
+  const c = clampCenter(cx, 34 + s.swayAmp, [leader, 'chaton']);
+  const mom: FormationSpawn = { tick: t0, char: leader, costume: costume(ctx, leader), x: c, ...s };
   const out: FormationSpawn[] = [mom];
   for (let i = 0; i < kittens && i < offsets.length; i++) {
-    out.push({ tick: t0, char: 'chaton', costume: costume(ctx, 'chaton'), x: clampX(cx + offsets[i][0], 'chaton'), swayAmp: 0, swayPhase: 0,
+    out.push({ tick: t0, char: 'chaton', costume: costume(ctx, 'chaton'), x: c + offsets[i][0], swayAmp: 0, swayPhase: 0,
       escortLocal: 0, escortDx: offsets[i][0], escortDy: offsets[i][1] });
   }
   return out;
