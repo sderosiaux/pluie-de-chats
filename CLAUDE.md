@@ -1,26 +1,23 @@
 # Pluie de Chats — Guide Claude
 
-Jeu mobile canvas 2D, **single-file** (`index.html` uniquement, ~5 Mo avec sprites base64 intégrés). Pas de build system, pas de bundler. Ouvrir directement dans le navigateur.
+Jeu mobile canvas 2D (Vite + TypeScript strict). Le design fait foi : **`GAME_SPEC.md`**, en particulier le contrat §30 et les règles de déterminisme §24. Toute décision d'implémentation qui s'en écarte est consignée en bas du spec (« Écarts d'implémentation »), jamais ailleurs.
 
 ## Architecture
 
-```
-index.html
-├── <style>          — CSS minimal, thème violet foncé (#1a0a2e)
-└── <script>         — tout le jeu (~5000 lignes JS)
-    ├── Constantes    — HUD_H, DIAL_R, DIAL_ANGLES, TYPE_ORDER, LEVELS, UPGRADES
-    ├── CAT_TYPES[]   — 40+ types de chats avec pts/col/size/w/minLvl
-    ├── OBJECT_TYPES[]— bombe, plume, souris (isObject:true obligatoire !)
-    ├── PROJ_DEFS{}   — 5 armes : pelote, artifice, laser, catnip, carton
-    ├── CAT_SPRITES{} — sprites chats base64 (22 types × 3 poses : sit/mid/tro)
-    ├── WEAPON_SPRITES{} — sprites armes base64 (200×200 PNG RGBA)
-    ├── OBJECT_SPRITES{} — sprites objets base64 (200×200 PNG RGBA)
-    ├── Game loop     — requestAnimationFrame, dt en secondes
-    ├── Draw fns      — drawCatShape, drawProjectileShape, drawInventory, drawEffect
-    └── resetGame()   — remet TOUT à zéro (BASE_PROJ_DEFS comme source de vérité)
-```
+- `src/sim/` — simulation déterministe, partagée avec le serveur du classement. Elle ne connaît ni l'écran ni l'horloge : monde fixe 360×640, pas de 1/120 s, entrées = angle entier en dixièmes de degré. Pas d'aléa à l'exécution : tout vient de l'averse (graine).
+- `src/game/` — client : rendu, entrées, son. Ne modifie la sim que par `tryShoot` et `step`.
+- `src/bots/` — joueurs automatiques : mesure « chance / talent » (§29) et validation des averses générées.
+- `e2e/` — Playwright (Chromium + WebKit) sur un build de test (`VITE_DEBUG=1`, outils `?debug`).
 
-**Règle critique :** Tout ajout dans `OBJECT_TYPES` doit avoir `isObject:true` sinon `drawObject()` n'est jamais appelé (dispatch via `type.isObject` dans `drawCatShape`).
+## Règles qui ne se voient pas dans le code
+
+- **Déterminisme.** Dans `src/sim`, ESLint refuse `Math.sin/cos/atan2/pow/random…`, `**`, `Date`, `performance`, les alias de `Math` et tout import hors de `src/sim` : leurs résultats peuvent différer d'un moteur JS à l'autre, et le serveur rejoue les parties pour valider les scores. Utiliser `fmath.ts`.
+- **Toute modification de la physique invalide les données figées.** Relancer `npm run fixtures` (journaux de référence et leur hash) puis `npm run freeze-chapters -- <chapitreMax>` (graines de campagne, validées par simulation), et vérifier que les portes chance/talent passent encore (`npx vitest run src/bots`).
+- **Une graine de campagne n'est retenue que si** l'expert fait 3 pattes ET plus de 2,2× le naïf (sauf le tutoriel 1-1). Ne pas assouplir ces seuils pour faire passer une averse : changer le générateur.
+- **`main` déploie en production** (GitHub Pages). La CI (`.github/workflows/ci.yml`) lance lint, tests et E2E ; le hook pre-commit lance `npm run check`.
+
+## Commandes
+`npm run check` · `npx vitest run` · `npx playwright test` · `npm run build` · `npm run fixtures` · `npm run freeze-chapters -- 5`
 
 ## Style visuel — Kawaii chibi
 
@@ -67,7 +64,7 @@ Gemini génère des images **1408×768** avec le sujet centré ~col 600-800.
 ### 2. Processing Python (PIL)
 ```python
 from PIL import Image
-import numpy as np, base64, io
+import numpy as np
 
 def remove_white_bg(img, threshold=235):
     img = img.convert('RGBA')
@@ -95,58 +92,10 @@ img = img.crop((320, 0, 1088, 768))  # centre 768×768 (ajuster si sujet décal�
 img = remove_white_bg(img)
 img = crop_to_content(img)
 img = img.resize((200,200), Image.LANCZOS)
-buf = io.BytesIO(); img.save(buf,'PNG')
-b64 = base64.b64encode(buf.getvalue()).decode()
+img.save('public/sprites/cats/<costume>_<pose>.png')
 ```
 
 **Cas particulier :** si la moitié droite de l'image est noire (artefact Gemini), cropper à `(0, 0, 700, 768)` au lieu du crop centré, et appliquer aussi `remove_dark_bg(threshold=60)`.
 
-### 3. Injection dans index.html
-- **Armes** → bloc `WEAPON_SPRITES['id']` (pattern existant)
-- **Objets** → bloc `OBJECT_SPRITES['id']` (pattern existant)
-- **Chats** → `CAT_SPRITES['id']` = array de 3 Images (sit/mid/tro)
-
-Le script de génération de tous les chats est dans `scripts/gen_all_cats.sh`.
-
-## Armes (PROJ_DEFS)
-
-| id | Emoji | Vitesse | Gravité | Mécanique |
-|---|---|---|---|---|
-| pelote | 🧶 | [5,22] | normale | rebondit sur les bords (3 bounces) |
-| artifice | 🎆 | [4,18] | ×0.7 | explose à `spd*30+rand*80` px de distance |
-| laser | 🔴 | [20,20] | 0 | rayon instantané, frappe en ligne |
-| catnip | 🌿 | [4,19] | normale | cloud qui étourdit |
-| carton | 📦 | [4,19] | normale | aspire les chats dans un rayon |
-
-`BASE_PROJ_DEFS` = source de vérité pour le reset. Toujours ajouter les nouveaux champs là-dedans.
-
-## Chats
-
-- **Spawn** : `spawnCat()` tire dans `CAT_TYPES` filtré par `minLvl <= level` et pondéré par `w`
-- **Objets** : `spawnObject()` toutes les 8-18s, 1 sur 3 chance d'être une bombe
-- **Dégâts joueur** : griffeur (fonce), crachat (boules de poils), bombe attrapée/tombée en bas
-- **Système de poses** : `poseIdx` 0=sit, 1=mid (saut), 2=tro (trot) — assigné aléatoirement au spawn
-
-## Système de progression
-
-- **Score** → niveaux (LEVELS[] avec thresholds 20/50/90/150/220/320/450/620/840)
-- **Level-up** → écran roguelite : 3 cartes d'upgrade à choisir
-- **Armes débloquées** : artifice à 15pts, laser à 30pts, catnip à 80pts, carton à 150pts
-
-## Pièges fréquents
-
-- **Sprites non visibles** : vérifier `isObject:true` dans les types, et que `OBJECT_SPRITES`/`WEAPON_SPRITES` sont déclarés AVANT la game loop
-- **Upgrades persistant entre parties** : tout reset doit passer par `BASE_PROJ_DEFS` dans `resetGame()`
-- **Boucle de niveau skippée** : les level-ups utilisent `pendingLevelUps[]` queue, ne jamais appeler `showLevelUpScreen` directement
-- **Cheat code** : taper "pluie" débloque tout + munitions infinies (`upgradeFlags.cheatMode`)
-
-## Direction du jeu
-
-Jeu mobile portrait, lanceur en bas au centre (slingshot). Ambiance kawaii/chibi colorée, fun et accessible. Pas de game over brutal — vies visuelles (❤️), slow-mo sur dernière vie.
-
-**Prochaines idées possibles :**
-- Nouvelles armes (filet, aspirateur, aimant)
-- Événements spéciaux (pluie de chats × 10, invasion boss)
-- Système de combo plus élaboré (streak visuel)
-- Nouveaux objets tombants (bonbons bonus, étoiles)
-- Animations d'entrée pour les chats (spirale, bounce-in)
+### 3. Où vont les sprites
+PNG dans `public/sprites/{cats,weapons,objects}/`, chargés via `import.meta.env.BASE_URL` (le site est servi sous `/pluie-de-chats/`). Chats : `<costume>_{sit,mid,tro}.png`. Le costume → caractère est dans `src/sim/costumes.ts` (§8 : un costume ne porte qu'un caractère par averse).
