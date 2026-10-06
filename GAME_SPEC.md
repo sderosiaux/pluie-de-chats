@@ -74,7 +74,7 @@ Pas fixe de **120 Hz**, découplé du rendu. La simulation s'arrête quand l'ong
 
 ### Loi 3 : Propagation
 - **Condition :** un boulet touche un chat qui tombe.
-- **Changement d'état :** le chat touché devient boulet. Il part selon la ligne des centres, avec une vitesse `|v_boulet| × transfert(boulet)`. Le boulet tapeur est dévié selon le rapport des masses (choc élastique simplifié : `v_tapeur -= (1 - m_cible/(m_tapeur+m_cible)) × 2 × projection sur la normale`, borné). Vitesse plancher d'un nouveau boulet : **380 px/s**, pour qu'une chaîne ne meure pas dans un frôlement.
+- **Changement d'état :** le chat touché devient boulet. Il part selon la ligne des centres, avec une vitesse `|v_boulet| × transfert(boulet)`. Le boulet tapeur est dévié selon le rapport des masses (choc élastique : `v_tapeur -= 2·m_cible/(m_tapeur+m_cible) × projection sur la normale`). Le gros n'est jamais dévié. Vitesse plancher d'un nouveau boulet : **380 px/s**, pour qu'une chaîne ne meure pas dans un frôlement.
 - **Les boulets ne se percutent pas entre eux.**
 - **Usage joueur :** viser un chat placé au-dessus d'une grappe pour que la cascade descende dedans.
 - **Cas limites :** deux boulets touchent le même chat dans le même tick → c'est le boulet d'`id` le plus petit qui gagne, et le chat rejoint sa chaîne.
@@ -374,6 +374,7 @@ PASS  Sur 5 essais de la même averse, le score d'un joueur progresse (il appren
 FAIL  Les scores varient sans tendance.
 
 PASS  Sur l'averse 2-3, la médiane des scores des 5 meilleurs joueurs-test est ≥ 2× celle des 5 débutants.
+      Proxy automatique (bots) : ≥ 2× sur toute averse hors tutoriel ; sur le tutoriel 1-1, l'expert doit seulement battre le naïf.
 FAIL  Écart < 1,5× : c'est la chance qui gagne, il faut revoir la propagation avant P3.
 
 PASS  Montré un chat costumé avec son collier, un joueur qui a passé le ch.2 dit « gros » ou « normal » correctement 9 fois sur 10.
@@ -401,3 +402,10 @@ PASS  Après une averse ratée, le joueur appuie sur Rejouer dans les 3 s.
 ---
 
 *Mis de côté : « Fil de laine » (tour 2, apprécié). Une seule mécanique signature : le fil et le carambolage se disputeraient le même tir. On pourra y revenir si la validation §29 sur la chance échoue.*
+
+## Écarts d'implémentation
+
+- 2026-10-05 · §7 loi 3 : la formule de déviation du spec inversait l'effet des masses (un tapeur lourd aurait été plus dévié qu'un léger). Remplacée par le choc élastique `2·m_cible/(m_tapeur+m_cible)`.
+- 2026-10-05 · §29 : la porte « chance / talent » s'applique hors tutoriel. Mesure P1 (expert patient vs naïf qui vise juste une cible au hasard) : 2-1 = 2,41×, 4-2 = 2,43×, 1-1 = 1,86×. Le naïf varie de 27 à 227 sur une même averse ; décision : le classement garde le meilleur score.
+- 2026-10-05 · §24 : monde logique fixe 360×640, lanceur en (180, 610) ; angle de tir en dixièmes de degré entiers (900 = vers le haut).
+

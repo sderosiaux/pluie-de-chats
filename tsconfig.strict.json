@@ -4,7 +4,14 @@
     "strict": true,
     "noImplicitAny": true,
     "allowJs": false,
-    "types": ["vite/client"]
+    "types": [
+      "vite/client"
+    ]
   },
-  "include": ["src/sim/**/*", "src/bots/**/*", "src/game/**/*"]
+  "include": [
+    "src/sim/**/*",
+    "src/bots/**/*",
+    "src/game/**/*",
+    "e2e/**/*"
+  ]
 }
