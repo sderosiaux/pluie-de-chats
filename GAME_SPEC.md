@@ -108,7 +108,7 @@ Dix caractères, introduits un par un. Chaque caractère a un **repère visuel d
 | 1 | **Tigré** | aucun | 1 | 0,8 | 1,2 s | référence | un chat touché en touche d'autres |
 | 2 | **Gros** | collier rouge ⬤, taille ×1,35 | 3 | 1,0 | 2,0 s | traverse sans dévier, tombe lentement | choisir la première cible |
 | 3 | **Chaton** | collier jaune 🍼, taille ×0,7 | 0,5 | 0,5 | 0,7 s | s'éteint vite | certains chats arrêtent la chaîne |
-| 4 | **Chien déguisé** | aucun collier, oreilles tombantes visibles | n/a | n/a | n/a | s'il est touché (pelote ou boulet) : −5 pts, il ne propage rien, il ne compte pas comme attrapé | contourner, pas seulement viser |
+| 4 | **Chien déguisé** | collier marron 🦴 | n/a | n/a | n/a | s'il est touché (pelote ou boulet) : −5 pts, il ne propage rien, il ne compte pas comme attrapé | contourner, pas seulement viser |
 | 5 | **Trouillard** | collier bleu ❗ | 1 | 0,8 | 1,2 s | esquive la **pelote** (bond latéral si la pelote passe à < 85 px), jamais les boulets | atteindre un chat par un autre |
 | 6 | **Bouclier** | collier acier 🛡 | 2 | 0,8 | 1,2 s | premier contact : le bouclier casse et le tapeur rebondit dessus (réflexion), le chat continue de tomber. Deuxième contact : il devient boulet | un obstacle devient une bande |
 | 7 | **Fusée** | collier orange 🚀 | 1 | 1,0 | 0,9 s | en boulet : ligne droite, sans gravité, traverse l'écran | balayer une rangée entière |
@@ -255,7 +255,7 @@ Aucun récit. Le seul cadre : « il pleut des chats ». Les chats attrapés file
 - **Les fonds sont discrets** (désaturés à ~60 %), pour que les chats et les colliers ressortent. Ce sont les seules couleurs saturées à l'écran.
 - **Colliers** = codage couleur fixe des caractères (§8). Jamais réutilisé pour autre chose.
 - Les boulets laissent une traînée courte de la couleur du collier. La traînée d'une chaîne à 5 ou plus devient arc-en-ciel.
-- Le chien déguisé doit être reconnaissable **avant** d'être touché : oreilles tombantes et queue visible. Avec le sprite `faux` actuel, c'est à vérifier.
+- Le chien déguisé doit être reconnaissable **avant** d'être touché : collier marron à médaille os 🦴, dessiné par le moteur comme les autres colliers.
 
 ## 18. Animation
 
@@ -409,5 +409,6 @@ PASS  Après une averse ratée, le joueur appuie sur Rejouer dans les 3 s.
 - 2026-10-05 · §29 : la porte « chance / talent » s'applique hors tutoriel. Mesure P1 après revue (expert patient vs naïf qui vise juste une cible au hasard) : 2-1 = 2,67×, 4-2 = 3,02×, 1-1 = 1,60×. Le naïf varie fortement d'une graine à l'autre (22 à 178 sur 2-1) ; décision : le classement garde le meilleur score.
 - 2026-10-05 · §7 loi 2 / §8 bouclier : un tapeur qui casse un bouclier est ignoré par ce bouclier tant qu'ils se chevauchent (sinon, sur un choc rasant, le même tapeur l'attrapait au tick suivant : « deux coups » en un). Un retour ultérieur du même tapeur reste un vrai second contact.
 - 2026-10-05 · §7 lois 2–3 : un chat devenu boulet pendant la phase « boulets » d'un tick ne bouge qu'au tick suivant, quel que soit son id (l'id ne sert qu'à départager les égalités).
+- 2026-10-05 · §8 / §17 / §30.8 : le chien porte un collier marron à médaille os 🦴. Le spec disait « aucun collier, oreilles tombantes », ce qui contredisait §30.8 (« reconnaissable par son collier ») ; le sprite `faux` a d'ailleurs les oreilles dressées.
 - 2026-10-05 · §24 : monde logique fixe 360×640, lanceur en (180, 610) ; angle de tir en dixièmes de degré entiers (900 = vers le haut).
 

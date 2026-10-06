@@ -10,3 +10,4 @@ export { CHARACTERS } from './characters';
 export type { CharacterDef } from './characters';
 export * from './constants';
 export type * from './types';
+export { HANDMADE, handmadeById } from './averses/handmade';

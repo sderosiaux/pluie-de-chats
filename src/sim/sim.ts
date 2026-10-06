@@ -80,9 +80,9 @@ export function stars(s: SimState): 0 | 1 | 2 | 3 {
   return 0;
 }
 
-/** Score final (§7 loi 7). Borné à 0 : un score négatif n'a pas de sens au classement. */
+/** Score final (§7 loi 7, §30.4) : Σ n² + 3 × pelotes restantes, chiens déduits. Peut être négatif. */
 export function finalScore(s: SimState): number {
-  return Math.max(0, s.score + PELOTE_BONUS * s.pelotes);
+  return s.score + PELOTE_BONUS * s.pelotes;
 }
 
 // ── Tir (loi 2, déclenchement) ───────────────────────────────────────────────

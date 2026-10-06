@@ -35,12 +35,12 @@ export interface CollarLook {
   icon: string; // '' = pas d'icône ; 'dot' = pastille dessinée (gros)
 }
 
-/** null = pas de collier (tigré, chien). */
+/** null = pas de collier (tigré). Le chien porte un collier marron à médaille os : §30.8 prime sur §8. */
 export const COLLARS: Readonly<Record<CharacterId, CollarLook | null>> = {
   tigre: null,
   gros: { color: '#e53935', icon: 'dot' },
   chaton: { color: '#f5c518', icon: '🍼' },
-  chien: null,
+  chien: { color: '#8d5524', icon: '🦴' },
   trouillard: { color: '#2f7de1', icon: '❗' },
   bouclier: { color: '#8a9bb0', icon: '🛡' },
   fusee: { color: '#ff8a1f', icon: '🚀' },

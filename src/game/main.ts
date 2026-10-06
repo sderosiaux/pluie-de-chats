@@ -3,11 +3,10 @@
 // l'accéléré changent le nombre de ticks par seconde réelle, jamais la physique.
 
 import {
-  ANGLE_MAX, ANGLE_MIN, CHARACTERS, DT, WORLD_H, catchableCount, createSim, drainEvents,
-  finalScore, hashState, predictFirstContact, runReplay, stars, step, tryShoot,
+  ANGLE_MAX, ANGLE_MIN, CHARACTERS, DT, HANDMADE, WORLD_H, catchableCount, createSim, drainEvents,
+  finalScore, handmadeById, hashState, predictFirstContact, runReplay, stars, step, tryShoot,
 } from '../sim';
 import type { AverseDef, InputLog, SimEvent, SimState } from '../sim';
-import { HANDMADE, handmadeById } from '../sim/averses/handmade';
 import { loadAssets } from './assets';
 import type { Assets } from './assets';
 import { bark, chainNote, chime, tink, unlockAudio } from './audio';
@@ -71,7 +70,9 @@ resize();
 window.addEventListener('resize', resize);
 
 const params = new URLSearchParams(location.search);
-const DEBUG = params.has('debug');
+// Outils de débogage (oracle de chaîne, état modifiable) : jamais dans le build publié.
+// Activés seulement en dev ou dans un build de test (VITE_DEBUG=1, utilisé par Playwright), et avec ?debug.
+const DEBUG = (import.meta.env.DEV || import.meta.env.VITE_DEBUG === '1') && params.has('debug');
 const AVERSE_IDS = HANDMADE.map(a => a.id);
 let averseId = AVERSE_IDS.includes(params.get('averse') ?? '') ? (params.get('averse') as string) : 'h1';
 

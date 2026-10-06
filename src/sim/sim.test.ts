@@ -282,13 +282,13 @@ describe('Loi 7 — fin d’averse', () => {
     expect(stars(s)).toBe(3); // 1/1 attrapé
     expect(finalScore(s)).toBe(1 + 3 * 2);
   });
-  it('le score final est borné à 0', () => {
+  it('le score final suit la formule du contrat, même négatif (§30.4)', () => {
     const s = createSim(averse([sp(0, 'chien', LAUNCH_X)], 1));
     run(s, st => (st.cats[0]?.y ?? -Infinity) >= 300);
     tryShoot(s, UP);
     run(s, st => st.ended, 5000);
     expect(s.score).toBe(-DOG_PENALTY);
-    expect(finalScore(s)).toBe(0);
+    expect(finalScore(s)).toBe(-DOG_PENALTY); // 0 pelote restante
   });
 });
 

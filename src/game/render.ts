@@ -282,7 +282,7 @@ function drawAim(g: CanvasRenderingContext2D, aim: AimState, sim: SimState): voi
   if (p.kind === 'none') return;
   const target = sim.cats.find(k => k.id === p.catId);
   const r = target?.r ?? 18;
-  const bad = p.kind === 'dog' || p.dodges.includes(p.catId);
+  const bad = p.kind === 'dog'; // un chat annoncé « catch » est attrapé, même s'il a tenté d'esquiver
   const color = bad ? THEME.danger : p.kind === 'shield' ? THEME.aimShield : THEME.action;
 
   g.setLineDash([5, 4]);
