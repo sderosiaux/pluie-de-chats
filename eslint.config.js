@@ -48,4 +48,26 @@ export default tseslint.config(
       'no-empty': ['warn', { allowEmptyCatch: true }],
     },
   },
+  {
+    // Déterminisme (GAME_SPEC §24) : la simulation ne lit ni horloge ni aléa,
+    // et n'appelle aucune fonction transcendante (résultats non garantis identiques entre moteurs JS).
+    files: ['src/sim/**/*.ts'],
+    ignores: ['src/sim/**/*.test.ts'],
+    rules: {
+      'no-restricted-properties': ['error',
+        ...['random', 'sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'atan2', 'pow', 'exp', 'expm1', 'log', 'log2', 'log10', 'log1p', 'sinh', 'cosh', 'tanh', 'cbrt', 'hypot']
+          .map(property => ({ object: 'Math', property, message: 'Interdit dans src/sim (déterminisme cross-engine, GAME_SPEC §24).' })),
+      ],
+      'no-restricted-globals': ['error',
+        { name: 'Date', message: 'Pas d\'horloge dans src/sim (GAME_SPEC §24).' },
+        { name: 'performance', message: 'Pas d\'horloge dans src/sim (GAME_SPEC §24).' },
+        { name: 'setTimeout', message: 'La sim avance par ticks, pas par timers.' },
+        { name: 'setInterval', message: 'La sim avance par ticks, pas par timers.' },
+        { name: 'requestAnimationFrame', message: 'La sim avance par ticks, pas par frames.' },
+      ],
+      'no-restricted-syntax': ['error',
+        { selector: 'BinaryExpression[operator="**"]', message: '** peut passer par pow : interdit dans src/sim (GAME_SPEC §24).' },
+      ],
+    },
+  },
 );
