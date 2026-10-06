@@ -11,3 +11,4 @@ export type { CharacterDef } from './characters';
 export * from './constants';
 export type * from './types';
 export { HANDMADE, handmadeById } from './averses/handmade';
+export { CAMPAIGN_SEEDS, campaignAverse } from './averses/chapters';
