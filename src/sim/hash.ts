@@ -11,7 +11,8 @@ export function hashState(s: SimState): string {
     s.ended ? 1 : 0, s.cats.length, s.balls.length, s.chains.length,
   ];
   for (const c of s.cats) {
-    nums.push(c.id, ST_CODE[c.st], c.x, c.y, c.anchorX, c.vx, c.vy, c.age, c.leapVx, c.leapCd, c.shield ? 1 : 0, c.life, c.chainId, c.escortOf);
+    nums.push(c.id, ST_CODE[c.st], c.x, c.y, c.anchorX, c.vx, c.vy, c.age, c.swayAmp, c.leapVx, c.leapCd, c.shield ? 1 : 0, c.shieldImmune,
+      c.life, c.chainId, c.escortOf, c.escortDx, c.escortDy);
   }
   for (const b of s.balls) nums.push(b.id, b.x, b.y, b.vx, b.vy, b.bounces);
   for (const ch of s.chains) nums.push(ch.id, ch.n, ch.alive);

@@ -24,7 +24,7 @@ export function predictFirstContact(s: SimState, angleDeci: number): Prediction 
     if (ball && t % PATH_EVERY === 0) path.push({ x: ball.x, y: ball.y });
     step(sim);
     for (const e of sim.events) {
-      if (e.type === 'dodge') dodges.push(e.catId);
+      if (e.type === 'dodge' && e.ballId === ballId) dodges.push(e.catId);
       else if (e.type === 'catch' && e.ballId === ballId) {
         path.push({ x: e.x, y: e.y });
         const sp = Math.sqrt(e.vx * e.vx + e.vy * e.vy) || 1;

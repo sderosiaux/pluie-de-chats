@@ -3,12 +3,8 @@
   "averseId": "h1",
   "log": [
    {
-    "tick": 790,
-    "angleDeci": 295
-   },
-   {
-    "tick": 850,
-    "angleDeci": 545
+    "tick": 750,
+    "angleDeci": 395
    },
    {
     "tick": 2710,
@@ -19,20 +15,16 @@
     "angleDeci": 95
    },
    {
-    "tick": 5340,
-    "angleDeci": 1420
+    "tick": 5360,
+    "angleDeci": 445
    },
    {
-    "tick": 5710,
-    "angleDeci": 370
-   },
-   {
-    "tick": 5770,
-    "angleDeci": 770
+    "tick": 5420,
+    "angleDeci": 820
    }
   ],
-  "hash": "0309aa7b",
-  "score": 235
+  "hash": "b1fefd4f",
+  "score": 240
  },
  {
   "averseId": "h2",
@@ -43,57 +35,65 @@
    },
    {
     "tick": 2500,
-    "angleDeci": 395
+    "angleDeci": 445
    },
    {
-    "tick": 2560,
+    "tick": 3770,
+    "angleDeci": 545
+   },
+   {
+    "tick": 5470,
     "angleDeci": 470
    },
    {
-    "tick": 4770,
-    "angleDeci": 170
-   },
-   {
-    "tick": 5460,
-    "angleDeci": 1345
-   },
-   {
     "tick": 5830,
+    "angleDeci": 520
+   },
+   {
+    "tick": 5890,
     "angleDeci": 395
+   },
+   {
+    "tick": 5950,
+    "angleDeci": 795
    }
   ],
-  "hash": "5128d917",
-  "score": 236
+  "hash": "2d4288ea",
+  "score": 230
  },
  {
   "averseId": "h3",
   "log": [
    {
-    "tick": 830,
-    "angleDeci": 470
+    "tick": 820,
+    "angleDeci": 1270
    },
    {
-    "tick": 2850,
+    "tick": 2860,
     "angleDeci": 1195
    },
    {
-    "tick": 4290,
-    "angleDeci": 695
+    "tick": 3470,
+    "angleDeci": 445
    },
    {
     "tick": 5470,
-    "angleDeci": 995
+    "angleDeci": 1670
    },
    {
     "tick": 5580,
-    "angleDeci": 1270
+    "angleDeci": 520
    },
    {
     "tick": 5950,
     "angleDeci": 420
+   },
+   {
+    "tick": 6010,
+    "angleDeci": 820
    }
   ],
-  "hash": "7b973b40",
-  "score": 206
+  "hash": "56a93ad3",
+  "score": 182
  }
 ]

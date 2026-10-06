@@ -91,16 +91,23 @@ describe('Loi 2 — impact de la pelote', () => {
     expect(tryShoot(s, UP)).toBe('empty');
     expect(s.balls).toHaveLength(0);
   });
-  it('le chat touché part selon la ligne des centres, à |v| × transfert, et la pelote est absorbée', () => {
+  it('le chat touché part selon la ligne des centres, à |v_pelote| × transfert, et la pelote est absorbée', () => {
     const s = catAbove();
     tryShoot(s, UP);
-    const ev = run(s, st => st.cats[0]?.st === 'boulet');
-    const c = ev.find(e => e.type === 'catch');
-    expect(c && c.type === 'catch' && c.by).toBe('ball');
     const cat = s.cats[0];
-    const sp0 = Math.hypot(cat.vx, cat.vy);
-    expect(sp0).toBeGreaterThan(BALL_SPEED * CHARACTERS.tigre.transfer - 20); // un tick de gravité au plus
-    expect(cat.vy).toBeLessThan(0); // part vers le haut
+    let expected = -1;
+    while (expected < 0) {
+      const b = s.balls[0];
+      const vx = b.vx, vy = b.vy + 300 / 120; // vitesse de la pelote au moment du contact (après la gravité du tick)
+      step(s);
+      if (s.events.some(e => e.type === 'catch' && e.catId === cat.id)) expected = Math.sqrt(vx * vx + vy * vy) * CHARACTERS.tigre.transfer;
+      s.events = [];
+    }
+    // Touché pendant la phase « pelotes », le boulet avance déjà une fois dans la phase « boulets » du même
+    // tick : on retire ce pas de gravité (BOULET_G × DT) pour retrouver sa vitesse de départ.
+    expect(Math.hypot(cat.vx, cat.vy - 900 / 120)).toBeCloseTo(expected, 9);
+    expect(expected).toBeLessThan(BALL_SPEED * CHARACTERS.tigre.transfer); // la gravité a ralenti la pelote
+    expect(cat.vy).toBeLessThan(0);
     expect(s.balls).toHaveLength(0);
     expect(s.caught).toBe(1);
   });
@@ -139,12 +146,15 @@ describe('Loi 2 — impact de la pelote', () => {
     expect(byBall).toHaveLength(1);
     expect(byBall[0].type === 'catch' && byBall[0].catId).toBe(Math.min(...s.cats.map(c => c.id)));
   });
-  it('tir le tick même où un chat apparaît : appliqué avant la physique, déterministe', () => {
-    const a = averse([sp(0, 'tigre', LAUNCH_X)]);
-    const r1 = runReplay(a, [{ tick: 0, angleDeci: UP }]);
-    const r2 = runReplay(a, [{ tick: 0, angleDeci: UP }]);
-    expect(r1.valid).toBe(true);
-    expect(r1.state.score).toBe(r2.state.score);
+  it('tir le tick même où un chat apparaît : apparition puis tir, puis UNE avance de physique', () => {
+    const s = createSim(averse([sp(0, 'tigre', 100)]));
+    expect(tryShoot(s, UP)).toBe('ok'); // appliqué au tick 0, avant step
+    const v0 = s.balls[0].vy;
+    step(s);
+    expect(s.cats).toHaveLength(1); // le chat du tick 0 est apparu dans ce même tick
+    const vy1 = v0 + 300 / 120; // BALL_G × DT
+    expect(s.balls[0].vy).toBe(vy1);
+    expect(s.balls[0].y).toBe(610 + vy1 / 120); // exactement un pas de physique
   });
 });
 
@@ -209,15 +219,22 @@ describe('Loi 3 — propagation', () => {
 });
 
 describe('Loi 4 — vie d’un boulet', () => {
-  it('rebondit au plafond, disparaît à la fin de sa vie ; attrapé dès le contact', () => {
-    const s = catAbove();
+  it('rebondit au plafond (vy change de signe à y = r), disparaît en fin de vie ou par le bas ; attrapé dès le contact', () => {
+    const s = createSim(averse([sp(0, 'tigre', LAUNCH_X)]));
+    run(s, st => (st.cats[0]?.y ?? -Infinity) >= 60); // chat haut placé : le boulet atteindra le plafond
     tryShoot(s, UP);
     run(s, st => st.cats[0]?.st === 'boulet');
     expect(s.caught).toBe(1);
-    let minY = Infinity;
-    for (let i = 0; i < CHARACTERS.tigre.lifeTicks + 2 && s.cats.length; i++) { step(s); if (s.cats[0]) minY = Math.min(minY, s.cats[0].y); }
-    expect(minY).toBeGreaterThanOrEqual(s.cats[0]?.r ?? 0);
-    expect(s.cats).toHaveLength(0);
+    const cat = s.cats[0];
+    let flippedAtCeiling = false;
+    while (s.cats.length) {
+      const vyBefore = cat.vy;
+      step(s);
+      if (vyBefore < 0 && cat.vy > 0 && cat.y === cat.r) flippedAtCeiling = true;
+      expect(cat.y).toBeGreaterThanOrEqual(cat.r);
+    }
+    expect(flippedAtCeiling).toBe(true);
+    expect(cat.life <= 0 || cat.y > WORLD_H + cat.r).toBe(true);
   });
 });
 
@@ -232,6 +249,7 @@ describe('Loi 5 — chaîne', () => {
     const ends = ev.filter(e => e.type === 'chainEnd');
     const sumSq = ends.reduce((acc, e) => acc + (e.type === 'chainEnd' ? e.n * e.n : 0), 0);
     expect(s.score).toBe(sumSq);
+    expect(Math.max(...ends.map(e => (e.type === 'chainEnd' ? e.n : 0)))).toBeGreaterThan(30);
   });
   it('une chaîne de 4 ou plus rend une pelote', () => {
     const spawns: SpawnDef[] = [];
@@ -241,8 +259,10 @@ describe('Loi 5 — chaîne', () => {
     tryShoot(s, UP);
     const ev = run(s, st => st.chains.length === 0 && st.balls.length === 0 && st.cats.every(c => c.st !== 'boulet'), 3000);
     const end = ev.find(e => e.type === 'chainEnd');
-    expect(end && end.type === 'chainEnd').toBe(true);
-    if (end && end.type === 'chainEnd') expect(s.pelotes).toBe(end.n >= 4 ? 1 : 0);
+    if (!end || end.type !== 'chainEnd') throw new Error('pas de fin de chaîne');
+    expect(end.n).toBeGreaterThanOrEqual(4);
+    expect(end.refund).toBe(true);
+    expect(s.pelotes).toBe(1);
   });
 });
 
@@ -283,14 +303,52 @@ describe('Chien déguisé', () => {
     expect(s.balls).toHaveLength(0);
     expect(s.chains).toHaveLength(0);
   });
-  it('touché par un boulet : −5, le boulet s’arrête, deux chiens = −10', () => {
-    const s = createSim(averse([sp(0, 'tigre', LAUNCH_X), sp(70, 'chien', LAUNCH_X - 10), sp(70, 'chien', LAUNCH_X + 10)]));
-    run(s, st => st.cats.length === 3 && (st.cats[0]?.y ?? -Infinity) >= 300);
+  it('touché par un boulet : −5, le boulet s’arrête et ne propage plus', () => {
+    const s = createSim(averse([sp(0, 'tigre', LAUNCH_X), sp(0, 'chien', LAUNCH_X)]));
+    run(s, st => (st.cats[0]?.y ?? -Infinity) >= 300);
+    const [t, dog] = s.cats;
+    dog.y = t.y - 70; // chien juste au-dessus du tigré
     tryShoot(s, UP);
-    run(s, st => st.ended, 8000);
-    expect(s.dogsHit).toBeGreaterThanOrEqual(1);
-    expect(s.score).toBe(1 - DOG_PENALTY * s.dogsHit);
+    const ev = run(s, st => st.ended, 5000);
+    expect(ev.filter(e => e.type === 'dog' && e.by === 'boulet')).toHaveLength(1);
+    expect(s.score).toBe(1 - DOG_PENALTY);
     expect(s.caught).toBe(1);
+  });
+  it('une chaîne qui touche deux chiens : −5 chacun (§26)', () => {
+    // Deux boulets d'une même chaîne, chacun lancé vers un chien.
+    const s = createSim(averse([sp(0, 'tigre', 100), sp(0, 'tigre', 260), sp(0, 'chien', 100), sp(0, 'chien', 260)]));
+    run(s, st => (st.cats[0]?.y ?? -Infinity) >= 300);
+    const [a, b, d1, d2] = s.cats;
+    d1.y = d2.y = a.y - 60;
+    const chain = { id: s.nextId++, n: 2, alive: 2, done: false };
+    s.chains.push(chain);
+    for (const k of [a, b]) { k.st = 'boulet'; k.vx = 0; k.vy = -600; k.life = 144; k.chainId = chain.id; }
+    s.caught = 2;
+    const ev = run(s, st => st.ended, 5000);
+    expect(ev.filter(e => e.type === 'dog')).toHaveLength(2);
+    expect(s.dogsHit).toBe(2);
+    expect(s.score).toBe(2 * 2 - 2 * DOG_PENALTY);
+  });
+});
+
+describe('Bouclier', () => {
+  it('un seul tapeur ne casse pas ET n’attrape pas le bouclier (régression : choc rasant)', () => {
+    const s = createSim(averse([sp(0, 'bouclier', LAUNCH_X - 26)]));
+    for (let i = 0; i < 250; i++) { step(s); s.events = []; }
+    tryShoot(s, UP);
+    const ball = s.nextId - 1;
+    let shieldTick = -1;
+    for (let i = 0; i < 150; i++) {
+      step(s);
+      for (const e of s.events) {
+        if (e.type === 'shield' && e.ballId === ball) shieldTick = s.tick;
+        // Un retour de la pelote bien plus tard (rebond) est un vrai second contact (§8) ; pas dans la foulée.
+        if (e.type === 'catch' && e.ballId === ball && s.tick - shieldTick < 30) expect.fail(`la pelote réfléchie a attrapé le bouclier au tick ${s.tick} (cassé au tick ${shieldTick})`);
+      }
+      s.events = [];
+    }
+    expect(shieldTick).toBeGreaterThan(0);
+    expect(s.cats[0].shield).toBe(false);
   });
 });
 

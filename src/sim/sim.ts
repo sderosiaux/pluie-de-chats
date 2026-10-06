@@ -13,7 +13,18 @@ import { CHARACTERS, ELASTIC_RESTITUTION } from './characters';
 import { dirFromAngleDeci, fsin } from './fmath';
 import type { AverseDef, Ball, Cat, Chain, InputLog, ShotResult, SimEvent, SimState } from './types';
 
+/** Les averses sont partagées entre parties (et avec le serveur) : on les gèle en profondeur. */
+function freezeAverse(averse: AverseDef): AverseDef {
+  if (!Object.isFrozen(averse)) {
+    for (const sp of averse.spawns) Object.freeze(sp);
+    Object.freeze(averse.spawns);
+    Object.freeze(averse);
+  }
+  return averse;
+}
+
 export function createSim(averse: AverseDef): SimState {
+  freezeAverse(averse);
   return {
     averse,
     tick: 0,
@@ -99,6 +110,7 @@ export function step(s: SimState): void {
   updateFalling(s);
   updateBalls(s);
   updateBoulets(s);
+  releaseShieldImmunity(s);
   removeGone(s);
   closeChains(s);
   if (s.cooldown > 0) s.cooldown--;
@@ -132,6 +144,7 @@ function spawnDue(s: SimState): void {
       leapVx: 0,
       leapCd: 0,
       shield: sp.char === 'bouclier',
+      shieldImmune: -1,
       life: 0,
       chainId: -1,
       escortOf,
@@ -175,7 +188,7 @@ function updateFalling(s: SimState): void {
         if (dx * dx + dy * dy < DODGE_RADIUS * DODGE_RADIUS) {
           c.leapVx = (c.x <= b.x ? -1 : 1) * LEAP_SPEED;
           c.leapCd = LEAP_COOLDOWN_TICKS;
-          s.events.push({ type: 'dodge', catId: c.id });
+          s.events.push({ type: 'dodge', catId: c.id, ballId: b.id });
           break;
         }
       }
@@ -212,7 +225,7 @@ function updateBalls(s: SimState): void {
     // Plusieurs chats touchés au même tick : le plus petit id gagne (parcours trié).
     let target: Cat | undefined;
     for (const c of s.cats) {
-      if (c.st !== 'fall') continue;
+      if (c.st !== 'fall' || c.shieldImmune === b.id) continue;
       const dx = c.x - b.x, dy = c.y - b.y, rr = c.r + BALL_R;
       if (dx * dx + dy * dy < rr * rr) { target = c; break; }
     }
@@ -220,11 +233,12 @@ function updateBalls(s: SimState): void {
 
     const n = normal(b.x, b.y, target.x, target.y);
     if (target.char === 'chien') {
-      hitDog(s, target, 'ball', b.id);
+      hitDog(s, target, 'ball', b.id, -1);
       continue; // pelote absorbée
     }
     if (target.char === 'bouclier' && target.shield) {
       target.shield = false;
+      target.shieldImmune = b.id;
       reflect(b, n.x, n.y);
       s.events.push({ type: 'shield', catId: target.id, x: target.x, y: target.y, ballId: b.id });
       keep.push(b);
@@ -232,7 +246,7 @@ function updateBalls(s: SimState): void {
     }
     const chain: Chain = { id: s.nextId++, n: 0, alive: 0, done: false };
     s.chains.push(chain);
-    const speed = BALL_SPEED * CHARACTERS[target.char].transfer;
+    const speed = Math.sqrt(b.vx * b.vx + b.vy * b.vy) * CHARACTERS[target.char].transfer;
     makeBoulet(s, target, n.x * speed, n.y * speed, chain, b.id);
     // pelote absorbée
   }
@@ -241,8 +255,10 @@ function updateBalls(s: SimState): void {
 
 // Lois 3 et 4 — propagation et vie des boulets
 function updateBoulets(s: SimState): void {
-  for (const b of s.cats) {
-    if (b.st !== 'boulet') continue;
+  // Liste figée en début de phase : un chat devenu boulet pendant cette phase ne bouge qu'au tick
+  // suivant, quel que soit son id (sinon une chaîne pourrait traverser plusieurs maillons en un tick).
+  const boulets = s.cats.filter(c => c.st === 'boulet');
+  for (const b of boulets) {
     const fusee = b.char === 'fusee';
     if (!fusee) b.vy += BOULET_G * DT;
     b.x += b.vx * DT;
@@ -260,19 +276,19 @@ function updateBoulets(s: SimState): void {
     const chain = s.chains.find(ch => ch.id === b.chainId);
     if (!chain) continue;
     for (const c of s.cats) {
-      if (c.st !== 'fall' || c.char === 'fantome') continue;
+      if (c.st !== 'fall' || c.char === 'fantome' || c.shieldImmune === b.id) continue;
       const dx = c.x - b.x, dy = c.y - b.y, rr = c.r + b.r;
       if (dx * dx + dy * dy >= rr * rr) continue;
       const n = normal(b.x, b.y, c.x, c.y);
       if (c.char === 'chien') {
-        hitDog(s, c, 'boulet', -1);
+        hitDog(s, c, 'boulet', -1, chain.id);
         b.life = 0; // la chaîne s'arrête de ce côté
         break;
       }
       if (c.char === 'bouclier' && c.shield) {
         c.shield = false;
         s.events.push({ type: 'shield', catId: c.id, x: c.x, y: c.y, ballId: -1 });
-        if (b.char !== 'gros') { reflect(b, n.x, n.y); continue; }
+        if (b.char !== 'gros') { c.shieldImmune = b.id; reflect(b, n.x, n.y); continue; }
         // Le gros compte pour les deux contacts : le bouclier part tout de suite (§9).
       }
       const sp = Math.max(MIN_BOULET_SPEED, Math.sqrt(b.vx * b.vx + b.vy * b.vy) * CHARACTERS[b.char].transfer);
@@ -314,11 +330,26 @@ function makeBoulet(s: SimState, c: Cat, vx: number, vy: number, chain: Chain, b
   }
 }
 
-function hitDog(s: SimState, dog: Cat, by: 'ball' | 'boulet', ballId: number): void {
+function hitDog(s: SimState, dog: Cat, by: 'ball' | 'boulet', ballId: number, chainId: number): void {
   dog.st = 'gone';
   s.score -= DOG_PENALTY;
   s.dogsHit++;
-  s.events.push({ type: 'dog', catId: dog.id, x: dog.x, y: dog.y, by, ballId });
+  s.events.push({ type: 'dog', catId: dog.id, x: dog.x, y: dog.y, by, ballId, chainId });
+}
+
+/**
+ * Un bouclier vient d'être cassé : son tapeur reste ignoré tant qu'ils se chevauchent. Sinon, sur un
+ * choc rasant, le même tapeur l'attraperait au tick suivant et le bouclier « prendrait deux coups » d'un seul.
+ */
+function releaseShieldImmunity(s: SimState): void {
+  for (const c of s.cats) {
+    if (c.shieldImmune < 0) continue;
+    let hx = 0, hy = 0, hr = 0, found = false;
+    for (const b of s.balls) if (b.id === c.shieldImmune) { hx = b.x; hy = b.y; hr = BALL_R; found = true; break; }
+    if (!found) for (const k of s.cats) if (k.id === c.shieldImmune && k.st === 'boulet') { hx = k.x; hy = k.y; hr = k.r; found = true; break; }
+    const dx = c.x - hx, dy = c.y - hy, rr = c.r + hr;
+    if (!found || dx * dx + dy * dy >= rr * rr) c.shieldImmune = -1;
+  }
 }
 
 function removeGone(s: SimState): void {

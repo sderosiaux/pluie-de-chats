@@ -43,6 +43,8 @@ export interface Cat {
   leapVx: number;
   leapCd: number; // ticks avant de pouvoir esquiver à nouveau
   shield: boolean;
+  /** Id de la pelote ou du boulet qui vient de casser le bouclier : ignoré tant qu'ils se chevauchent (-1 sinon). */
+  shieldImmune: number;
   life: number; // ticks restants en boulet
   chainId: number; // -1 tant que pas attrapé
   escortOf: number; // id de la maman suivie, -1 sinon
@@ -72,13 +74,13 @@ export interface InputEntry {
 }
 export type InputLog = InputEntry[];
 
-// `ballId` = id de la pelote responsable, -1 quand c'est un boulet.
+// `ballId` = id de la pelote responsable, -1 quand c'est un boulet. `chainId` = -1 hors chaîne.
 export type SimEvent =
   | { type: 'shot'; tick: number; angleDeci: number }
   | { type: 'catch'; catId: number; chainId: number; n: number; x: number; y: number; vx: number; vy: number; by: 'ball' | 'boulet'; ballId: number }
-  | { type: 'dog'; catId: number; x: number; y: number; by: 'ball' | 'boulet'; ballId: number }
+  | { type: 'dog'; catId: number; x: number; y: number; by: 'ball' | 'boulet'; ballId: number; chainId: number }
   | { type: 'shield'; catId: number; x: number; y: number; ballId: number }
-  | { type: 'dodge'; catId: number }
+  | { type: 'dodge'; catId: number; ballId: number }
   | { type: 'bounce'; catId: number; x: number; y: number }
   | { type: 'chainEnd'; chainId: number; n: number; points: number; refund: boolean }
   | { type: 'miss'; catId: number; x: number }

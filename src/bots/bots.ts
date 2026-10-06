@@ -85,7 +85,7 @@ export function evaluateShot(s: SimState, angleDeci: number, horizon = 600): { n
     step(sim);
     for (const e of sim.events) {
       if (e.type === 'catch' && e.ballId === ballId) chainId = e.chainId;
-      else if (e.type === 'dog' && (e.ballId === ballId || chainId >= 0)) dogs++;
+      else if (e.type === 'dog' && (e.ballId === ballId || (chainId >= 0 && e.chainId === chainId))) dogs++;
       else if (e.type === 'ballLost' && e.ballId === ballId && chainId < 0) return { n: 0, value: -dogs * 5 };
       else if (e.type === 'chainEnd' && e.chainId === chainId) return { n: e.n, value: e.n * e.n - dogs * 5 };
     }

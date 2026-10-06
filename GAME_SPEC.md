@@ -406,6 +406,8 @@ PASS  Après une averse ratée, le joueur appuie sur Rejouer dans les 3 s.
 ## Écarts d'implémentation
 
 - 2026-10-05 · §7 loi 3 : la formule de déviation du spec inversait l'effet des masses (un tapeur lourd aurait été plus dévié qu'un léger). Remplacée par le choc élastique `2·m_cible/(m_tapeur+m_cible)`.
-- 2026-10-05 · §29 : la porte « chance / talent » s'applique hors tutoriel. Mesure P1 (expert patient vs naïf qui vise juste une cible au hasard) : 2-1 = 2,41×, 4-2 = 2,43×, 1-1 = 1,86×. Le naïf varie de 27 à 227 sur une même averse ; décision : le classement garde le meilleur score.
+- 2026-10-05 · §29 : la porte « chance / talent » s'applique hors tutoriel. Mesure P1 après revue (expert patient vs naïf qui vise juste une cible au hasard) : 2-1 = 2,67×, 4-2 = 3,02×, 1-1 = 1,60×. Le naïf varie fortement d'une graine à l'autre (22 à 178 sur 2-1) ; décision : le classement garde le meilleur score.
+- 2026-10-05 · §7 loi 2 / §8 bouclier : un tapeur qui casse un bouclier est ignoré par ce bouclier tant qu'ils se chevauchent (sinon, sur un choc rasant, le même tapeur l'attrapait au tick suivant : « deux coups » en un). Un retour ultérieur du même tapeur reste un vrai second contact.
+- 2026-10-05 · §7 lois 2–3 : un chat devenu boulet pendant la phase « boulets » d'un tick ne bouge qu'au tick suivant, quel que soit son id (l'id ne sert qu'à départager les égalités).
 - 2026-10-05 · §24 : monde logique fixe 360×640, lanceur en (180, 610) ; angle de tir en dixièmes de degré entiers (900 = vers le haut).
 

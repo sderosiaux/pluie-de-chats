@@ -77,10 +77,10 @@ let averseId = AVERSE_IDS.includes(params.get('averse') ?? '') ? (params.get('av
 
 const dom = bindDom({
   onFinish() {
-    if (run && run.sim.pelotes === 0 && run.sim.balls.length === 0) run.fast = true;
+    if (run && canFinish(run.sim)) run.fast = true;
   },
   onReplay() {
-    void start(averseId);
+    launch(averseId);
   },
   onNext() {
     const i = AVERSE_IDS.indexOf(averseId);
@@ -88,9 +88,22 @@ const dom = bindDom({
     const url = new URL(location.href);
     url.searchParams.set('averse', averseId);
     history.replaceState(null, '', url);
-    void start(averseId);
+    launch(averseId);
   },
 });
+
+/**
+ * « Finir l'averse » n'a de sens que si plus rien ne peut rendre une pelote : stock vide, aucune pelote
+ * en vol et aucune chaîne active (une chaîne ≥ 4 encore en cours rendrait une pelote, §7 loi 5).
+ */
+function canFinish(s: SimState): boolean {
+  return !s.ended && s.pelotes === 0 && s.balls.length === 0 && s.chains.length === 0;
+}
+
+/** Démarre une averse ; un échec (asset introuvable…) s'affiche au lieu de devenir une promesse rejetée muette. */
+function launch(id: string): void {
+  start(id).catch((err: unknown) => dom.showError(err instanceof Error ? err.message : String(err)));
+}
 
 let run: Run | null = null;
 let now = performance.now();
@@ -248,8 +261,7 @@ function frame(t: number): void {
     fast: r.fast,
   });
 
-  const canFinish = !r.sim.ended && !r.fast && r.sim.pelotes === 0 && r.sim.balls.length === 0;
-  dom.placeFinish(view, canFinish);
+  dom.placeFinish(view, !r.fast && canFinish(r.sim));
 
   if (r.sim.ended && !r.endShown && r.endedAt !== null && t >= r.endedAt + END_DELAY_MS && t >= r.slowUntil) {
     r.endShown = true;
