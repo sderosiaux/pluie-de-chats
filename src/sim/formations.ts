@@ -38,8 +38,8 @@ function sway(ctx: FormationCtx, amp: number): { swayAmp: number; swayPhase: num
 }
 
 /** Chats isolés, répartis sur `durationS` secondes. */
-export function pluieFine(ctx: FormationCtx, t0: number, durationS: number, chars: CharacterId[]): SpawnDef[] {
-  const out: SpawnDef[] = [];
+export function pluieFine(ctx: FormationCtx, t0: number, durationS: number, chars: CharacterId[]): FormationSpawn[] {
+  const out: FormationSpawn[] = [];
   const step = (durationS * SEC) / Math.max(1, chars.length);
   chars.forEach((char, i) => {
     out.push({
@@ -54,14 +54,14 @@ export function pluieFine(ctx: FormationCtx, t0: number, durationS: number, char
 }
 
 /** Rangée horizontale, même tick. */
-export function rideau(ctx: FormationCtx, t0: number, cx: number, chars: CharacterId[], gap = 46): SpawnDef[] {
+export function rideau(ctx: FormationCtx, t0: number, cx: number, chars: CharacterId[], gap = 46): FormationSpawn[] {
   const s = sway(ctx, ctx.rng.range(4, 10));
   const w = (chars.length - 1) * gap;
   return chars.map((char, i) => ({ tick: t0, char, costume: costume(ctx, char), x: clampX(cx - w / 2 + i * gap, char), ...s }));
 }
 
 /** Pile verticale : le premier élément est en bas (apparaît le premier). */
-export function colonne(ctx: FormationCtx, t0: number, x: number, chars: CharacterId[], gap = 50): SpawnDef[] {
+export function colonne(ctx: FormationCtx, t0: number, x: number, chars: CharacterId[], gap = 50): FormationSpawn[] {
   const s = sway(ctx, ctx.rng.range(4, 10));
   let t = t0;
   return chars.map((char, i) => {
@@ -71,9 +71,9 @@ export function colonne(ctx: FormationCtx, t0: number, x: number, chars: Charact
 }
 
 /** Grappe serrée : rangées en quinconce, de bas en haut. `chars` est rempli rangée par rangée. */
-export function grappe(ctx: FormationCtx, t0: number, cx: number, chars: CharacterId[], perRow = 3, gapX = 42, gapY = 40): SpawnDef[] {
+export function grappe(ctx: FormationCtx, t0: number, cx: number, chars: CharacterId[], perRow = 3, gapX = 42, gapY = 40): FormationSpawn[] {
   const s = sway(ctx, ctx.rng.range(4, 8));
-  const out: SpawnDef[] = [];
+  const out: FormationSpawn[] = [];
   let t = t0;
   for (let row = 0; row * perRow < chars.length; row++) {
     const rowChars = chars.slice(row * perRow, row * perRow + perRow);
@@ -88,9 +88,9 @@ export function grappe(ctx: FormationCtx, t0: number, cx: number, chars: Charact
 }
 
 /** V pointe en bas : la pointe apparaît la première. */
-export function vForm(ctx: FormationCtx, t0: number, cx: number, chars: CharacterId[], gapX = 36, gapY = 34): SpawnDef[] {
+export function vForm(ctx: FormationCtx, t0: number, cx: number, chars: CharacterId[], gapX = 36, gapY = 34): FormationSpawn[] {
   const s = sway(ctx, ctx.rng.range(4, 8));
-  const out: SpawnDef[] = [];
+  const out: FormationSpawn[] = [];
   chars.forEach((char, i) => {
     const level = Math.ceil(i / 2);
     const side = i === 0 ? 0 : i % 2 === 1 ? -1 : 1;
@@ -99,9 +99,36 @@ export function vForm(ctx: FormationCtx, t0: number, cx: number, chars: Characte
   return out;
 }
 
-/** Assemble des formations en une liste triée par tick (tri stable : l'ordre d'insertion départage). */
-export function assemble(...groups: SpawnDef[][]): SpawnDef[] {
-  return groups.flat().map((sp, i) => ({ sp, i })).sort((a, b) => a.sp.tick - b.sp.tick || a.i - b.i).map(e => e.sp);
+/** Maman + chatons en escorte (§8). Les chatons suivent la maman tant qu'elle tombe. */
+export function escorte(ctx: FormationCtx, t0: number, cx: number, kittens: number): FormationSpawn[] {
+  const s = sway(ctx, ctx.rng.range(4, 10));
+  const mom: FormationSpawn = { tick: t0, char: 'maman', costume: costume(ctx, 'maman'), x: clampX(cx, 'maman'), ...s };
+  const offsets = [[-34, 8], [34, 8], [-18, -30], [18, -30]];
+  const out: FormationSpawn[] = [mom];
+  for (let i = 0; i < kittens && i < offsets.length; i++) {
+    out.push({ tick: t0, char: 'chaton', costume: costume(ctx, 'chaton'), x: clampX(cx + offsets[i][0], 'chaton'), swayAmp: 0, swayPhase: 0,
+      escortLocal: 0, escortDx: offsets[i][0], escortDy: offsets[i][1] });
+  }
+  return out;
+}
+
+/** Spawn en cours d'assemblage : `escortLocal` = index de la maman dans SA formation. */
+export type FormationSpawn = SpawnDef & { escortLocal?: number };
+
+/**
+ * Assemble des formations en une liste triée par tick (tri stable : l'ordre d'insertion départage)
+ * et traduit les références d'escorte locales en index globaux. Une maman précède toujours ses chatons.
+ */
+export function assemble(...groups: FormationSpawn[][]): SpawnDef[] {
+  const items = groups.flatMap((g, gi) => g.map((sp, li) => ({ sp, gi, li })));
+  const order = items.map((e, i) => ({ e, i })).sort((a, b) => a.e.sp.tick - b.e.sp.tick || a.i - b.i);
+  const globalIndex = new Map<string, number>();
+  order.forEach(({ e }, k) => globalIndex.set(`${e.gi}:${e.li}`, k));
+  return order.map(({ e }) => {
+    const { escortLocal, ...rest } = e.sp;
+    if (escortLocal === undefined) return rest;
+    return { ...rest, escortOf: globalIndex.get(`${e.gi}:${escortLocal}`) };
+  });
 }
 
 export const seconds = (s: number): number => Math.round(s * SEC);
