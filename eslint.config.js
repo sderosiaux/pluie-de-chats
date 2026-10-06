@@ -48,4 +48,37 @@ export default tseslint.config(
       'no-empty': ['warn', { allowEmptyCatch: true }],
     },
   },
+  {
+    // Déterminisme (GAME_SPEC §24) : la simulation ne lit ni horloge ni aléa,
+    // et n'appelle aucune fonction transcendante (résultats non garantis identiques entre moteurs JS).
+    files: ['src/sim/**/*.ts'],
+    ignores: ['src/sim/**/*.test.ts'],
+    rules: {
+      'no-restricted-properties': ['error',
+        ...['random', 'sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'atan2', 'pow', 'exp', 'expm1', 'log', 'log2', 'log10', 'log1p', 'sinh', 'cosh', 'tanh', 'cbrt', 'hypot']
+          .map(property => ({ object: 'Math', property, message: 'Interdit dans src/sim (déterminisme cross-engine, GAME_SPEC §24).' })),
+      ],
+      'no-restricted-globals': ['error',
+        { name: 'Date', message: 'Pas d\'horloge dans src/sim (GAME_SPEC §24).' },
+        { name: 'performance', message: 'Pas d\'horloge dans src/sim (GAME_SPEC §24).' },
+        { name: 'setTimeout', message: 'La sim avance par ticks, pas par timers.' },
+        { name: 'setInterval', message: 'La sim avance par ticks, pas par timers.' },
+        { name: 'requestAnimationFrame', message: 'La sim avance par ticks, pas par frames.' },
+        { name: 'globalThis', message: 'Accès indirect aux globales interdit dans src/sim (GAME_SPEC §24).' },
+        { name: 'window', message: 'Pas de DOM dans src/sim.' },
+        { name: 'self', message: 'Accès indirect aux globales interdit dans src/sim (GAME_SPEC §24).' },
+        { name: 'crypto', message: 'Pas d\'aléa dans src/sim (GAME_SPEC §24).' },
+      ],
+      'no-restricted-syntax': ['error',
+        { selector: 'BinaryExpression[operator="**"]', message: '** peut passer par pow : interdit dans src/sim (GAME_SPEC §24).' },
+        { selector: 'AssignmentExpression[operator="**="]', message: '**= peut passer par pow : interdit dans src/sim (GAME_SPEC §24).' },
+        { selector: 'MemberExpression[object.name="Math"][computed=true]', message: 'Math[...] contourne la liste des fonctions interdites (GAME_SPEC §24).' },
+        { selector: ':not(MemberExpression) > Identifier[name="Math"]', message: 'Math ne s\'utilise que sous la forme Math.f(...) : pas d\'alias (GAME_SPEC §24).' },
+      ],
+      'no-restricted-imports': ['error', {
+        patterns: [{ regex: '^(?!\\.)', message: 'src/sim ne dépend d\'aucun paquet : tout doit être reproductible au bit près.' },
+          { group: ['**/game/**', '**/bots/**'], message: 'src/sim ne dépend ni du client ni des bots.' }],
+      }],
+    },
+  },
 );

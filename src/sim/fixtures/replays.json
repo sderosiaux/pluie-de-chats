@@ -1,0 +1,99 @@
+[
+ {
+  "averseId": "h1",
+  "log": [
+   {
+    "tick": 750,
+    "angleDeci": 395
+   },
+   {
+    "tick": 2710,
+    "angleDeci": 770
+   },
+   {
+    "tick": 4530,
+    "angleDeci": 95
+   },
+   {
+    "tick": 5360,
+    "angleDeci": 445
+   },
+   {
+    "tick": 5420,
+    "angleDeci": 820
+   }
+  ],
+  "hash": "b1fefd4f",
+  "score": 240
+ },
+ {
+  "averseId": "h2",
+  "log": [
+   {
+    "tick": 1000,
+    "angleDeci": 495
+   },
+   {
+    "tick": 2500,
+    "angleDeci": 445
+   },
+   {
+    "tick": 3770,
+    "angleDeci": 545
+   },
+   {
+    "tick": 5470,
+    "angleDeci": 470
+   },
+   {
+    "tick": 5830,
+    "angleDeci": 520
+   },
+   {
+    "tick": 5890,
+    "angleDeci": 395
+   },
+   {
+    "tick": 5950,
+    "angleDeci": 795
+   }
+  ],
+  "hash": "2d4288ea",
+  "score": 230
+ },
+ {
+  "averseId": "h3",
+  "log": [
+   {
+    "tick": 820,
+    "angleDeci": 1270
+   },
+   {
+    "tick": 2860,
+    "angleDeci": 1195
+   },
+   {
+    "tick": 3470,
+    "angleDeci": 445
+   },
+   {
+    "tick": 5470,
+    "angleDeci": 1670
+   },
+   {
+    "tick": 5580,
+    "angleDeci": 520
+   },
+   {
+    "tick": 5950,
+    "angleDeci": 420
+   },
+   {
+    "tick": 6010,
+    "angleDeci": 820
+   }
+  ],
+  "hash": "56a93ad3",
+  "score": 182
+ }
+]

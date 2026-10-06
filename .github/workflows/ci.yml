@@ -1,0 +1,24 @@
+name: CI
+
+# Garde-fous de GAME_SPEC §24/§29 : lint (règles de déterminisme), tests de la sim, portes
+# chance/talent, E2E Chromium + WebKit (dont le hash des journaux figés). Ne déploie rien.
+on:
+  pull_request:
+  push:
+    branches-ignore: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npx vitest run
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium webkit
+      - run: npx playwright test

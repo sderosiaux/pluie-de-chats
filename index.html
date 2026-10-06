@@ -2,917 +2,128 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Pluie de Chats</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#e9e4ec">
+<title>Pluie de Chats — Carambolage</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800;900&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Fredoka:wght@500;600&display=swap" rel="stylesheet">
 <style>
+  :root {
+    --ink: #3b2f4a;
+    --ink-soft: rgba(59, 47, 74, 0.6);
+    --paper: #fffdfb;
+    --backdrop: rgba(233, 228, 236, 0.72);
+    --action: #6b4fa0;
+    --action-press: #59408a;
+    --line: rgba(59, 47, 74, 0.14);
+    --font-display: 'Baloo 2', 'Arial Rounded MT Bold', system-ui, sans-serif;
+    --font-text: 'Fredoka', 'Arial Rounded MT Bold', system-ui, sans-serif;
+  }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  :root { --sab: env(safe-area-inset-bottom, 0px); }
   html, body {
     width: 100%; height: 100%; overflow: hidden;
-    font-family: 'Baloo 2', 'Arial Rounded MT Bold', Arial, sans-serif;
-    background: #7ad7ff;
+    background: #e9e4ec; color: var(--ink);
+    font-family: var(--font-text);
+    -webkit-user-select: none; user-select: none;
+    -webkit-tap-highlight-color: transparent;
   }
   canvas { display: block; touch-action: none; }
 
-  #hud {
-    position: fixed; top: 0; left: 0; right: 0;
-    display: flex; justify-content: space-between; align-items: center;
-    gap: 7px;
-    padding: 8px 12px;
-    padding-top: max(8px, env(safe-area-inset-top));
-    background: rgba(122,215,255,0.82);
-    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-    border-bottom: 2px solid rgba(255,255,255,0.5);
-    z-index: 10;
+  button { font: inherit; color: inherit; border: 0; cursor: pointer; }
+  button:focus-visible { outline: 3px solid var(--action); outline-offset: 3px; }
+
+  #finish {
+    position: fixed;
+    padding: 0.55em 1.1em;
+    border-radius: 999px;
+    background: var(--action); color: var(--paper);
+    font-family: var(--font-display); font-weight: 800;
+    box-shadow: 0 3px 0 var(--action-press);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
   }
-  #score {
-    font-family: 'Baloo 2', sans-serif;
-    font-size: clamp(17px,4.5vw,24px); font-weight: 900; color: #2a1b4a;
-    background: #fff8e6; padding: 5px 18px; border-radius: 22px;
-    border: 3px solid #7b3ff2;
-    box-shadow: 0 4px 0 rgba(42,27,74,.2);
-    white-space: nowrap; line-height: 1;
-    /* Largeur stable quel que soit le nombre de digits (jusqu'à 5) */
-    font-variant-numeric: tabular-nums;
-    min-width: 5ch; text-align: center;
-    display: inline-flex; align-items: center; justify-content: center;
-  }
-  #score #score-val { font-variant-numeric: tabular-nums; }
-  #combo {
-    font-family: 'Baloo 2', sans-serif;
-    font-size: clamp(13px,3.5vw,17px); font-weight: 800;
-    color: white; background: linear-gradient(180deg, #ff3ea5, #c9217e);
-    padding: 5px 13px; border-radius: 14px;
-    border: 3px solid #fff8e6;
-    box-shadow: 0 4px 0 rgba(42,27,74,.25);
-    transform: rotate(-4deg);
-    opacity: 0; pointer-events: none; transition: opacity .15s;
-    text-shadow: 0 2px 0 rgba(0,0,0,.25);
-    white-space: nowrap; flex-shrink: 0;
-  }
-  #combo.active { opacity: 1; animation: candy-pulse 0.9s ease-in-out infinite; }
-  #hi-block {
-    font-family: 'Fredoka', sans-serif;
-    font-size: clamp(9px,2.5vw,11px); color: #2a1b4a;
-    background: #fff8e6; padding: 4px 11px; border-radius: 22px;
-    border: 3px solid #7b3ff2;
-    box-shadow: 0 4px 0 rgba(42,27,74,.18);
-    text-align: center; line-height: 1.3; white-space: nowrap;
-  }
-  #hi-block span { font-family: 'Baloo 2', sans-serif; font-size: clamp(12px,3.5vw,15px); font-weight: 800; display: block; color: #7b3ff2; }
-  #level-badge {
-    font-family: 'Fredoka', sans-serif;
-    background: #fff8e6; color: #2a1b4a;
-    border: 3px solid #7b3ff2;
-    box-shadow: 0 4px 0 rgba(42,27,74,.18);
-    font-size: clamp(11px,3vw,13px); font-weight: 700;
-    padding: 5px 11px; border-radius: 22px;
-    white-space: nowrap; flex-shrink: 0;
-  }
-  #music-btn {
-    background: #fff8e6; border: 3px solid #7b3ff2;
-    box-shadow: 0 4px 0 rgba(42,27,74,.18);
-    border-radius: 50%; width: 36px; height: 36px; min-width: 36px;
-    font-size: 17px; cursor: pointer; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-    transition: transform .1s;
-  }
-  #music-btn:active { transform: scale(0.9); }
-  #hud-menu-btn {
-    background: #fff8e6; border: 3px solid #7b3ff2;
-    box-shadow: 0 4px 0 rgba(42,27,74,.18);
-    border-radius: 12px; width: 38px; height: 38px; min-width: 38px;
-    font-size: 22px; line-height: 1; cursor: pointer; flex-shrink: 0;
-    color: #2a1b4a; font-weight: 800;
-    display: flex; align-items: center; justify-content: center;
-    transition: transform .1s;
-  }
-  #hud-menu-btn:active { transform: scale(0.9); }
-  /* Menu in-game : modal centré qui met en pause */
-  #hud-menu-panel {
+  #finish:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--action-press); }
+
+  #end {
     position: fixed; inset: 0;
-    background: rgba(26,10,58,0.85);
-    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-    z-index: 95;
-    display: none;
-    align-items: center; justify-content: center;
+    display: grid; place-items: center;
+    background: var(--backdrop);
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
     padding: 24px;
   }
-  #hud-menu-panel.show { display: flex; }
-  #hud-menu-panel .hmp-card {
-    background: linear-gradient(145deg, #2a1b4a, #1a0a3a);
-    border: 2px solid rgba(255,255,255,0.18);
-    border-radius: 22px;
-    padding: 22px 18px;
-    box-shadow: 0 18px 60px rgba(0,0,0,0.55);
-    width: 100%; max-width: 360px;
-    display: flex; flex-direction: column; gap: 10px;
-  }
-  #hud-menu-panel .hmp-title {
-    font-family: 'Baloo 2', sans-serif; font-weight: 900;
-    font-size: 22px; color: #ffce3a;
-    text-align: center; margin-bottom: 6px;
-    text-shadow: 0 2px 0 rgba(0,0,0,0.3);
-  }
-  .hmp-item {
-    display: flex; align-items: center; gap: 14px;
-    background: rgba(255,255,255,0.07);
-    border: 2px solid rgba(255,255,255,0.08);
-    border-radius: 14px;
-    padding: 14px 16px;
-    color: #fff;
-    font-family: 'Baloo 2', sans-serif; font-weight: 800;
-    font-size: 17px;
-    cursor: pointer; text-align: left;
-    transition: transform .1s, background .1s;
-  }
-  .hmp-item:active { transform: scale(0.97); background: rgba(255,255,255,0.14); }
-  .hmp-item.hmp-resume {
-    background: linear-gradient(180deg, #ff3ea5, #c9217e);
-    border-color: transparent;
-    justify-content: center;
-    margin-top: 6px;
-  }
-  .hmp-icon { font-size: 24px; line-height: 1; flex-shrink: 0; width: 28px; text-align: center; }
-  .hmp-label { flex: 1; }
-  #lives-el {
-    font-size: clamp(12px,3.5vw,16px);
-    letter-spacing: 2px;
-    flex-shrink: 0;
-    /* Largeur stable même quand on perd des cœurs (max_lives × emoji) */
-    min-width: calc(7 * 1.4em); text-align: right;
-    font-variant-emoji: text;
-  }
-
-  @keyframes candy-pulse {
-    0%, 100% { transform: scale(1) rotate(-4deg); }
-    50% { transform: scale(1.08) rotate(-4deg); }
-  }
-  @keyframes candy-shimmer {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
-  }
-
-  #unlock-toast {
-    position: fixed; top: 72px; left: 50%;
-    transform: translateX(-50%) translateY(-16px) scale(0.9);
-    font-family: 'Baloo 2', sans-serif;
-    background: linear-gradient(135deg, #7b3ff2, #ff3ea5);
-    color: white; font-size: clamp(12px,3.5vw,15px); font-weight: 800;
-    padding: 11px 22px; border-radius: 30px;
-    border: 3px solid #fff8e6;
-    box-shadow: 0 6px 0 rgba(42,27,74,.3), 0 8px 24px rgba(123,63,242,.4);
-    opacity: 0; pointer-events: none; z-index: 30;
-    transition: opacity 0.28s, transform 0.28s;
-    white-space: nowrap;
-  }
-  #unlock-toast.show { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
-
-  #gameover-overlay {
-    display: none; position: fixed; inset: 0; z-index: 100;
-    background: rgba(42,27,74,0.9); backdrop-filter: blur(10px);
-    flex-direction: column; align-items: center; justify-content: center; gap: 14px;
-    overflow: hidden;
-  }
-  #gameover-overlay.show { display: flex; }
-  #gameover-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
-  #gameover-overlay > *:not(#gameover-canvas) { position: relative; z-index: 1; }
-  .go-title {
-    font-family: 'Baloo 2', sans-serif; font-weight: 900;
-    font-size: clamp(38px, 10vw, 56px); color: #ffce3a;
-    text-shadow: 0 4px 0 rgba(0,0,0,.35), 0 0 30px rgba(255,206,58,.4);
-    letter-spacing: 2px;
-  }
-  .go-score {
-    font-family: 'Fredoka', sans-serif; font-size: clamp(18px,5vw,24px);
-    color: #fff8e6; letter-spacing: .5px;
-  }
-  .go-score span, .go-hi span {
-    font-family: 'Baloo 2', sans-serif; font-weight: 800; color: #ff3ea5;
-  }
-  .go-hi {
-    font-family: 'Fredoka', sans-serif; font-size: clamp(13px,3.5vw,16px);
-    color: rgba(255,248,230,.7);
-  }
-  #replay-btn {
-    font-family: 'Baloo 2', sans-serif; font-weight: 800;
-    font-size: clamp(16px,4vw,20px); color: #2a1b4a;
-    background: linear-gradient(180deg, #ffce3a, #e8a820);
-    border: none; padding: 14px 36px; border-radius: 30px;
-    box-shadow: 0 6px 0 #a87820, 0 10px 24px rgba(255,206,58,.35);
-    cursor: pointer; margin-top: 8px;
-    transition: transform .12s, box-shadow .12s;
-  }
-  #replay-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #a87820; }
-
-  /* ── Level-up overlay ── */
-  #levelup-overlay {
-    display: none; position: fixed; inset: 0; z-index: 90;
-    flex-direction: column; align-items: center; justify-content: center; gap: 10px;
-    overflow: hidden;
-    background: #2d0e7a;
-  }
-  #levelup-overlay.show { display: flex; }
-  #lu-rays {
-    position: absolute; inset: -60%;
-    background: conic-gradient(
-      from 0deg,
-      rgba(255,255,255,0.10) 0deg, transparent 15deg,
-      rgba(255,255,255,0.10) 30deg, transparent 45deg,
-      rgba(255,255,255,0.10) 60deg, transparent 75deg,
-      rgba(255,255,255,0.10) 90deg, transparent 105deg,
-      rgba(255,255,255,0.10) 120deg, transparent 135deg,
-      rgba(255,255,255,0.10) 150deg, transparent 165deg,
-      rgba(255,255,255,0.10) 180deg, transparent 195deg,
-      rgba(255,255,255,0.10) 210deg, transparent 225deg,
-      rgba(255,255,255,0.10) 240deg, transparent 255deg,
-      rgba(255,255,255,0.10) 270deg, transparent 285deg,
-      rgba(255,255,255,0.10) 300deg, transparent 315deg,
-      rgba(255,255,255,0.10) 330deg, transparent 345deg,
-      rgba(255,255,255,0.10) 360deg
-    );
-    animation: lu-spin 10s linear infinite;
-    pointer-events: none;
-  }
-  @keyframes lu-spin { to { transform: rotate(360deg); } }
-  .lu-sub {
-    font-family: 'Fredoka', sans-serif; font-weight: 600;
-    font-size: clamp(13px,3.5vw,16px); color: #ffce3a;
-    letter-spacing: 4px; text-transform: uppercase;
-    position: relative; z-index: 2;
-  }
-  .lu-num {
-    font-family: 'Baloo 2', sans-serif; font-weight: 900;
-    font-size: clamp(72px,18vw,96px); line-height: 1;
-    color: #fff;
-    text-shadow: 0 6px 0 rgba(0,0,0,.3), 0 0 40px rgba(255,206,58,.5);
-    position: relative; z-index: 2;
-    animation: lu-pop 0.45s cubic-bezier(.17,.67,.35,1.4) both;
-  }
-  @keyframes lu-pop { from { transform: scale(0.4); opacity:0; } to { transform: scale(1); opacity:1; } }
-  .lu-unlock-title {
-    font-family: 'Baloo 2', sans-serif; font-weight: 900;
-    font-size: clamp(18px,5vw,24px); color: #ffce3a;
-    text-shadow: 0 3px 0 rgba(0,0,0,.3);
-    position: relative; z-index: 2; margin-top: 4px;
-    letter-spacing: 1px;
-  }
-  .lu-pick-label {
-    position: relative; z-index: 2;
-    font-family: 'Fredoka', sans-serif; font-weight: 600;
-    font-size: clamp(12px,3vw,14px); color: rgba(255,248,230,0.7);
-    letter-spacing: 3px; text-transform: uppercase; margin-top: 2px;
-  }
-  #lu-choices {
-    position: relative; z-index: 2;
-    display: flex; flex-direction: row; gap: 10px;
-    padding: 0 10px; max-width: 420px; width: 100%;
-    justify-content: center;
-  }
-  .lu-choice {
-    flex: 1; min-width: 0; max-width: 120px;
-    display: flex; flex-direction: column; align-items: center; gap: 6px;
-    border-radius: 18px; padding: 14px 8px 12px;
-    background: rgba(255,255,255,0.07);
-    border: 3px solid rgba(255,255,255,0.18);
-    cursor: pointer; transition: transform .12s, box-shadow .12s, border-color .12s;
-    animation: lu-pop 0.45s cubic-bezier(.17,.67,.35,1.4) both;
-  }
-  .lu-choice:nth-child(1) { animation-delay: .05s; }
-  .lu-choice:nth-child(2) { animation-delay: .13s; }
-  .lu-choice:nth-child(3) { animation-delay: .21s; }
-  .lu-choice:active { transform: scale(0.95) translateY(3px); }
-  .lu-choice-top {
-    width: 100%; border-radius: 10px; padding: 3px 6px;
+  #end[hidden], #finish[hidden], #error[hidden] { display: none; }
+  .card {
+    width: min(330px, 100%);
+    background: var(--paper);
+    border-radius: 28px;
+    padding: 26px 24px 20px;
     text-align: center;
-    font-family: 'Fredoka', sans-serif; font-weight: 700;
-    font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: #fff;
-    margin-bottom: 2px;
+    box-shadow: 0 18px 40px rgba(59, 47, 74, 0.16);
+    animation: card-in 0.28s cubic-bezier(0.2, 1.3, 0.5, 1);
   }
-  .lu-choice-emoji { font-size: 32px; line-height: 1; }
-  canvas.lu-choice-emoji { width: 56px; height: 56px; display: block; margin: 0 auto; }
-  .lu-choice-name {
-    font-family: 'Baloo 2', sans-serif; font-weight: 900;
-    font-size: clamp(12px,3vw,14px); color: #fff;
-    text-align: center; line-height: 1.2;
-  }
-  .lu-choice-desc {
-    font-family: 'Fredoka', sans-serif; font-weight: 500;
-    font-size: clamp(11px,2.8vw,13px); color: rgba(255,248,230,0.75);
-    text-align: center; line-height: 1.3;
-  }
-  .lu-unlock-banner {
-    position: relative; z-index: 2;
-    background: rgba(255,206,58,0.18); border: 2px solid rgba(255,206,58,0.5);
-    border-radius: 14px; padding: 8px 18px;
-    font-family: 'Fredoka', sans-serif; font-weight: 600;
-    font-size: clamp(13px,3.5vw,15px); color: #ffce3a; text-align: center;
-  }
-  /* ── Reveal weapon card (déblocage) ────────────────────────────────────── */
-  .lu-reveal {
-    position: relative; z-index: 2;
-    display: flex; flex-direction: column; align-items: center; gap: 8px;
-    background: linear-gradient(180deg, rgba(255,206,58,0.22), rgba(255,206,58,0.08));
-    border: 2px solid rgba(255,206,58,0.55);
-    border-radius: 18px;
-    padding: 14px 18px 12px;
-    max-width: min(92vw, 380px);
-    box-shadow: 0 0 28px rgba(255,206,58,0.35);
-    animation: lu-pop 0.5s cubic-bezier(.17,.67,.35,1.4) both;
-  }
-  .lu-reveal-tag {
-    font-family: 'Fredoka', sans-serif; font-weight: 700;
-    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
-    color: #ffce3a; opacity: 0.9;
-  }
-  .lu-reveal-head { display: flex; align-items: center; gap: 12px; }
-  .lu-reveal-head canvas { width: 64px; height: 64px; display: block; }
-  .lu-reveal-name {
-    font-family: 'Baloo 2', sans-serif; font-weight: 900;
-    font-size: clamp(20px,5vw,26px); color: #fff;
-    text-shadow: 0 0 14px rgba(255,206,58,0.6);
-  }
-  .lu-reveal-row {
-    display: flex; gap: 8px; align-items: flex-start;
+  @keyframes card-in { from { transform: scale(0.9); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .card { animation: none; } }
+  .paws { display: flex; justify-content: center; gap: 10px; font-size: 44px; line-height: 1; }
+  .paw { filter: grayscale(1); opacity: 0.25; transition: opacity 0.2s; }
+  .paw.on { filter: none; opacity: 1; }
+  #end-title { font-family: var(--font-display); font-weight: 800; font-size: 20px; margin-top: 10px; }
+  .score { font-family: var(--font-display); font-weight: 800; font-size: 64px; line-height: 1; margin-top: 8px; font-variant-numeric: tabular-nums; }
+  #end-bonus { display: block; min-height: 1.2em; font-size: 13px; color: var(--ink-soft); }
+  .stats { display: flex; justify-content: center; gap: 28px; margin: 16px 0 20px; }
+  .stats div { display: flex; flex-direction: column; }
+  .stats b { font-family: var(--font-display); font-weight: 800; font-size: 24px; line-height: 1.1; }
+  .stats small { font-size: 13px; color: var(--ink-soft); }
+  #replay {
     width: 100%;
-    font-family: 'Fredoka', sans-serif; font-weight: 500;
-    font-size: clamp(12px,3vw,14px); color: rgba(255,248,230,0.92);
-    line-height: 1.35; text-align: left;
+    padding: 16px 0;
+    border-radius: 999px;
+    background: var(--action); color: var(--paper);
+    font-family: var(--font-display); font-weight: 800; font-size: 24px;
+    box-shadow: 0 4px 0 var(--action-press);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
   }
-  .lu-reveal-row b {
-    font-family: 'Baloo 2', sans-serif; font-weight: 800;
-    color: #ffce3a;
-  }
-  .lu-reveal-icon {
-    flex: 0 0 auto; font-size: 16px; line-height: 1.2;
-  }
-  /* ── Weapon reveal overlay (déblocage immédiat) ────────────────────────── */
-  /* Modal léger : pas de scrim, juste la carte centrée par-dessus le jeu */
-  #weapon-reveal-overlay {
-    display: none; position: fixed; inset: 0; z-index: 95;
-    flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  #replay:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--action-press); }
+  #next {
+    margin-top: 10px;
+    padding: 10px 18px;
+    border-radius: 999px;
     background: transparent;
-    pointer-events: none; /* laisse passer hors-carte (mais le tap sur "Compris !" capte via pointer-events:auto sur les enfants) */
-    padding: 20px;
+    font-family: var(--font-display); font-weight: 600; font-size: 17px;
+    color: var(--action);
+    transition: background 0.15s ease;
+  }
+  #next:hover { background: var(--line); }
+
+  #error {
+    position: fixed; left: 16px; right: 16px; top: 16px;
+    padding: 14px 16px; border-radius: 16px;
+    background: var(--paper); border: 2px solid #e0303c;
+    font-size: 15px;
   }
-  #weapon-reveal-overlay.show { display: flex; }
-  #weapon-reveal-overlay > * { pointer-events: auto; }
-  #wr-card.lu-reveal {
-    background: linear-gradient(180deg, #fff8e6, #fff1d2);
-    border: 3px solid #7b3ff2;
-    box-shadow: 0 6px 0 rgba(42,27,74,.25), 0 14px 28px rgba(42,27,74,.22);
-  }
-  #wr-card.lu-reveal .lu-reveal-tag { color: #7b3ff2; }
-  #wr-card.lu-reveal .lu-reveal-name {
-    color: #2a1b4a; text-shadow: none;
-  }
-  #wr-card.lu-reveal .lu-reveal-row { color: #3a2a5a; }
-  #wr-card.lu-reveal .lu-reveal-row b { color: #ff3ea5; }
-  #wr-ok {
-    background: #ffce3a; border: none; border-radius: 14px;
-    padding: 12px 32px;
-    font-family: 'Baloo 2', sans-serif; font-weight: 900;
-    font-size: 16px; color: #2a1b4a; cursor: pointer;
-    box-shadow: 0 4px 0 rgba(0,0,0,0.25);
-    transition: transform .1s, box-shadow .1s;
-  }
-  #wr-ok:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.25); }
-  #lu-confetti { position: absolute; inset: 0; pointer-events: none; z-index: 3; overflow: hidden; }
-  .lu-conf-piece {
-    position: absolute; width: 10px; height: 14px; border-radius: 2px;
-    animation: lu-conf-fall linear forwards;
-  }
-  @keyframes lu-conf-fall {
-    0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
-    100% { transform: translateY(110vh) rotate(720deg); opacity: 0.3; }
-  }
-  /* ── Bestiary ───────────────────────────────────────────────────────────── */
-  #bestiary-btn {
-    background: #fff8e6; border: 3px solid #7b3ff2;
-    box-shadow: 0 4px 0 rgba(42,27,74,.18);
-    border-radius: 50%; width: 36px; height: 36px; min-width: 36px;
-    font-size: 17px; cursor: pointer; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-    transition: transform .1s;
-  }
-  #bestiary-btn:active { transform: scale(0.9); }
-  #bestiary-overlay {
-    display: none; position: fixed; inset: 0; z-index: 320;
-    background: #1a0a3a; flex-direction: column;
-    overflow-y: auto; -webkit-overflow-scrolling: touch;
-  }
-  #bestiary-overlay.show { display: flex; }
-  #bst-header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 16px 16px 10px;
-    background: rgba(0,0,0,0.35);
-    position: sticky; top: 0; z-index: 5;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
-  }
-  #bst-title {
-    font-family: 'Baloo 2', sans-serif; font-weight: 900;
-    font-size: 20px; color: #fff;
-  }
-  #bst-count {
-    font-family: 'Fredoka', sans-serif; font-size: 13px;
-    color: rgba(255,248,230,0.55); font-weight: 500; margin-top: 1px;
-  }
-  #bst-close {
-    background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.18);
-    border-radius: 50%; width: 36px; height: 36px; min-width: 36px;
-    font-size: 16px; color: #fff; cursor: pointer; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-  }
-  #bst-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr);
-    gap: 10px; padding: 12px 10px 24px;
-  }
-  .bst-card {
-    border-radius: 14px; padding: 8px 6px 10px;
-    display: flex; flex-direction: column; align-items: center; gap: 3px;
-    background: rgba(255,255,255,0.06);
-    border: 2px solid rgba(255,255,255,0.12);
-  }
-  .bst-card.unknown {
-    background: rgba(0,0,0,0.25);
-    border-color: rgba(255,255,255,0.05);
-    opacity: 0.6;
-  }
-  /* Rareté Diablo-like : commun → légendaire */
-  .bst-card.bst-rar-common {
-    border-color: rgba(255,255,255,0.18);
-  }
-  .bst-card.bst-rar-uncommon {
-    border-color: #5BB6E8;
-    box-shadow: 0 0 10px rgba(91,182,232,0.30);
-  }
-  .bst-card.bst-rar-rare {
-    border-color: #A876F2;
-    box-shadow: 0 0 14px rgba(168,118,242,0.45), inset 0 0 10px rgba(168,118,242,0.10);
-    background: linear-gradient(160deg, rgba(168,118,242,0.10), rgba(255,255,255,0.04));
-  }
-  .bst-card.bst-rar-legendary {
-    border-color: #FFB347;
-    background: linear-gradient(160deg, rgba(255,179,71,0.18), rgba(255,206,58,0.06));
-    box-shadow: 0 0 22px rgba(255,179,71,0.55), inset 0 0 14px rgba(255,206,58,0.18);
-    animation: bst-leg-pulse 2.4s ease-in-out infinite;
-  }
-  /* Cards inconnues : la teinte rareté reste discrète mais visible (= teaser) */
-  .bst-card.unknown.bst-rar-uncommon { box-shadow: 0 0 6px rgba(91,182,232,0.18); }
-  .bst-card.unknown.bst-rar-rare     { box-shadow: 0 0 8px rgba(168,118,242,0.22); }
-  .bst-card.unknown.bst-rar-legendary{
-    box-shadow: 0 0 12px rgba(255,179,71,0.32);
-    animation: bst-leg-pulse 2.4s ease-in-out infinite;
-  }
-  @keyframes bst-leg-pulse {
-    0%,100% { box-shadow: 0 0 18px rgba(255,179,71,0.45), inset 0 0 10px rgba(255,206,58,0.14); }
-    50%     { box-shadow: 0 0 28px rgba(255,179,71,0.75), inset 0 0 18px rgba(255,206,58,0.24); }
-  }
-  .bst-badge {
-    font-size: 8px; font-family: 'Fredoka', sans-serif; font-weight: 700;
-    letter-spacing: 1px; text-transform: uppercase;
-    padding: 2px 7px; border-radius: 8px; color: #fff;
-    width: 100%; text-align: center; box-sizing: border-box;
-  }
-  .bst-name {
-    font-family: 'Baloo 2', sans-serif; font-weight: 800;
-    font-size: 11px; color: #fff; text-align: center; line-height: 1.2;
-    margin-top: 1px;
-  }
-  .bst-pts {
-    font-family: 'Fredoka', sans-serif; font-size: 10px;
-    color: rgba(255,248,230,0.55); text-align: center;
-  }
-  .bst-hint {
-    font-family: 'Fredoka', sans-serif; font-size: 9px;
-    color: rgba(255,248,230,0.38); text-align: center; line-height: 1.3;
-    padding: 0 2px;
-  }
-  #bst-detail-overlay {
-    position: fixed; inset: 0; z-index: 330;
-    background: rgba(26,10,58,0.92); backdrop-filter: blur(8px);
-    display: none; align-items: center; justify-content: center;
-    padding: 20px;
-  }
-  #bst-detail-overlay.show { display: flex; }
-  #bst-detail-card {
-    background: linear-gradient(145deg, #2a1b4a, #1a0a3a);
-    border: 2px solid rgba(255,255,255,0.15);
-    border-radius: 22px; padding: 18px 16px 22px;
-    max-width: 460px; width: 100%;
-    box-shadow: 0 18px 60px rgba(0,0,0,0.55);
-    text-align: center;
-    transition: border-color .2s, box-shadow .2s;
-  }
-  #bst-detail-card.bst-rar-uncommon {
-    border-color: #5BB6E8;
-    box-shadow: 0 18px 60px rgba(91,182,232,0.45);
-  }
-  #bst-detail-card.bst-rar-rare {
-    border-color: #A876F2;
-    box-shadow: 0 18px 60px rgba(168,118,242,0.55);
-  }
-  #bst-detail-card.bst-rar-legendary {
-    border-color: #FFB347;
-    box-shadow: 0 18px 60px rgba(255,179,71,0.65), inset 0 0 22px rgba(255,206,58,0.18);
-    animation: bst-leg-pulse 2.4s ease-in-out infinite;
-  }
-  .bst-detail-rarity {
-    display: inline-block; font-family: 'Fredoka', sans-serif;
-    font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
-    padding: 3px 10px; border-radius: 8px; margin-left: 8px;
-    vertical-align: middle;
-  }
-  .bst-detail-rar-common    { background: rgba(255,255,255,0.18); color: #fff; }
-  .bst-detail-rar-uncommon  { background: #5BB6E8; color: #0a2a3a; }
-  .bst-detail-rar-rare      { background: #A876F2; color: #fff; }
-  .bst-detail-rar-legendary { background: linear-gradient(90deg, #FFB347, #ffce3a); color: #2a1b4a; }
-  #bst-detail-badge {
-    display: inline-block; font-family: 'Fredoka', sans-serif;
-    font-size: 10px; font-weight: 700; letter-spacing: 1px;
-    text-transform: uppercase; padding: 3px 10px; border-radius: 10px;
-    color: #fff; margin-bottom: 6px;
-  }
-  #bst-detail-name {
-    font-family: 'Baloo 2', sans-serif; font-weight: 800;
-    font-size: 22px; color: #fff; margin: 4px 0;
-  }
-  #bst-detail-pts {
-    font-family: 'Fredoka', sans-serif; font-size: 14px;
-    color: #ffce3a; margin-bottom: 4px;
-  }
-  #bst-detail-hint {
-    font-family: 'Fredoka', sans-serif; font-size: 12px;
-    color: rgba(255,248,230,0.65); margin-bottom: 14px;
-    line-height: 1.4;
-  }
-  #bst-detail-poses {
-    display: flex; flex-direction: column; gap: 10px;
-    margin-bottom: 14px;
-  }
-  .bst-pose {
-    background: rgba(255,255,255,0.06); border-radius: 14px;
-    padding: 10px; display: flex; align-items: center; justify-content: center;
-  }
-  .bst-pose canvas {
-    width: 160px; height: 160px;
-  }
-  .bst-pose-label {
-    font-family: 'Fredoka', sans-serif; font-size: 11px;
-    color: rgba(255,248,230,0.7); font-weight: 600;
-  }
-  #bst-detail-close {
-    background: linear-gradient(180deg, #ff3ea5, #c9217e);
-    color: #fff; border: none; border-radius: 14px;
-    padding: 10px 28px; font-family: 'Baloo 2', sans-serif;
-    font-weight: 800; font-size: 14px; cursor: pointer;
-  }
-  /* ── Start menu ────────────────────────────────────────────────────── */
-  #menu-canvas {
-    position: absolute; inset: 0; width: 100%; height: 100%;
-    z-index: 0; pointer-events: none;
-  }
-  #start-menu-overlay {
-    position: fixed; inset: 0; z-index: 300;
-    background: linear-gradient(180deg, #7ad7ff 0%, #b8c8ff 55%, #e3c9ff 100%);
-    display: none; flex-direction: column;
-    padding: max(28px, env(safe-area-inset-top)) 18px max(20px, env(safe-area-inset-bottom));
-    overflow: hidden;
-  }
-  #start-menu-overlay.show { display: flex; }
-  .sm-deco { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 1; }
-  .sm-cloud {
-    position: absolute; background: #fff;
-    border-radius: 50%;
-    box-shadow: 28px 4px 0 -2px #fff, -22px 6px 0 -4px #fff, 8px -10px 0 -2px #fff;
-    opacity: 0.92;
-  }
-  .sm-cloud.c1 { top: 18%; left: 6%; width: 44px; height: 30px; }
-  .sm-cloud.c2 { top: 40%; left: 4%; width: 30px; height: 22px; opacity: 0.75; }
-  .sm-cloud.c3 { top: 14%; right: 14%; width: 36px; height: 26px; opacity: 0.8; }
-  .sm-cat-deco {
-    position: absolute; font-size: 30px;
-    filter: drop-shadow(0 3px 6px rgba(42,27,74,0.18));
-  }
-  .sm-cat-deco.cd1 { top: 6%; left: 50%; transform: translateX(-50%) rotate(-6deg); font-size: 28px; }
-  .sm-cat-deco.cd2 { top: 28%; left: 8%; transform: rotate(-10deg); font-size: 38px; }
-  .sm-cat-deco.cd3 { top: 36%; right: 12%; transform: rotate(8deg); font-size: 32px; }
-  .sm-top {
-    position: relative; z-index: 2;
-    display: flex; flex-direction: column; align-items: center;
-    padding-top: 24px;
-  }
-  .sm-title {
-    display: flex; flex-direction: column; align-items: center; gap: 0;
-    text-align: center;
-  }
-  .sm-title-row1 { display: flex; align-items: flex-end; gap: 10px; }
-  .sm-title-pluie, .sm-title-chats {
-    font-family: 'Baloo 2', sans-serif; font-weight: 900;
-    -webkit-text-stroke: 5px #2a1b4a; paint-order: stroke fill;
-    letter-spacing: 2px; line-height: 0.95;
-    text-shadow: 5px 6px 0 #ff3ea5;
-  }
-  .sm-title-pluie {
-    color: #fff;
-    font-size: clamp(75px, 19.5vw, 102px);
-    transform: rotate(-3deg);
-  }
-  .sm-title-chats {
-    color: #ffce3a;
-    font-size: clamp(87px, 22.5vw, 117px);
-    transform: rotate(-2deg);
-    margin-top: -4px;
-  }
-  .sm-title-de {
-    font-family: 'Fredoka', sans-serif; font-style: italic; font-weight: 600;
-    font-size: clamp(27px, 6.75vw, 36px); color: #2a1b4a;
-    margin-bottom: 6px; letter-spacing: 0.5px;
-  }
-  .sm-center {
-    flex: 1; display: flex; align-items: center; justify-content: center;
-    position: relative; z-index: 2;
-  }
-  #play-btn {
-    width: clamp(220px, 58vw, 280px); height: clamp(220px, 58vw, 280px);
-    border-radius: 50%; border: 6px solid #fff8e6;
-    background: radial-gradient(circle at 35% 28%, #fff5b8 0%, #ffce3a 48%, #e8a820 100%);
-    box-shadow: 0 12px 0 #a87820, 0 22px 32px rgba(168,120,32,0.35), inset 0 -10px 24px rgba(168,120,32,0.18);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
-    font-family: 'Baloo 2', sans-serif; font-weight: 900; color: #2a1b4a;
-    cursor: pointer; padding: 0;
-    transition: transform .1s, box-shadow .1s;
-  }
-  #play-btn:active {
-    transform: translateY(8px);
-    box-shadow: 0 4px 0 #a87820, 0 10px 14px rgba(168,120,32,0.35), inset 0 -10px 24px rgba(168,120,32,0.18);
-  }
-  .sm-play-icon {
-    font-size: clamp(56px, 14vw, 72px); line-height: 1;
-    color: #2a1b4a;
-    filter: drop-shadow(0 3px 0 rgba(42,27,74,0.18));
-  }
-  .sm-play-label {
-    font-size: clamp(22px, 5.5vw, 28px); letter-spacing: 2px;
-  }
-  .sm-dock {
-    position: relative; z-index: 2;
-    display: flex; gap: 8px; padding: 10px;
-    background: #fff8e6;
-    border: 3px solid #2a1b4a;
-    border-radius: 22px;
-    box-shadow: 0 6px 0 rgba(42,27,74,0.25);
-    margin: 0 auto;
-  }
-  .sm-tile {
-    width: 72px; height: 80px;
-    border: 3px solid #2a1b4a; border-radius: 16px;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 4px; cursor: pointer;
-    font-family: 'Baloo 2', sans-serif;
-    box-shadow: 0 4px 0 rgba(42,27,74,0.3);
-    transition: transform .1s, box-shadow .1s;
-    padding: 0;
-  }
-  .sm-tile:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(42,27,74,0.3); }
-  .sm-tile-icon { font-size: 24px; line-height: 1; }
-  .sm-tile-label {
-    font-weight: 800; font-size: 9px;
-    letter-spacing: 0.5px; color: #2a1b4a;
-  }
-  .sm-tile-purple { background: linear-gradient(180deg, #9b6df5, #7b3ff2); }
-  .sm-tile-purple .sm-tile-label { color: #fff; }
-  .sm-tile-yellow { background: linear-gradient(180deg, #ffe070, #ffce3a); }
-  .sm-tile-pink { background: linear-gradient(180deg, #ff70ba, #ff3ea5); }
-  .sm-tile-pink .sm-tile-label { color: #fff; }
-  .sm-tile-blue { background: linear-gradient(180deg, #6dd0ff, #2aa8ff); }
-  .sm-tile-blue .sm-tile-label { color: #fff; }
-  /* ── Highscores ────────────────────────────────────────────────────── */
-  #highscores-overlay {
-    position: fixed; inset: 0; z-index: 310;
-    background: rgba(26,10,58,0.92); backdrop-filter: blur(8px);
-    display: none; align-items: center; justify-content: center;
-    padding: 20px;
-  }
-  #highscores-overlay.show { display: flex; }
-  #hs-card {
-    background: linear-gradient(145deg, #2a1b4a, #1a0a3a);
-    border: 2px solid rgba(255,255,255,0.15);
-    border-radius: 22px; padding: 22px 18px;
-    max-width: 420px; width: 100%; text-align: center;
-  }
-  #hs-title {
-    font-family: 'Baloo 2', sans-serif; font-weight: 800;
-    font-size: 22px; color: #fff; margin-bottom: 14px;
-  }
-  #hs-list {
-    display: flex; flex-direction: column; gap: 6px;
-    margin-bottom: 16px; font-family: 'Fredoka', sans-serif;
-  }
-  .hs-row {
-    display: flex; justify-content: space-between; align-items: center;
-    background: rgba(255,255,255,0.06); border-radius: 10px;
-    padding: 8px 14px; color: #fff;
-  }
-  .hs-row .hs-rank { font-weight: 700; opacity: .55; min-width: 28px; text-align: left; }
-  .hs-row .hs-name { flex: 1; text-align: left; padding: 0 10px; font-weight: 600; }
-  .hs-row .hs-score { font-weight: 700; color: #ffce3a; }
-  .hs-row.empty { color: rgba(255,255,255,0.4); justify-content: center; font-style: italic; }
-  #hs-close {
-    background: linear-gradient(180deg, #ff3ea5, #c9217e);
-    color: #fff; border: none; border-radius: 14px;
-    padding: 10px 28px; font-family: 'Baloo 2', sans-serif;
-    font-weight: 800; font-size: 14px; cursor: pointer;
-  }
-  /* ── Highscore name input overlay ──────────────────────── */
-  #hs-name-overlay {
-    position: fixed; inset: 0; z-index: 340;
-    background: rgba(26,10,58,0.92); backdrop-filter: blur(8px);
-    display: none; align-items: center; justify-content: center;
-    padding: 20px;
-  }
-  #hs-name-overlay.show { display: flex; }
-  #hs-name-card {
-    background: linear-gradient(145deg, #2a1b4a, #1a0a3a);
-    border: 2px solid rgba(255,206,58,0.4);
-    border-radius: 22px; padding: 28px 22px;
-    max-width: 340px; width: 100%; text-align: center;
-    box-shadow: 0 18px 60px rgba(255,206,58,0.2);
-  }
-  #hs-name-trophy {
-    font-size: 56px; line-height: 1;
-    animation: candy-pulse 1.4s ease-in-out infinite;
-    margin-bottom: 8px;
-  }
-  #hs-name-title {
-    font-family: 'Baloo 2', sans-serif; font-weight: 900;
-    font-size: 22px; color: #ffce3a;
-    text-shadow: 0 2px 0 rgba(0,0,0,0.3);
-    margin-bottom: 4px;
-  }
-  #hs-name-score {
-    font-family: 'Fredoka', sans-serif; font-size: 14px;
-    color: rgba(255,248,230,0.7); margin-bottom: 16px;
-  }
-  #hs-name-input {
-    width: 100%; box-sizing: border-box;
-    background: rgba(255,248,230,0.95); color: #2a1b4a;
-    border: 3px solid #7b3ff2; border-radius: 14px;
-    padding: 12px 16px; font-size: 18px;
-    font-family: 'Baloo 2', sans-serif; font-weight: 700;
-    text-align: center; outline: none;
-    text-transform: uppercase; letter-spacing: 1.5px;
-    margin-bottom: 16px;
-  }
-  #hs-name-input:focus { border-color: #ff3ea5; }
-  #hs-name-buttons {
-    display: flex; gap: 10px; justify-content: center;
-  }
-  #hs-name-buttons button {
-    flex: 1; max-width: 130px;
-    border: none; border-radius: 14px; padding: 12px 18px;
-    font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 14px;
-    cursor: pointer; transition: transform .12s;
-  }
-  #hs-name-buttons button:active { transform: scale(0.95); }
-  #hs-name-skip {
-    background: rgba(255,255,255,0.1); color: rgba(255,248,230,0.8);
-  }
-  #hs-name-ok {
-    background: linear-gradient(180deg, #ffce3a, #d4a017);
-    color: #2a1b4a;
-    box-shadow: 0 4px 0 #a87820;
-  }
-  #hs-name-ok:active { transform: translateY(2px); box-shadow: 0 2px 0 #a87820; }
 </style>
 </head>
 <body>
-<div id="bestiary-overlay">
-  <div id="bst-header">
-    <div>
-      <div id="bst-title">📖 Bestiaire</div>
-      <div id="bst-count"></div>
-    </div>
-    <button id="bst-close">✕</button>
-  </div>
-  <div id="bst-grid"></div>
-</div>
-<div id="bst-detail-overlay">
-  <div id="bst-detail-card">
-    <div id="bst-detail-badge"></div>
-    <div id="bst-detail-name"></div>
-    <div id="bst-detail-pts"></div>
-    <div id="bst-detail-hint"></div>
-    <div id="bst-detail-poses"></div>
-    <button id="bst-detail-close">Fermer</button>
-  </div>
-</div>
-<div id="hud">
-  <button id="hud-menu-btn" title="Menu" aria-label="Menu">☰</button>
-  <div id="score" title="Score"><span id="score-val">0</span></div>
-  <div id="level-badge">★ Niv. 1</div>
-  <div id="combo"></div>
-  <div id="lives-el">❤️❤️❤️</div>
-</div>
-<div id="hud-menu-panel" aria-hidden="true">
-  <div class="hmp-card">
-    <div class="hmp-title">⏸ Pause</div>
-    <button id="hud-menu-music" class="hmp-item">
-      <span id="hud-menu-music-icon" class="hmp-icon">🔇</span>
-      <span class="hmp-label">Musique</span>
-    </button>
-    <button id="hud-menu-bestiary" class="hmp-item">
-      <span class="hmp-icon">🐾</span>
-      <span class="hmp-label">Bestiaire</span>
-    </button>
-    <button id="hud-menu-highscores" class="hmp-item">
-      <span class="hmp-icon">🏆</span>
-      <span class="hmp-label">Records</span>
-    </button>
-    <button id="hud-menu-resume" class="hmp-item hmp-resume">
-      <span class="hmp-icon">▶</span>
-      <span class="hmp-label">Reprendre</span>
-    </button>
-  </div>
-</div>
-<div id="unlock-toast"></div>
-<div id="levelup-overlay">
-  <div id="lu-rays"></div>
-  <div id="lu-confetti"></div>
-  <div class="lu-sub">NIVEAU</div>
-  <div class="lu-num" id="lu-num">1</div>
-  <div class="lu-unlock-banner" id="lu-unlock-banner" style="display:none" id="lu-unlock-banner"></div>
-  <div class="lu-pick-label">CHOISIS TON AMÉLIORATION</div>
-  <div id="lu-choices"></div>
-</div>
-<div id="weapon-reveal-overlay">
-  <div id="wr-card"></div>
-  <button id="wr-ok">Compris !</button>
-</div>
-<div id="gameover-overlay">
-  <canvas id="gameover-canvas" aria-hidden="true"></canvas>
-  <div class="go-title">GAME OVER</div>
-  <div class="go-score">Score <span id="go-score">0</span></div>
-  <div class="go-hi">Record <span id="go-hi-val">0</span></div>
-  <button id="replay-btn">Rejouer !</button>
-  <button id="go-menu-btn" style="margin-top:8px;background:rgba(255,255,255,0.1);color:#fff;border:none;border-radius:14px;padding:10px 22px;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:14px;cursor:pointer">← Menu</button>
-</div>
-<div id="start-menu-overlay" class="show">
-  <canvas id="menu-canvas" aria-hidden="true"></canvas>
-  <div class="sm-top">
-    <h1 class="sm-title">
-      <span class="sm-title-row1">
-        <span class="sm-title-pluie">PLUIE</span>
-        <span class="sm-title-de">de</span>
-      </span>
-      <span class="sm-title-chats">CHATS!</span>
-    </h1>
-  </div>
-  <div class="sm-center">
-    <button id="play-btn" aria-label="Jouer">
-      <span class="sm-play-icon">▶</span>
-      <span class="sm-play-label">JOUER</span>
-    </button>
-  </div>
-  <nav class="sm-dock">
-    <button id="menu-bestiary-btn" class="sm-tile sm-tile-purple">
-      <span class="sm-tile-icon">📖</span>
-      <span class="sm-tile-label">BESTIAIRE</span>
-    </button>
-    <button id="menu-highscores-btn" class="sm-tile sm-tile-yellow">
-      <span class="sm-tile-icon">🏆</span>
-      <span class="sm-tile-label">RECORDS</span>
-    </button>
-    <button id="menu-music-btn" class="sm-tile sm-tile-pink">
-      <span class="sm-tile-icon" id="menu-music-icon">🔇</span>
-      <span class="sm-tile-label">MUSIQUE</span>
-    </button>
-  </nav>
-</div>
-<div id="highscores-overlay">
-  <div id="hs-card">
-    <div id="hs-title">🏆 Highscores</div>
-    <div id="hs-list"></div>
-    <button id="hs-close">Fermer</button>
-  </div>
-</div>
-<div id="hs-name-overlay">
-  <div id="hs-name-card">
-    <div id="hs-name-trophy">🏆</div>
-    <div id="hs-name-title">Nouveau highscore !</div>
-    <div id="hs-name-score"></div>
-    <input id="hs-name-input" type="text" maxlength="12" placeholder="Ton pseudo" autocomplete="off" autocapitalize="characters" spellcheck="false">
-    <div id="hs-name-buttons">
-      <button id="hs-name-skip">Passer</button>
-      <button id="hs-name-ok">Valider</button>
-    </div>
-  </div>
-</div>
-<canvas id="game"></canvas>
+<canvas id="game" aria-label="Pluie de chats : touche au-dessus du lanceur pour viser, relâche pour tirer"></canvas>
 
-<script type="module" src="/src/main.ts"></script>
+<button id="finish" type="button" hidden>Finir l'averse</button>
+
+<div id="end" role="dialog" aria-modal="true" aria-labelledby="end-title" hidden>
+  <div class="card">
+    <div class="paws" aria-hidden="true"><span class="paw">🐾</span><span class="paw">🐾</span><span class="paw">🐾</span></div>
+    <h1 id="end-title">Averse terminée</h1>
+    <div class="score"><span id="end-score">0</span></div>
+    <span id="end-bonus"></span>
+    <div class="stats">
+      <div><b id="end-chain">×0</b><small>meilleure chaîne</small></div>
+      <div><b id="end-caught">0/0</b><small>chats attrapés</small></div>
+    </div>
+    <button id="replay" type="button">Rejouer</button>
+    <button id="next" type="button">Averse suivante</button>
+  </div>
+</div>
+
+<div id="error" role="alert" hidden></div>
+
+<script type="module" src="/src/game/main.ts"></script>
 </body>
 </html>
