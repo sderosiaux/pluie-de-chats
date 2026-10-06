@@ -33,6 +33,8 @@ export interface RenderInput {
   time: number; // secondes réelles (nuages, pelote)
   catchable: number;
   fast: boolean; // « Finir l'averse » en cours
+  /** Costumes rares (§8) : index de spawn → costume. Purement visuel, la sim garde le costume d'origine. */
+  rare: ReadonlyMap<number, string>;
 }
 
 const SPRITE_K = 2.5; // taille du sprite ≈ 2,5 × r
@@ -72,12 +74,7 @@ export function render(g: CanvasRenderingContext2D, view: View, dpr: number, r: 
   g.translate(r.fx.shakeX, r.fx.shakeY);
   drawBackground(g, r.assets, r.time, sx0, sy0, sx1, sy1);
   g.restore();
-  // Voile hors du monde : les murs et le plafond restent visibles sur écran large ou haut.
-  g.fillStyle = THEME.letterboxVeil;
-  g.beginPath();
-  g.rect(sx0, sy0, sx1 - sx0, sy1 - sy0);
-  g.rect(WORLD_W, 0, -WORLD_W, WORLD_H);
-  g.fill('evenodd');
+  drawWorldEdges(g, sx0, sy0, sx1);
 
   g.save();
   g.beginPath();
@@ -87,7 +84,7 @@ export function render(g: CanvasRenderingContext2D, view: View, dpr: number, r: 
   const chainN = new Map<number, number>();
   for (const ch of r.sim.chains) chainN.set(ch.id, ch.n);
   for (const c of r.sim.cats) if (c.st === 'boulet') drawTrail(g, c, r.looks.get(c.id), chainN.get(c.chainId) ?? 0);
-  for (const c of r.sim.cats) drawCat(g, c, r.assets, r.looks.get(c.id), r.sim.tick);
+  for (const c of r.sim.cats) drawCat(g, c, r.rare.get(c.spawnIdx) ?? c.costume, r.assets, r.looks.get(c.id), r.sim.tick);
   for (const b of r.sim.balls) drawPelote(g, r.assets, b.x, b.y, 2.5 * BALL_R, r.time * 9);
   drawLauncher(g, r);
   drawWorldFx(g, r.fx);
@@ -109,9 +106,11 @@ export function render(g: CanvasRenderingContext2D, view: View, dpr: number, r: 
 
 // ── Décor ────────────────────────────────────────────────────────────────────
 
+// Hors du monde (letterbox), le décor continue : ciel au-dessus, sol en dessous, sans bande unie.
 function drawBackground(g: CanvasRenderingContext2D, assets: Assets, time: number, x0: number, y0: number, x1: number, y1: number): void {
-  const sky = g.createLinearGradient(0, 0, 0, WORLD_H);
-  sky.addColorStop(0, THEME.skyTop);
+  const sky = g.createLinearGradient(0, Math.min(0, y0), 0, WORLD_H);
+  if (y0 < 0) sky.addColorStop(0, THEME.skyHigh);
+  sky.addColorStop(y0 < 0 ? -y0 / (WORLD_H - y0) : 0, THEME.skyTop);
   sky.addColorStop(1, THEME.skyBottom);
   g.fillStyle = sky;
   g.fillRect(x0 - 20, y0 - 20, x1 - x0 + 40, y1 - y0 + 40);
@@ -128,9 +127,42 @@ function drawBackground(g: CanvasRenderingContext2D, assets: Assets, time: numbe
   g.globalAlpha = 0.6;
   const start = x0 - (((x0 % w) + w) % w) - w;
   for (let x = start; x < x1 + 20; x += w) g.drawImage(img, x, WORLD_H - SCENERY_H, w, SCENERY_H);
-  g.fillStyle = assets.ground;
-  g.fillRect(x0 - 20, WORLD_H - 1, x1 - x0 + 40, y1 - WORLD_H + 21);
   g.globalAlpha = 1;
+  if (y1 > WORLD_H) {
+    // Sol : la couleur du bas du décor, qui fonce doucement vers le bord de l'écran.
+    g.fillStyle = assets.ground;
+    g.globalAlpha = 0.6;
+    g.fillRect(x0 - 20, WORLD_H - 1, x1 - x0 + 40, y1 - WORLD_H + 21);
+    const soil = g.createLinearGradient(0, WORLD_H, 0, y1);
+    soil.addColorStop(0, 'rgba(59,47,74,0)');
+    soil.addColorStop(1, 'rgba(59,47,74,0.12)');
+    g.globalAlpha = 1;
+    g.fillStyle = soil;
+    g.fillRect(x0 - 20, WORLD_H - 1, x1 - x0 + 40, y1 - WORLD_H + 21);
+  }
+}
+
+/** Plafond et murs (rebonds) : un liseré discret quand l'écran montre du décor au-delà du monde. */
+function drawWorldEdges(g: CanvasRenderingContext2D, x0: number, y0: number, x1: number): void {
+  g.strokeStyle = THEME.worldEdge;
+  g.lineWidth = 1.5;
+  g.setLineDash([2, 6]);
+  g.lineCap = 'round';
+  g.beginPath();
+  if (y0 < -1) {
+    g.moveTo(0, 0);
+    g.lineTo(WORLD_W, 0);
+  }
+  if (x0 < -1) {
+    g.moveTo(0, 0);
+    g.lineTo(0, WORLD_H);
+  }
+  if (x1 > WORLD_W + 1) {
+    g.moveTo(WORLD_W, 0);
+    g.lineTo(WORLD_W, WORLD_H);
+  }
+  g.stroke();
+  g.setLineDash([]);
 }
 
 function cloud(g: CanvasRenderingContext2D, x: number, y: number, s: number): void {
@@ -166,10 +198,10 @@ function drawTrail(g: CanvasRenderingContext2D, c: Cat, look: CatLook | undefine
   g.globalAlpha = 1;
 }
 
-function drawCat(g: CanvasRenderingContext2D, c: Cat, assets: Assets, look: CatLook | undefined, tick: number): void {
+function drawCat(g: CanvasRenderingContext2D, c: Cat, costume: string, assets: Assets, look: CatLook | undefined, tick: number): void {
   if (c.st === 'gone') return;
   const pose = c.st === 'fall' && look && look.tro > 0 ? 'tro' : 'mid';
-  const img = assets.cat(c.costume, pose);
+  const img = assets.cat(costume, pose);
   const size = SPRITE_K * c.r;
   const rot = c.st === 'boulet' ? look?.rot ?? 0 : Math.sin((tick + c.id * 37) / 40) * 0.08;
   const ghost = c.char === 'fantome';

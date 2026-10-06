@@ -1,22 +1,33 @@
-// Client jouable P1 (GAME_SPEC §28). La sim n'est modifiée que par tryShoot et step.
-// Boucle : accumulateur temps réel → step à 120 Hz, au plus 10 ticks par image. Le ralenti et
-// l'accéléré changent le nombre de ticks par seconde réelle, jamais la physique.
+// Client (GAME_SPEC §21, §28). La sim n'est modifiée que par tryShoot et step.
+// Trois écrans : carte des averses (accueil), carnet, jeu. La sim n'avance que sur l'écran de jeu,
+// onglet visible (§30.9). Boucle : accumulateur temps réel → step à 120 Hz, au plus 10 ticks par image.
+// Le ralenti et l'accéléré changent le nombre de ticks par seconde réelle, jamais la physique.
 
 import {
-  ANGLE_MAX, ANGLE_MIN, CHARACTERS, DT, HANDMADE, WORLD_H, catchableCount, createSim, drainEvents,
+  ANGLE_MAX, ANGLE_MIN, CHARACTERS, DT, WORLD_H, catchableCount, createSim, drainEvents,
   finalScore, handmadeById, hashState, predictFirstContact, runReplay, stars, step, tryShoot,
 } from '../sim';
 import type { AverseDef, InputLog, SimEvent, SimState } from '../sim';
 import { loadAssets } from './assets';
 import type { Assets } from './assets';
-import { bark, chainNote, chime, tink, unlockAudio } from './audio';
+import { bark, chainNote, chime, setSoundEnabled, tink, unlockAudio } from './audio';
+import {
+  averseFor, isPlayable, isUnlocked, nextSlot, parseSlot, rareCostumesEnabled, rareCostumesFor, slotId,
+} from './campaign';
+import type { Slot } from './campaign';
 import { burst, createFx, floatText, queueBanner, shake, spark, stamp, updateFx } from './fx';
 import type { Fx } from './fx';
 import { bindDom } from './hud';
 import { attachInput } from './input';
 import { BANNER_ICON, THEME } from './look';
+import {
+  emptyProgress, loadProgress, markRead, meet, parseProgress, recordResult, saveProgress, seeCostume, withSound,
+} from './progress';
+import type { Progress } from './progress';
 import { render, updateLooks } from './render';
 import type { AimState, CatLook } from './render';
+import { averseLabel, bindScreens } from './screens';
+import type { Paused } from './screens';
 import { aimAngleDeci, fitView } from './view';
 import type { View } from './view';
 
@@ -29,11 +40,23 @@ const BLINK_MS = 450;
 const END_DELAY_MS = 900; // laisse lire le dernier « Carambolage » avant l'écran de fin
 const MAX_FRAME_S = 0.1;
 
+type Screen = 'map' | 'carnet' | 'play';
+
+/** Ce que la fin d'averse a changé dans la progression (calculé quand la sim se termine). */
+interface Outcome {
+  next: string | null;
+  unlocked: string | null;
+  record: boolean;
+}
+
 interface Run {
   averse: AverseDef;
+  /** Averse de campagne (progression, carnet, costumes rares) ; null = averse de débogage (h1…). */
+  slot: Slot | null;
   sim: SimState;
   assets: Assets;
   catchable: number;
+  rare: ReadonlyMap<number, string>;
   looks: Map<number, CatLook>;
   fx: Fx;
   acc: number;
@@ -43,8 +66,9 @@ interface Run {
   fast: boolean;
   endedAt: number | null;
   endShown: boolean;
+  outcome: Outcome | null;
   spawnSeen: number;
-  seenChars: Set<string>;
+  seenChars: Set<string>; // averses de débogage : bandeau par partie, sans persistance
 }
 
 // ── DOM et vue ───────────────────────────────────────────────────────────────
@@ -70,28 +94,100 @@ resize();
 window.addEventListener('resize', resize);
 
 const params = new URLSearchParams(location.search);
-// Outils de débogage (oracle de chaîne, état modifiable) : jamais dans le build publié.
+// Outils de débogage (oracle de chaîne, état modifiable, averses h1–h3) : jamais dans le build publié.
 // Activés seulement en dev ou dans un build de test (VITE_DEBUG=1, utilisé par Playwright), et avec ?debug.
 const DEBUG = (import.meta.env.DEV || import.meta.env.VITE_DEBUG === '1') && params.has('debug');
-const AVERSE_IDS = HANDMADE.map(a => a.id);
-let averseId = AVERSE_IDS.includes(params.get('averse') ?? '') ? (params.get('averse') as string) : 'h1';
+
+// ── Progression ─────────────────────────────────────────────────────────────
+
+function localStore(): Storage | null {
+  try {
+    return window.localStorage;
+  } catch {
+    return null; // accès refusé : on joue sans sauvegarde
+  }
+}
+const storage = localStore();
+let progress: Progress = loadProgress(storage);
+setSoundEnabled(progress.sound);
+
+function commit(p: Progress): void {
+  if (p === progress) return;
+  progress = p;
+  saveProgress(storage, p);
+}
+
+// ── Écrans ──────────────────────────────────────────────────────────────────
+
+let screen: Screen = 'map';
+let run: Run | null = null;
+let now = performance.now();
 
 const dom = bindDom({
   onFinish() {
     if (run && canFinish(run.sim)) run.fast = true;
   },
   onReplay() {
-    launch(averseId);
+    if (run) launch(run.averse.id);
   },
   onNext() {
-    const i = AVERSE_IDS.indexOf(averseId);
-    averseId = AVERSE_IDS[(i + 1) % AVERSE_IDS.length];
-    const url = new URL(location.href);
-    url.searchParams.set('averse', averseId);
-    history.replaceState(null, '', url);
-    launch(averseId);
+    const next = run?.outcome?.next;
+    if (next) launch(next);
+  },
+  onMap: openMap,
+});
+
+const screens = bindScreens({
+  onPlay: launch,
+  onResume() {
+    if (!run || run.sim.ended) return openMap();
+    showPlay(run.averse.id);
+  },
+  onOpenCarnet() {
+    screen = 'carnet';
+    screens.showCarnet(progress);
+  },
+  onCloseCarnet: openMap,
+  onSound(on) {
+    commit(withSound(progress, on));
+    setSoundEnabled(on);
+    if (on) unlockAudio(); // geste utilisateur : le contexte audio peut naître ici
+    screens.showMap(progress, paused());
+  },
+  onReadPage(ch) {
+    commit(markRead(progress, ch));
+    screens.refreshCarnet(progress);
   },
 });
+
+/** Averse en cours, mise en pause par l'ouverture de la carte. */
+function paused(): Paused | null {
+  if (!run || run.sim.ended) return null;
+  return { id: run.averse.id, label: run.slot ? averseLabel(run.slot) : `Averse ${run.averse.id}` };
+}
+
+function setUrlAverse(id: string | null): void {
+  const url = new URL(location.href);
+  if (id === null) url.searchParams.delete('averse');
+  else url.searchParams.set('averse', id);
+  history.replaceState(null, '', url);
+}
+
+function openMap(): void {
+  screen = 'map';
+  if (run) run.aim = null;
+  dom.hideEnd();
+  dom.placeButtons(view, false, false);
+  screens.showMap(progress, paused());
+  setUrlAverse(null);
+}
+
+function showPlay(id: string): void {
+  screen = 'play';
+  last = null; // aucun rattrapage du temps passé sur la carte
+  screens.hide();
+  setUrlAverse(id);
+}
 
 /**
  * « Finir l'averse » n'a de sens que si plus rien ne peut rendre une pelote : stock vide, aucune pelote
@@ -106,15 +202,29 @@ function launch(id: string): void {
   start(id).catch((err: unknown) => dom.showError(err instanceof Error ? err.message : String(err)));
 }
 
-let run: Run | null = null;
-let now = performance.now();
+/** Averse jouable pour cet id : campagne débloquée, ou averse à la main en mode débogage. */
+function resolve(id: string): { averse: AverseDef; slot: Slot | null } | null {
+  const slot = parseSlot(id);
+  if (slot) {
+    const averse = isPlayable(progress, slot) ? averseFor(slot) : undefined;
+    return averse ? { averse, slot } : null;
+  }
+  const averse = DEBUG ? handmadeById(id) : undefined;
+  return averse ? { averse, slot: null } : null;
+}
+
+let startToken = 0;
 
 async function start(id: string): Promise<void> {
-  const averse = handmadeById(id);
-  if (!averse) throw new Error(`Averse inconnue : ${id}`);
-  const assets = await loadAssets(averse);
+  const token = ++startToken;
+  const found = resolve(id);
+  if (!found) throw new Error(`Averse indisponible : ${id}`);
+  const { averse, slot } = found;
+  const rare = slot ? rareCostumesFor(averse, rareCostumesEnabled(progress)) : new Map<number, string>();
+  const assets = await loadAssets(averse, rare.values());
+  if (token !== startToken) return; // un autre lancement est passé devant
   run = {
-    averse, assets,
+    averse, slot, assets, rare,
     sim: createSim(averse),
     catchable: catchableCount(averse),
     looks: new Map(),
@@ -126,13 +236,15 @@ async function start(id: string): Promise<void> {
     fast: false,
     endedAt: null,
     endShown: false,
+    outcome: null,
     spawnSeen: 0,
     seenChars: new Set(),
   };
   dom.hideEnd();
+  showPlay(id);
 }
 
-// ── Événements de la sim → retours visuels et sonores ───────────────────────
+// ── Événements de la sim → retours visuels, sonores, progression ────────────
 
 function onEvent(r: Run, e: SimEvent): void {
   const fx = r.fx;
@@ -172,22 +284,48 @@ function onEvent(r: Run, e: SimEvent): void {
       break;
     case 'end':
       r.endedAt = now;
+      r.outcome = settle(r);
       break;
     default:
       break;
   }
 }
 
+/** Fin d'averse : la progression est enregistrée tout de suite, bien avant l'écran de fin (§22). */
+function settle(r: Run): Outcome {
+  if (!r.slot) return { next: null, unlocked: null, record: false };
+  const id = slotId(r.slot);
+  const next = nextSlot(r.slot);
+  const wasOpen = next !== null && isUnlocked(progress, next);
+  const before = progress.averses[id];
+  const score = finalScore(r.sim);
+  commit(recordResult(progress, id, { stars: stars(r.sim), score, chain: r.sim.bestChain }));
+  const playable = next !== null && isPlayable(progress, next);
+  return {
+    next: playable ? slotId(next) : null,
+    unlocked: playable && !wasOpen ? slotId(next) : null,
+    record: before !== undefined && score > before.score,
+  };
+}
+
+/** Un chat entre en scène : carnet (caractère, costume) et carte de caractère à la toute première rencontre (§13). */
+function discover(r: Run, spawnIdx: number): void {
+  const sp = r.averse.spawns[spawnIdx];
+  const ch = sp.char;
+  const banner = (): void => queueBanner(r.fx, BANNER_ICON[ch], CHARACTERS[ch].label, CHARACTERS[ch].rule);
+  if (!r.slot) {
+    if (ch !== 'tigre' && !r.seenChars.has(ch)) banner();
+    r.seenChars.add(ch);
+    return;
+  }
+  // Le tigré est la référence, sans règle à annoncer : il entre au carnet sans bandeau.
+  if (ch !== 'tigre' && !progress.met.includes(ch)) banner();
+  commit(seeCostume(meet(progress, ch), ch, r.rare.get(spawnIdx) ?? sp.costume));
+}
+
 function tick(r: Run): void {
   step(r.sim);
-  // Bandeau à la première apparition d'un caractère non tigré (§13), sans pause.
-  const spawns = r.averse.spawns;
-  for (; r.spawnSeen < r.sim.nextSpawn; r.spawnSeen++) {
-    const ch = spawns[r.spawnSeen].char;
-    if (ch === 'tigre' || r.seenChars.has(ch)) continue;
-    r.seenChars.add(ch);
-    queueBanner(r.fx, BANNER_ICON[ch], CHARACTERS[ch].label, CHARACTERS[ch].rule);
-  }
+  for (; r.spawnSeen < r.sim.nextSpawn; r.spawnSeen++) discover(r, r.spawnSeen);
   for (const e of drainEvents(r.sim)) onEvent(r, e);
 }
 
@@ -199,18 +337,23 @@ function shoot(r: Run, angleDeci: number): string {
   return res;
 }
 
+/** La partie accepte des entrées : écran de jeu, averse en cours. */
+function playing(): Run | null {
+  return screen === 'play' && run && !run.sim.ended ? run : null;
+}
+
 attachInput(cv, () => view, {
   onGesture: unlockAudio,
   onAim(wx, wy) {
-    if (!run || run.sim.ended) return;
-    run.aim = { wx, wy, angle: aimAngleDeci(wx, wy), pred: null };
+    const r = playing();
+    if (r) r.aim = { wx, wy, angle: aimAngleDeci(wx, wy), pred: null };
   },
   onRelease(wx, wy) {
-    if (!run) return;
-    run.aim = null;
+    if (run) run.aim = null;
+    const r = playing();
     const a = aimAngleDeci(wx, wy);
-    if (a === null || run.sim.ended) return; // sous 7° : annulé, rien n'est consommé
-    shoot(run, a);
+    if (!r || a === null) return; // sous 7° (ou hors du monde, sous le lanceur) : annulé, rien n'est consommé
+    shoot(r, a);
   },
   onCancel() {
     if (run) run.aim = null;
@@ -220,15 +363,18 @@ attachInput(cv, () => view, {
 // ── Boucle ───────────────────────────────────────────────────────────────────
 
 let last: number | null = null;
+let pageHidden = document.visibilityState === 'hidden';
 document.addEventListener('visibilitychange', () => {
+  pageHidden = document.visibilityState === 'hidden';
   last = null; // à la reprise, aucun rattrapage du temps passé caché
-  if (document.hidden && run) run.aim = null;
+  if (pageHidden && run) run.aim = null;
 });
 
 function frame(t: number): void {
   requestAnimationFrame(frame);
   now = t;
-  if (document.hidden) {
+  // §30.9 : rien n'avance sur la carte, dans le carnet ou onglet caché.
+  if (pageHidden || screen !== 'play') {
     last = null;
     return;
   }
@@ -260,19 +406,25 @@ function frame(t: number): void {
     time: t / 1000,
     catchable: r.catchable,
     fast: r.fast,
+    rare: r.rare,
   });
 
-  dom.placeFinish(view, !r.fast && canFinish(r.sim));
+  dom.placeButtons(view, !r.fast && canFinish(r.sim), !r.endShown);
 
   if (r.sim.ended && !r.endShown && r.endedAt !== null && t >= r.endedAt + END_DELAY_MS && t >= r.slowUntil) {
     r.endShown = true;
+    const o = r.outcome ?? { next: null, unlocked: null, record: false };
     dom.showEnd({
+      averseLabel: r.slot ? averseLabel(r.slot) : `Averse ${r.averse.id}`,
       stars: stars(r.sim),
       score: finalScore(r.sim),
       bestChain: r.sim.bestChain,
       caught: r.sim.caught,
       catchable: r.catchable,
       pelotesLeft: r.sim.pelotes,
+      next: o.next,
+      unlocked: o.unlocked,
+      record: o.record,
     });
   }
 }
@@ -285,6 +437,10 @@ export interface PdcDebug {
   bestAngle: () => number | null;
   fastForward: (ticks: number) => void;
   replayHash: (averseId: string, log: InputLog) => { hash: string; score: number; valid: boolean };
+  /** Progression remise à zéro (stockage compris). */
+  resetProgress: () => void;
+  /** Remplace la progression par un JSON sérialisé (même lecture tolérante qu'au chargement). */
+  setProgress: (json: string) => void;
 }
 
 declare global {
@@ -296,6 +452,14 @@ declare global {
 function current(): Run {
   if (!run) throw new Error('Averse pas encore chargée');
   return run;
+}
+
+function replaceProgress(p: Progress): void {
+  progress = p;
+  saveProgress(storage, p);
+  setSoundEnabled(p.sound);
+  if (screen === 'map') screens.showMap(progress, paused());
+  else if (screen === 'carnet') screens.showCarnet(progress);
 }
 
 async function exposeDebug(): Promise<void> {
@@ -319,11 +483,14 @@ async function exposeDebug(): Promise<void> {
       for (let i = 0; i < ticks && !r.sim.ended; i++) tick(r);
     },
     replayHash: (id, log) => {
-      const averse = handmadeById(id);
+      const slot = parseSlot(id);
+      const averse = slot ? averseFor(slot) : handmadeById(id);
       if (!averse) throw new Error(`Averse inconnue : ${id}`);
       const res = runReplay(averse, log);
       return { hash: hashState(res.state), score: finalScore(res.state), valid: res.valid };
     },
+    resetProgress: () => replaceProgress(emptyProgress()),
+    setProgress: json => replaceProgress(parseProgress(json)),
   };
 }
 
@@ -332,7 +499,14 @@ async function exposeDebug(): Promise<void> {
 void document.fonts?.load(`800 20px "Baloo 2"`).catch(() => undefined);
 void document.fonts?.load(`600 14px "Fredoka"`).catch(() => undefined);
 
-start(averseId)
+/** `?averse=1-2` ouvre directement une averse débloquée ; sinon (ou si verrouillée) : la carte. */
+async function boot(): Promise<void> {
+  const requested = params.get('averse');
+  if (requested !== null && resolve(requested)) await start(requested);
+  else openMap();
+}
+
+boot()
   .then(() => (DEBUG ? exposeDebug() : undefined))
   .catch((err: unknown) => {
     dom.showError(err instanceof Error ? err.message : String(err));

@@ -4,10 +4,10 @@
 import type { CharacterId } from '../sim';
 
 export const THEME = {
+  skyHigh: '#cfdce8', // ciel au-dessus du monde (letterbox)
   skyTop: '#dce6ee',
   skyBottom: '#f4eff3',
-  letterbox: '#e9e4ec',
-  letterboxVeil: 'rgba(233,228,236,0.78)',
+  worldEdge: 'rgba(255,255,255,0.9)',
   cloud: 'rgba(255,255,255,0.6)',
   ink: '#3b2f4a',
   inkSoft: 'rgba(59,47,74,0.55)',

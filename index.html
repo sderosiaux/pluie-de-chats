@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-<meta name="theme-color" content="#e9e4ec">
+<meta name="theme-color" content="#dce6ee">
 <title>Pluie de Chats — Carambolage</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,38 +12,77 @@
   :root {
     --ink: #3b2f4a;
     --ink-soft: rgba(59, 47, 74, 0.6);
+    --ink-faint: rgba(59, 47, 74, 0.28);
     --paper: #fffdfb;
+    --paper-soft: rgba(255, 253, 251, 0.72);
+    --sky-top: #dce6ee;
+    --sky-bottom: #f4eff3;
     --backdrop: rgba(233, 228, 236, 0.72);
     --action: #6b4fa0;
     --action-press: #59408a;
+    --action-tint: #efe9f8;
+    --success: #7ccba2;
+    --success-tint: #e6f6ee;
+    --locked: #ebe7ee;
     --line: rgba(59, 47, 74, 0.14);
+    --shadow: 0 6px 18px rgba(59, 47, 74, 0.1);
+    --radius: 22px;
     --font-display: 'Baloo 2', 'Arial Rounded MT Bold', system-ui, sans-serif;
     --font-text: 'Fredoka', 'Arial Rounded MT Bold', system-ui, sans-serif;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body {
     width: 100%; height: 100%; overflow: hidden;
-    background: #e9e4ec; color: var(--ink);
+    background: var(--sky-top); color: var(--ink);
     font-family: var(--font-text);
     -webkit-user-select: none; user-select: none;
     -webkit-tap-highlight-color: transparent;
   }
   canvas { display: block; touch-action: none; }
+  [hidden] { display: none !important; }
 
-  button { font: inherit; color: inherit; border: 0; cursor: pointer; }
+  button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; }
   button:focus-visible { outline: 3px solid var(--action); outline-offset: 3px; }
+  button:disabled { cursor: default; }
 
-  #finish {
-    position: fixed;
-    padding: 0.55em 1.1em;
+  .btn-primary {
     border-radius: 999px;
     background: var(--action); color: var(--paper);
     font-family: var(--font-display); font-weight: 800;
-    box-shadow: 0 3px 0 var(--action-press);
-    transition: transform 0.12s ease, box-shadow 0.12s ease;
+    box-shadow: 0 4px 0 var(--action-press);
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.15s ease;
   }
-  #finish:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--action-press); }
+  .btn-primary:hover { background: #765aab; }
+  .btn-primary:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--action-press); }
+  .btn-soft {
+    border-radius: 999px;
+    background: var(--action-tint); color: var(--action);
+    font-family: var(--font-display); font-weight: 800;
+    transition: background 0.15s ease, transform 0.12s ease;
+  }
+  .btn-soft:hover { background: #e4dbf3; }
+  .btn-soft:active { transform: translateY(2px); }
+  .icon-btn {
+    width: 44px; height: 44px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: var(--paper); box-shadow: var(--shadow);
+    font-size: 20px; line-height: 1;
+    transition: transform 0.12s ease, background 0.15s ease;
+  }
+  .icon-btn:hover { background: #fff; }
+  .icon-btn:active { transform: scale(0.94); }
 
+  /* ── En jeu ─────────────────────────────────────────────────────────── */
+  #finish { position: fixed; padding: 0.55em 1.1em; }
+  #to-map {
+    position: fixed; width: 40px; height: 40px; font-size: 18px;
+    background: var(--paper-soft);
+    -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+  }
+
+  /* ── Fin d'averse ───────────────────────────────────────────────────── */
   #end {
     position: fixed; inset: 0;
     display: grid; place-items: center;
@@ -51,65 +90,216 @@
     -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
     padding: 24px;
   }
-  #end[hidden], #finish[hidden], #error[hidden] { display: none; }
   .card {
     width: min(330px, 100%);
     background: var(--paper);
     border-radius: 28px;
-    padding: 26px 24px 20px;
+    padding: 26px 24px 18px;
     text-align: center;
     box-shadow: 0 18px 40px rgba(59, 47, 74, 0.16);
     animation: card-in 0.28s cubic-bezier(0.2, 1.3, 0.5, 1);
   }
   @keyframes card-in { from { transform: scale(0.9); opacity: 0; } }
-  @media (prefers-reduced-motion: reduce) { .card { animation: none; } }
   .paws { display: flex; justify-content: center; gap: 10px; font-size: 44px; line-height: 1; }
   .paw { filter: grayscale(1); opacity: 0.25; transition: opacity 0.2s; }
   .paw.on { filter: none; opacity: 1; }
-  #end-title { font-family: var(--font-display); font-weight: 800; font-size: 20px; margin-top: 10px; }
+  #end-averse { display: block; font-size: 13px; color: var(--ink-soft); margin-top: 10px; letter-spacing: 0.02em; }
+  #end-title { font-family: var(--font-display); font-weight: 800; font-size: 20px; line-height: 1.2; }
   .score { font-family: var(--font-display); font-weight: 800; font-size: 64px; line-height: 1; margin-top: 8px; font-variant-numeric: tabular-nums; }
   #end-bonus { display: block; min-height: 1.2em; font-size: 13px; color: var(--ink-soft); }
-  .stats { display: flex; justify-content: center; gap: 28px; margin: 16px 0 20px; }
+  .stats { display: flex; justify-content: center; gap: 28px; margin: 14px 0 12px; }
   .stats div { display: flex; flex-direction: column; }
   .stats b { font-family: var(--font-display); font-weight: 800; font-size: 24px; line-height: 1.1; }
   .stats small { font-size: 13px; color: var(--ink-soft); }
-  #replay {
-    width: 100%;
-    padding: 16px 0;
-    border-radius: 999px;
-    background: var(--action); color: var(--paper);
-    font-family: var(--font-display); font-weight: 800; font-size: 24px;
-    box-shadow: 0 4px 0 var(--action-press);
-    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  #end-unlock {
+    display: inline-block; margin-bottom: 14px;
+    padding: 4px 12px; border-radius: 999px;
+    background: var(--success-tint); color: #2f7d58;
+    font-size: 14px; font-weight: 600;
   }
-  #replay:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--action-press); }
-  #next {
-    margin-top: 10px;
-    padding: 10px 18px;
-    border-radius: 999px;
-    background: transparent;
-    font-family: var(--font-display); font-weight: 600; font-size: 17px;
-    color: var(--action);
-    transition: background 0.15s ease;
+  #end-record { display: block; font-size: 13px; font-weight: 600; color: var(--action); min-height: 1.2em; margin-bottom: 6px; }
+  #replay { width: 100%; padding: 16px 0; font-size: 24px; }
+  .end-row { display: flex; gap: 10px; margin-top: 12px; }
+  .end-row button { flex: 1; padding: 11px 10px; font-size: 17px; }
+
+  /* ── Écrans (carte, carnet) ─────────────────────────────────────────── */
+  .screen {
+    position: fixed; inset: 0;
+    overflow-y: auto; overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bottom) 420px, var(--sky-bottom) 100%);
+    padding: calc(var(--safe-top) + 12px) 16px calc(var(--safe-bottom) + 28px);
   }
-  #next:hover { background: var(--line); }
+  .screen-inner { max-width: 560px; margin: 0 auto; }
+  .bar { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .bar h1 { font-family: var(--font-display); font-weight: 800; font-size: 26px; line-height: 1; flex: 1; }
+  .brand { flex: 1; display: flex; flex-direction: column; line-height: 1; }
+  .brand-title { font-family: var(--font-display); font-weight: 800; font-size: 27px; }
+  .brand-sub { font-size: 13px; color: var(--ink-soft); margin-top: 2px; letter-spacing: 0.04em; }
+  #open-carnet { position: relative; height: 44px; padding: 0 16px; font-size: 16px; background: var(--paper); box-shadow: var(--shadow); }
+  .new-dot {
+    position: absolute; top: -3px; right: -3px;
+    min-width: 14px; height: 14px; border-radius: 7px;
+    background: #ff6f91; border: 2px solid var(--paper);
+  }
+
+  .cta {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--paper); border-radius: var(--radius);
+    padding: 14px 14px 14px 18px; margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+  .cta p { flex: 1; font-size: 15px; line-height: 1.3; }
+  .cta p b { display: block; font-family: var(--font-display); font-weight: 800; font-size: 18px; }
+  .cta button { padding: 10px 18px; font-size: 17px; white-space: nowrap; }
+
+  .chapters { list-style: none; display: flex; flex-direction: column; gap: 16px; }
+  .chapter { background: var(--paper); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+  .chapter-head {
+    position: relative; height: 96px;
+    padding: 12px 16px;
+    background: linear-gradient(180deg, var(--sky-top), var(--sky-bottom));
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
+  }
+  .chapter-head::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 46px;
+    background-image: var(--scene); background-repeat: repeat-x; background-size: auto 46px; background-position: left bottom;
+    filter: saturate(0.4); opacity: 0.75; pointer-events: none;
+  }
+  .chapter-title { position: relative; z-index: 1; line-height: 1; }
+  .chapter-num { display: block; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); }
+  .chapter-name { font-family: var(--font-display); font-weight: 800; font-size: 26px; line-height: 1.1; }
+  .chapter-meta {
+    position: relative; z-index: 1;
+    padding: 3px 10px; border-radius: 999px;
+    background: var(--paper-soft); font-size: 13px; font-weight: 600; white-space: nowrap;
+  }
+  .chapter[data-state="locked"] .chapter-head, .chapter[data-state="soon"] .chapter-head { filter: grayscale(0.6); opacity: 0.75; }
+  .chapter-hint { padding: 0 16px 14px; font-size: 14px; color: var(--ink-soft); line-height: 1.3; }
+
+  .averses { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 12px; }
+  .averse {
+    position: relative;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    min-height: 66px; padding: 6px 4px;
+    border-radius: 16px;
+    background: var(--action-tint);
+    transition: transform 0.12s ease, background 0.15s ease, box-shadow 0.15s ease;
+  }
+  .averse:not(:disabled):hover { background: #e4dbf3; }
+  .averse:not(:disabled):active { transform: scale(0.96); }
+  .averse-num { font-family: var(--font-display); font-weight: 800; font-size: 22px; line-height: 1; }
+  .averse-paws { font-size: 12px; letter-spacing: 1px; line-height: 1; }
+  .averse-paws i { font-style: normal; filter: grayscale(1); opacity: 0.22; }
+  .averse-paws i.on { filter: none; opacity: 1; }
+  .averse[data-state="done"] { background: var(--success-tint); }
+  .averse[data-state="locked"], .averse[data-state="soon"] { background: var(--locked); color: var(--ink-faint); }
+  .averse[data-state="locked"] .averse-paws, .averse[data-state="soon"] .averse-paws { display: none; }
+  .averse-lock { font-size: 14px; line-height: 1; filter: grayscale(1); opacity: 0.85; }
+  .averse.suggested { background: var(--action); color: var(--paper); box-shadow: 0 4px 0 var(--action-press); }
+  .averse.suggested .averse-paws i { opacity: 0.55; filter: grayscale(1) brightness(2.2); }
+  /* Anneau qui respire autour de l'averse à jouer : sur un pseudo-élément, le bouton lui-même reste immobile. */
+  .averse.suggested::after {
+    content: ''; position: absolute; inset: -4px; border-radius: 20px;
+    border: 3px solid var(--action); opacity: 0;
+    animation: ring 1.8s ease-out infinite; pointer-events: none;
+  }
+  @keyframes ring { 0% { opacity: 0.55; transform: scale(0.96); } 100% { opacity: 0; transform: scale(1.08); } }
+  .averse.grande { grid-column: 1 / -1; flex-direction: row; gap: 12px; min-height: 56px; justify-content: flex-start; padding: 8px 16px; }
+  .averse.grande .averse-num { font-size: 22px; }
+  .grande-label { flex: 1; text-align: left; font-family: var(--font-display); font-weight: 800; font-size: 17px; }
+  .grande-label small { display: block; font-family: var(--font-text); font-weight: 500; font-size: 12px; opacity: 0.7; }
+  .averse.grande:not([data-state="locked"]):not([data-state="soon"]):not(.suggested) { background: linear-gradient(90deg, var(--action-tint), #f8e9f6); }
+  .averse.grande[data-state="done"]:not(.suggested) { background: linear-gradient(90deg, var(--success-tint), #eef8e6); }
+  .averse.grande .averse-paws { font-size: 15px; }
+  .soon-tag { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+
+  /* ── Carnet ─────────────────────────────────────────────────────────── */
+  #carnet-count { font-size: 14px; font-weight: 600; color: var(--ink-soft); }
+  .carnet-empty { background: var(--paper); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 14px; box-shadow: var(--shadow); font-size: 15px; line-height: 1.35; }
+  .carnet-empty b { display: block; font-family: var(--font-display); font-weight: 800; font-size: 18px; }
+  .carnet-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .entry {
+    position: relative;
+    display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px;
+    padding: 14px 10px 12px; border-radius: var(--radius);
+    background: var(--paper); box-shadow: var(--shadow);
+    transition: transform 0.12s ease;
+  }
+  .entry:not(:disabled):active { transform: scale(0.97); }
+  .entry-sprite { width: 76px; height: 76px; position: relative; }
+  .entry-sprite img { width: 100%; height: 100%; object-fit: contain; }
+  .entry-name { font-family: var(--font-display); font-weight: 800; font-size: 18px; line-height: 1.1; }
+  .entry-rule { font-size: 13px; color: var(--ink-soft); min-height: 1.2em; }
+  .entry.unknown { background: var(--locked); box-shadow: none; }
+  .entry.unknown img { filter: brightness(0); opacity: 0.12; }
+  .entry.unknown { padding: 12px 10px 10px; }
+  .entry-q { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-display); font-weight: 800; font-size: 34px; color: var(--ink-faint); }
+  .new-tag {
+    position: absolute; top: 10px; right: 10px;
+    padding: 2px 8px; border-radius: 999px;
+    background: #ff6f91; color: var(--paper);
+    font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .collar {
+    position: absolute; right: -2px; bottom: 0;
+    width: 28px; height: 28px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: var(--collar, var(--locked)); border: 2px solid var(--paper);
+    font-size: 13px; line-height: 1;
+  }
+  .collar.big { width: 40px; height: 40px; font-size: 19px; right: 0; bottom: 4px; border-width: 3px; }
+
+  #page {
+    position: fixed; inset: 0; display: grid; place-items: center;
+    background: var(--backdrop);
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    padding: 20px;
+  }
+  .page-card { position: relative; width: min(360px, 100%); max-height: 100%; overflow-y: auto; padding: 22px 20px 16px; text-align: center; }
+  .page-close { position: absolute; top: 10px; right: 10px; width: 38px; height: 38px; font-size: 18px; box-shadow: none; background: var(--action-tint); }
+  .page-hero { width: 128px; height: 128px; margin: 0 auto; position: relative; }
+  .page-hero img { width: 100%; height: 100%; object-fit: contain; }
+  .page-num { display: block; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); margin-top: 6px; }
+  #page-name { font-family: var(--font-display); font-weight: 800; font-size: 30px; line-height: 1.1; }
+  #page-rule { font-size: 17px; margin-top: 4px; }
+  .page-costumes-title { font-size: 13px; font-weight: 600; color: var(--ink-soft); margin: 16px 0 8px; text-transform: uppercase; letter-spacing: 0.06em; }
+  #page-costumes { display: grid; grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)); gap: 6px; }
+  .costume { position: relative; aspect-ratio: 1; border-radius: 14px; background: var(--action-tint); padding: 4px; }
+  .costume img { width: 100%; height: 100%; object-fit: contain; }
+  .costume.rare { background: linear-gradient(135deg, #fff3c9, #f8e9f6); }
+  .costume.rare::after { content: '✨'; position: absolute; top: -4px; right: -4px; font-size: 14px; }
+  .page-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; }
+  .page-nav button { padding: 8px 14px; font-size: 15px; }
+  .page-nav button:disabled { opacity: 0.3; }
+  .page-nav span { font-size: 13px; color: var(--ink-soft); }
 
   #error {
-    position: fixed; left: 16px; right: 16px; top: 16px;
+    position: fixed; left: 16px; right: 16px; top: 16px; z-index: 10;
     padding: 14px 16px; border-radius: 16px;
     background: var(--paper); border: 2px solid #e0303c;
     font-size: 15px;
+  }
+
+  @media (min-width: 700px) {
+    .carnet-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .card { animation: none; }
+    .averse.suggested::after { animation: none; }
   }
 </style>
 </head>
 <body>
 <canvas id="game" aria-label="Pluie de chats : touche au-dessus du lanceur pour viser, relâche pour tirer"></canvas>
 
-<button id="finish" type="button" hidden>Finir l'averse</button>
+<button id="finish" class="btn-primary" type="button" hidden>Finir l'averse</button>
+<button id="to-map" class="icon-btn" type="button" aria-label="Pause : retour à la carte" hidden>🗺️</button>
 
 <div id="end" role="dialog" aria-modal="true" aria-labelledby="end-title" hidden>
   <div class="card">
     <div class="paws" aria-hidden="true"><span class="paw">🐾</span><span class="paw">🐾</span><span class="paw">🐾</span></div>
+    <span id="end-averse"></span>
     <h1 id="end-title">Averse terminée</h1>
     <div class="score"><span id="end-score">0</span></div>
     <span id="end-bonus"></span>
@@ -117,8 +307,60 @@
       <div><b id="end-chain">×0</b><small>meilleure chaîne</small></div>
       <div><b id="end-caught">0/0</b><small>chats attrapés</small></div>
     </div>
-    <button id="replay" type="button">Rejouer</button>
-    <button id="next" type="button">Averse suivante</button>
+    <span id="end-record"></span>
+    <span id="end-unlock" hidden></span>
+    <button id="replay" class="btn-primary" type="button">Rejouer</button>
+    <div class="end-row">
+      <button id="end-map" class="btn-soft" type="button">Carte</button>
+      <button id="next" class="btn-soft" type="button">Suivante</button>
+    </div>
+  </div>
+</div>
+
+<main id="map" class="screen" aria-label="Carte des averses" hidden>
+  <div class="screen-inner">
+    <header class="bar">
+      <div class="brand"><span class="brand-title">Pluie de Chats</span><span class="brand-sub">Carambolage</span></div>
+      <button id="sound" class="icon-btn" type="button" aria-pressed="true" aria-label="Son">🔊</button>
+      <button id="open-carnet" class="btn-soft" type="button">📖 Carnet<span id="carnet-dot" class="new-dot" hidden></span></button>
+    </header>
+    <div id="map-cta" class="cta" hidden>
+      <p id="map-cta-text"></p>
+      <button id="map-cta-go" class="btn-primary" type="button"></button>
+    </div>
+    <ol id="chapters" class="chapters"></ol>
+  </div>
+</main>
+
+<main id="carnet" class="screen" aria-label="Carnet" hidden>
+  <div class="screen-inner">
+    <header class="bar">
+      <button id="carnet-back" class="icon-btn" type="button" aria-label="Retour à la carte">‹</button>
+      <h1>Carnet</h1>
+      <span id="carnet-count"></span>
+    </header>
+    <div id="carnet-empty" class="carnet-empty" hidden>
+      <b>Ton carnet est vide</b>
+      Commence par la première averse : chaque chat que tu croises y laisse sa page.
+    </div>
+    <div id="carnet-grid" class="carnet-grid"></div>
+  </div>
+</main>
+
+<div id="page" role="dialog" aria-modal="true" aria-labelledby="page-name" hidden>
+  <div class="card page-card">
+    <button id="page-close" class="icon-btn page-close" type="button" aria-label="Fermer">✕</button>
+    <div class="page-hero"><img id="page-img" alt=""><span id="page-collar" class="collar big"></span></div>
+    <span id="page-num" class="page-num"></span>
+    <h2 id="page-name"></h2>
+    <p id="page-rule"></p>
+    <p class="page-costumes-title">Costumes vus</p>
+    <div id="page-costumes"></div>
+    <div class="page-nav">
+      <button id="page-prev" class="btn-soft" type="button" aria-label="Page précédente">‹</button>
+      <span id="page-pos"></span>
+      <button id="page-next" class="btn-soft" type="button" aria-label="Page suivante">›</button>
+    </div>
   </div>
 </div>
 

@@ -4,6 +4,12 @@
 let ac: AudioContext | null = null;
 let master: GainNode | null = null;
 let noise: AudioBuffer | null = null;
+let enabled = true;
+
+/** Préférence son du joueur (§22). Coupé : chaque son est un no-op. */
+export function setSoundEnabled(on: boolean): void {
+  enabled = on;
+}
 
 export function unlockAudio(): void {
   if (!ac) {
@@ -21,7 +27,7 @@ export function unlockAudio(): void {
 }
 
 function ready(): { ctx: AudioContext; out: GainNode } | null {
-  return ac && master && ac.state === 'running' ? { ctx: ac, out: master } : null;
+  return enabled && ac && master && ac.state === 'running' ? { ctx: ac, out: master } : null;
 }
 
 function tone(freq: number, start: number, dur: number, type: OscillatorType, vol: number): void {

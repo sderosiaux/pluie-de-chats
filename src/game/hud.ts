@@ -1,5 +1,5 @@
 // HUD (§21) : barre de progression avec seuils 🐾, score, pelotes restantes (canvas, coordonnées monde),
-// bouton « Finir l'averse » et écran de fin (DOM, au-dessus du canvas).
+// boutons « Finir l'averse » et « carte », écran de fin (DOM, au-dessus du canvas).
 
 import { PELOTE_BONUS, STAR_THRESHOLDS, WORLD_H, WORLD_W } from '../sim';
 import type { SimState } from '../sim';
@@ -80,62 +80,97 @@ function label(g: CanvasRenderingContext2D, text: string, x: number, y: number):
 
 // ── DOM ──────────────────────────────────────────────────────────────────────
 
-function el<T extends HTMLElement>(id: string): T {
+export function el<T extends HTMLElement>(id: string): T {
   const e = document.getElementById(id);
   if (!e) throw new Error(`Élément #${id} absent de index.html`);
   return e as T;
 }
 
 export interface EndInfo {
+  averseLabel: string; // « Averse 1-2 », « Grande averse 1-5 »…
   stars: 0 | 1 | 2 | 3;
   score: number;
   bestChain: number;
   caught: number;
   catchable: number;
   pelotesLeft: number;
+  /** Id de l'averse suivante si elle est jouable, sinon null (bouton masqué). */
+  next: string | null;
+  /** Averse débloquée par ce résultat (« 1-3 débloquée »), sinon null. */
+  unlocked: string | null;
+  record: boolean; // nouveau meilleur score sur cette averse
 }
 
 export interface Dom {
-  placeFinish(view: View, visible: boolean): void;
+  placeButtons(view: View, finish: boolean, toMap: boolean): void;
   showEnd(info: EndInfo): void;
   hideEnd(): void;
   showError(msg: string): void;
 }
 
-export function bindDom(handlers: { onFinish(): void; onReplay(): void; onNext(): void }): Dom {
+export interface DomHandlers {
+  onFinish(): void;
+  onReplay(): void;
+  onNext(): void;
+  onMap(): void;
+}
+
+const MAP_BTN = 40; // px CSS, cf. #to-map
+
+export function bindDom(handlers: DomHandlers): Dom {
   const finish = el<HTMLButtonElement>('finish');
+  const toMap = el<HTMLButtonElement>('to-map');
   const end = el<HTMLDivElement>('end');
   const replay = el<HTMLButtonElement>('replay');
   const next = el<HTMLButtonElement>('next');
+  const endMap = el<HTMLButtonElement>('end-map');
   const paws = [...end.querySelectorAll<HTMLSpanElement>('.paw')];
+  const averse = el<HTMLSpanElement>('end-averse');
   const score = el<HTMLSpanElement>('end-score');
   const chain = el<HTMLSpanElement>('end-chain');
   const caught = el<HTMLSpanElement>('end-caught');
   const bonus = el<HTMLSpanElement>('end-bonus');
   const title = el<HTMLHeadingElement>('end-title');
+  const record = el<HTMLSpanElement>('end-record');
+  const unlock = el<HTMLSpanElement>('end-unlock');
   const error = el<HTMLDivElement>('error');
 
   finish.addEventListener('click', () => handlers.onFinish());
+  toMap.addEventListener('click', () => handlers.onMap());
   replay.addEventListener('click', () => handlers.onReplay());
   next.addEventListener('click', () => handlers.onNext());
+  endMap.addEventListener('click', () => handlers.onMap());
 
   return {
-    placeFinish(view, visible) {
-      finish.hidden = !visible;
-      if (!visible) return;
-      const right = view.width - (view.offX + WORLD_W * view.scale) + 10 * view.scale;
-      const bottom = view.height - (view.offY + WORLD_H * view.scale) + 8 * view.scale;
-      finish.style.right = `${right}px`;
-      finish.style.bottom = `${bottom}px`;
-      finish.style.fontSize = `${Math.max(13, 15 * view.scale)}px`;
+    placeButtons(view, showFinish, showMap) {
+      // Coin bas-droit du monde : sous la ligne des 7°, aucun tir n'y part (§6), le bouton ne gêne pas la visée.
+      const right = view.width - (view.offX + WORLD_W * view.scale);
+      const bottom = view.height - (view.offY + WORLD_H * view.scale);
+      toMap.hidden = !showMap;
+      if (showMap) {
+        toMap.style.right = `${right + 8 * view.scale}px`;
+        toMap.style.bottom = `${bottom + 8 * view.scale}px`;
+      }
+      finish.hidden = !showFinish;
+      if (showFinish) {
+        finish.style.right = `${right + 10 * view.scale + (showMap ? MAP_BTN + 8 : 0)}px`;
+        finish.style.bottom = `${bottom + 8 * view.scale}px`;
+        finish.style.fontSize = `${Math.max(13, 15 * view.scale)}px`;
+      }
     },
     showEnd(info) {
       paws.forEach((p, i) => p.classList.toggle('on', i < info.stars));
+      averse.textContent = info.averseLabel;
       title.textContent = info.stars === 0 ? 'Pas encore de patte' : info.stars === 3 ? 'Averse parfaite' : 'Averse terminée';
       score.textContent = String(info.score);
       chain.textContent = `×${info.bestChain}`;
       caught.textContent = `${info.caught}/${info.catchable}`;
       bonus.textContent = info.pelotesLeft > 0 ? `dont ${PELOTE_BONUS * info.pelotesLeft} pour ${info.pelotesLeft} pelote${info.pelotesLeft > 1 ? 's' : ''} gardée${info.pelotesLeft > 1 ? 's' : ''}` : '';
+      record.textContent = info.record ? 'Nouveau record sur cette averse' : '';
+      unlock.hidden = info.unlocked === null;
+      unlock.textContent = info.unlocked === null ? '' : `🔓 ${info.unlocked} débloquée`;
+      next.hidden = info.next === null;
+      next.textContent = info.next === null ? '' : `Suivante · ${info.next}`;
       end.hidden = false;
       replay.focus({ preventScroll: true });
     },

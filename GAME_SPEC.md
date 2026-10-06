@@ -416,3 +416,6 @@ PASS  Après une averse ratée, le joueur appuie sur Rejouer dans les 3 s.
 - 2026-10-05 · §24 : monde logique fixe 360×640, lanceur en (180, 610) ; angle de tir en dixièmes de degré entiers (900 = vers le haut).
 - 2026-10-06 · §23 / §28 P3 : classement et serveur abandonnés à la demande du propriétaire. Aucun service Cloudflare n'est utilisé.
 - 2026-10-06 · §10–§11 : averses générées puis figées seulement si l'expert fait 3 pattes ET > 2,2× le naïf (hors 1-1). Tailles réelles (campagne figée) : 1-1 = 24 chats (20 prévus), Grandes averses 44–53 (45 prévus), à cause de la taille des formations. Grappes hors tutoriel plus espacées (50×48 px) pour que la chaîne dépende de l'angle d'attaque.
+- 2026-10-06 · §8 costumes rares : choisis côté client à partir de (averse, index du chat dans l'averse), jamais tirés par la sim (aucun effet de jeu, graines inchangées).
+- 2026-10-06 · §13 : pas de bandeau pour le tigré (règle vide, pas de texte en 1-1) ; il entre au carnet comme « le chat de référence ».
+- 2026-10-06 · §21 : bouton carte 🗺️ en jeu (sous la ligne des 7°, où aucun tir ne part) ; la carte propose « Reprendre » l'averse en pause.
