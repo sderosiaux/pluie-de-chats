@@ -1,0 +1,800 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pluie de Chats — quelle direction ?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Fredoka:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fff8ee;
+    --paper: #ffffff;
+    --ink: #2a1b4a;
+    --ink-soft: #6b5e86;
+    --line: #eadfce;
+    --magenta: #ff3ea5;
+    --violet: #7b3ff2;
+    --sun: #ffce3a;
+    --sky: #26c6f7;
+    --leaf: #3dc47e;
+    --coral: #ff6b35;
+    --love: #ff3ea5;
+    --maybe: #ffb020;
+    --nope: #9a90ad;
+    --radius: 18px;
+    --shadow: 0 1px 2px rgba(42,27,74,.06), 0 8px 24px rgba(42,27,74,.06);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 500 16px/1.55 'Fredoka', system-ui, sans-serif;
+    padding-bottom: 140px;
+  }
+  h1, h2, h3 { font-family: 'Baloo 2', sans-serif; line-height: 1.1; margin: 0; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+  header { padding: 48px 0 24px; }
+  header h1 { font-size: clamp(32px, 5vw, 52px); font-weight: 800; }
+  header h1 span { color: var(--magenta); }
+  header p { color: var(--ink-soft); max-width: 720px; font-size: 18px; margin: 12px 0 0; }
+  section.wrap { margin-top: 56px; }
+  .eyebrow { font: 600 13px 'Fredoka'; letter-spacing: .08em; text-transform: uppercase; color: var(--violet); margin-bottom: 8px; }
+  h2 { font-size: 30px; font-weight: 800; margin-bottom: 16px; }
+
+  /* Diagnostic */
+  .finds { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+  .find { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); }
+  .find b { display: block; font-family: 'Baloo 2'; font-size: 19px; margin-bottom: 4px; }
+  .find p { margin: 0; color: var(--ink-soft); font-size: 15px; }
+  .find code { font-size: 12px; background: #f4ecff; color: var(--violet); padding: 1px 6px; border-radius: 6px; }
+  .find.key { border-color: var(--leaf); background: #f1fbf5; }
+
+  .codex { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+  .codex div { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; }
+  .codex h3 { font-size: 18px; margin-bottom: 6px; }
+  .codex ul { margin: 0; padding-left: 18px; color: var(--ink-soft); font-size: 15px; }
+  .codex .agree h3 { color: var(--leaf); }
+  .codex .diverge h3 { color: var(--coral); }
+
+  /* Directions */
+  .dir { background: var(--paper); border: 2px solid var(--line); border-radius: 24px; box-shadow: var(--shadow); margin-bottom: 28px; overflow: hidden; transition: border-color .2s; }
+  .dir[data-vote="love"] { border-color: var(--love); }
+  .dir[data-vote="maybe"] { border-color: var(--maybe); }
+  .dir[data-vote="nope"] { border-color: var(--nope); opacity: .82; }
+  .dir-head { padding: 22px 26px 6px; display: flex; gap: 14px; align-items: baseline; flex-wrap: wrap; }
+  .dir-num { font: 800 15px 'Baloo 2'; color: #fff; background: var(--c); border-radius: 999px; padding: 2px 12px; }
+  .dir-head h3 { font-size: 32px; font-weight: 800; }
+  .badge { font: 600 12px 'Fredoka'; padding: 3px 10px; border-radius: 999px; background: #f4ecff; color: var(--violet); }
+  .badge.reco { background: var(--leaf); color: #fff; }
+  .badge.codex { background: #eef6fb; color: #2a7fa8; }
+  .pitch { padding: 0 26px; font-size: 20px; color: var(--ink); max-width: 820px; margin: 6px 0 18px; }
+  .dir-body { display: grid; grid-template-columns: 360px 1fr; gap: 28px; padding: 0 26px 24px; }
+  .demo { position: sticky; top: 16px; align-self: start; }
+  .demo canvas { width: 340px; height: 440px; display: block; border-radius: 18px; border: 1px solid var(--line); touch-action: none; cursor: crosshair; background: #eaf6ff; }
+  .demo .how { font-size: 13px; color: var(--ink-soft); margin-top: 8px; max-width: 340px; }
+  .demo .how b { color: var(--ink); }
+  .demo button { margin-top: 6px; font: 600 13px 'Fredoka'; border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 999px; padding: 5px 14px; cursor: pointer; transition: background .15s; }
+  .demo button:hover { background: #f4ecff; }
+
+  .block { margin-bottom: 18px; }
+  .block h4 { font: 700 14px 'Fredoka'; text-transform: uppercase; letter-spacing: .06em; color: var(--c); margin: 0 0 6px; }
+  .block p { margin: 0; }
+  .block ol, .block ul { margin: 0; padding-left: 20px; }
+  .block li { margin-bottom: 4px; }
+  .loop { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 15px; }
+  .loop span { background: #f7f2ea; border-radius: 10px; padding: 3px 10px; }
+  .loop i { color: var(--ink-soft); font-style: normal; }
+  .combos { display: grid; gap: 6px; }
+  .combo { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: baseline; font-size: 15px; }
+  .combo .eq { font: 600 13px 'Fredoka'; background: color-mix(in srgb, var(--c) 14%, white); color: var(--ink); padding: 2px 10px; border-radius: 8px; white-space: nowrap; }
+  .kg { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .kg div { background: #f7f2ea; border-radius: 12px; padding: 10px 14px; font-size: 14px; }
+  .kg b { display: block; font-size: 13px; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
+  .kg .keep b { color: var(--leaf); }
+  .kg .drop b { color: var(--coral); }
+  .risk { background: #fff4ec; border-left: 4px solid var(--coral); border-radius: 0 12px 12px 0; padding: 10px 14px; font-size: 15px; }
+  .risk b { color: var(--coral); }
+
+  .vote { border-top: 1px solid var(--line); padding: 16px 26px 20px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; background: #fffcf7; }
+  .vote > span { font-weight: 600; margin-right: 6px; }
+  .vbtn { font: 600 15px 'Fredoka'; border: 2px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 999px; padding: 6px 16px; cursor: pointer; transition: all .15s; }
+  .vbtn:hover { transform: translateY(-1px); }
+  .vbtn.on[data-v="love"] { background: var(--love); border-color: var(--love); color: #fff; }
+  .vbtn.on[data-v="maybe"] { background: var(--maybe); border-color: var(--maybe); color: #fff; }
+  .vbtn.on[data-v="nope"] { background: var(--nope); border-color: var(--nope); color: #fff; }
+  .vote textarea { flex: 1 1 100%; min-height: 54px; }
+
+  textarea { font: 500 15px 'Fredoka'; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; resize: vertical; width: 100%; }
+  textarea:focus { outline: 2px solid var(--violet); outline-offset: 1px; }
+
+  /* Reco */
+  .reco-box { background: linear-gradient(135deg, #f1fbf5, #fff8ee); border: 2px solid var(--leaf); border-radius: 24px; padding: 24px 28px; }
+  .reco-box h2 { color: #1f8a52; }
+  .reco-box p { margin: 0 0 10px; max-width: 860px; }
+
+  /* Questions */
+  .q { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 14px; box-shadow: var(--shadow); }
+  .q h3 { font-size: 20px; margin-bottom: 4px; }
+  .q .why { color: var(--ink-soft); font-size: 14px; margin: 0 0 12px; }
+  .opts { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+  .opt { border: 2px solid var(--line); border-radius: 14px; padding: 10px 14px; cursor: pointer; transition: all .15s; background: var(--paper); }
+  .opt:hover { border-color: #cdb8f5; }
+  .opt.on { border-color: var(--violet); background: #f6f0ff; }
+  .opt b { display: block; font-size: 15px; }
+  .opt small { color: var(--ink-soft); font-size: 13px; line-height: 1.35; display: block; }
+  .opt .tag { font-size: 11px; font-weight: 600; color: var(--leaf); }
+  .q textarea { margin-top: 10px; min-height: 44px; }
+
+  /* Bottom bar */
+  .bar { position: fixed; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,.94); backdrop-filter: blur(8px); border-top: 1px solid var(--line); padding: 12px 24px; display: flex; gap: 14px; align-items: center; justify-content: center; z-index: 20; }
+  .bar .progress { font-weight: 600; color: var(--ink-soft); }
+  .bar .progress b { color: var(--violet); }
+  .bar button { font: 700 16px 'Fredoka'; border: 0; border-radius: 999px; padding: 12px 26px; cursor: pointer; background: var(--violet); color: #fff; transition: background .15s, transform .15s; }
+  .bar button:hover { background: #6930d8; transform: translateY(-1px); }
+  .bar button.ghost { background: transparent; color: var(--ink-soft); border: 1px solid var(--line); padding: 10px 18px; font-size: 14px; }
+  .toast { position: fixed; bottom: 86px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 999px; opacity: 0; transition: all .25s; pointer-events: none; z-index: 30; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 860px) {
+    .dir-body { grid-template-columns: 1fr; }
+    .demo { position: static; justify-self: center; }
+    .codex, .kg { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="wrap">
+  <h1>Pluie de Chats — <span>et si les chats servaient à quelque chose ?</span></h1>
+  <p>J'ai lu le code, joué la boucle et passé l'idée au crible du skill <code>game:spec</code>. Voici ce que j'ai trouvé, trois directions vraiment différentes avec une mini-démo jouable pour chacune, et les questions où ton avis change le jeu. Tout se copie en bas de page.</p>
+</header>
+
+<section class="wrap">
+  <div class="eyebrow">Diagnostic</div>
+  <h2>Ce que le code raconte</h2>
+  <div class="finds">
+    <div class="find">
+      <b>Rater un chat ne coûte presque rien</b>
+      <p>Un chat qui sort par le bas casse juste le combo. Les cœurs se perdent sur les pièges et les attaquants, pas sur la mission principale. Ne pas tirer est une stratégie viable. <code>main.ts:301</code></p>
+    </div>
+    <div class="find">
+      <b>62 chats, 8 comportements</b>
+      <p>Zigzag, rapide, bouclier, furtif, cracheur, griffeur, tireur, boss. Les 50 autres (pompier, Batman, Eiffel…) diffèrent par le sprite et les points. La collection ne touche pas au jeu. <code>data.ts:57</code></p>
+    </div>
+    <div class="find">
+      <b>Progresser = des chiffres plus gros</b>
+      <p>Les 22 améliorations ajoutent des rebonds, du rayon, du stock ou de la recharge. À la minute 20 on fait la même chose qu'à la minute 2, en plus fort. <code>data.ts:215</code></p>
+    </div>
+    <div class="find">
+      <b>Test des ballons : échoué</b>
+      <p>Remplace les chats par des ballons et c'est le même jeu, un stand de tir. Le thème « chat » ne fait aucun travail mécanique.</p>
+    </div>
+    <div class="find key">
+      <b>Le meilleur système est caché</b>
+      <p>Les croquettes attirent les chats, la souris les repousse, le chien les disperse, le carton les aspire. Des chats qui <em>réagissent</em> à des choses : c'est la seule partie qui ne marcherait pas avec des ballons. <code>main.ts:179</code> <code>effects.ts:112</code></p>
+    </div>
+  </div>
+
+  <div class="codex">
+    <div class="agree">
+      <h3>Ce que Codex a bien vu</h3>
+      <ul>
+        <li>Le temps avance dans les menus et certains déplacements sont calculés par image : à corriger quelle que soit la direction.</li>
+        <li>La convention de visée est floue (« tire la corde » alors que le tir part vers le doigt).</li>
+        <li>Trop d'interruptions : niveaux, déblocages et améliorations se déclenchent tous sur le score.</li>
+      </ul>
+    </div>
+    <div class="diverge">
+      <h3>Où je diverge</h3>
+      <ul>
+        <li>L'arcade express améliore le rythme d'un stand de tir sans répondre à « pourquoi des chats ? ».</li>
+        <li>Un album en récompense secondaire ajoute une collection. Il ne rend pas les 62 chats utiles en jeu.</li>
+        <li>Ses trois pistes gardent toutes le même verbe : tirer pour attraper. Je voulais aussi tester des verbes différents.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="wrap" id="directions">
+  <div class="eyebrow">Trois directions</div>
+  <h2>Trois jeux différents, pas trois variantes</h2>
+
+  <!-- ① INSTINCTS -->
+  <article class="dir" id="d1" style="--c: var(--leaf)" data-id="instincts" data-label="① Instincts">
+    <div class="dir-head">
+      <span class="dir-num">①</span><h3>Instincts</h3>
+      <span class="badge reco">ma recommandation</span>
+      <span class="badge">verbe : attirer / effrayer</span>
+    </div>
+    <p class="pitch">Tu ne tires plus <em>sur</em> les chats. Tu les attires, tu leur fais peur, tu les fais entrer dans un carton. Le même jouet ne produit pas le même effet sur chaque chat.</p>
+    <div class="dir-body">
+      <div class="demo">
+        <canvas id="cv1" width="340" height="440"></canvas>
+        <div class="how"><b>Bouge le doigt / la souris</b> : c'est le point laser. Les <b style="color:#ff3ea5">chasseurs</b> le suivent, les <b style="color:#1a9fd0">trouillards</b> le fuient, les <b style="color:#d49a00">chatons</b> suivent l'adulte le plus proche. Fais-les tomber dans le carton.</div>
+        <button data-reset="1">Recommencer</button>
+      </div>
+      <div>
+        <div class="block"><h4>Fantasme du joueur</h4><p>« Je connais les chats par cœur. Avec un point laser et un carton, je les emmène où je veux. »</p></div>
+        <div class="block"><h4>Boucle</h4>
+          <div class="loop"><span>regarder qui tombe</span><i>→</i><span>choisir un jouet</span><i>→</i><span>chaque chat réagit selon son caractère</span><i>→</i><span>atterrit au chaud… ou pas</span><i>→</i><span>averse suivante</span></div>
+        </div>
+        <div class="block"><h4>Lois du monde</h4>
+          <ol>
+            <li>Un chat retombe toujours sur ses pattes. Il ne meurt jamais : tout l'enjeu, c'est <b>où</b> il atterrit.</li>
+            <li>Chaque jouet crée un stimulus. Le laser est un point qui suit ton doigt, le carton un abri qui se remplit, la pelote roule et rebondit, l'herbe à chat fait flotter.</li>
+            <li>Chaque chat a un caractère qui décide de sa réaction : le chasseur suit le laser, le trouillard le fuit, le flemmard ignore tout sauf le carton, le chaton suit un adulte.</li>
+            <li>Les chats agissent les uns sur les autres. Un chasseur qui court entraîne les chatons, deux matous se repoussent, un carton plein refuse les suivants.</li>
+          </ol>
+        </div>
+        <div class="block"><h4>Ce que les règles produisent ensemble</h4>
+          <div class="combos">
+            <div class="combo"><span class="eq">laser + carton</span><span>tu promènes une file de chasseurs jusque dans le carton.</span></div>
+            <div class="combo"><span class="eq">laser + trouillard</span><span>le même outil sert à pousser au lieu de tirer.</span></div>
+            <div class="combo"><span class="eq">chien + carton</span><span>panique générale, tout le monde se réfugie dans la boîte.</span></div>
+            <div class="combo"><span class="eq">gros chat + carton</span><span>il ne rentre pas, s'assoit dessus et bloque l'entrée. Il faut le déloger.</span></div>
+          </div>
+        </div>
+        <div class="block"><h4>Les 62 chats deviennent utiles</h4><p>Une dizaine de caractères, chaque costume en porte un. Le ninja fuit le laser mais adore les cartons, le pompier fonce vers le chien. Le bestiaire devient un carnet de terrain qu'on remplit en observant, pas un album à cocher.</p></div>
+        <div class="block"><h4>Progression</h4><p>Chaque nouveau chat change le sens d'un jouet que tu croyais connaître. D'abord le chat qui a peur du laser, plus tard celui qui vole les pelotes, puis celui qui ouvre les cartons. Ce qui progresse, c'est ta compréhension des chats ; les chiffres ne bougent pas.</p></div>
+        <div class="block kg">
+          <div class="keep"><b>On garde</b>lanceur, sprites, leurres déjà codés (croquettes, souris, chien), carton aspirant, laser pilotable.</div>
+          <div class="drop"><b>On jette</b>points par type de chat, dégâts, 22 améliorations chiffrées, feu d'artifice (il tue, il ne manipule pas).</div>
+        </div>
+        <div class="risk"><b>Risque :</b> le contrôle indirect peut sembler mou. Si les chats réagissent trop lentement, on a l'impression de ne rien contrôler. <b>Test qui tue :</b> laser + carton + 3 caractères, une averse de 60 s. Si un joueur ne sourit pas en menant 4 chats dans le carton, on abandonne.</div>
+      </div>
+    </div>
+    <div class="vote" data-for="instincts">
+      <span>Ton avis</span>
+      <button class="vbtn" data-v="love">😍 Oui, ça</button>
+      <button class="vbtn" data-v="maybe">🤔 Peut-être</button>
+      <button class="vbtn" data-v="nope">✋ Non</button>
+      <textarea placeholder="Ce qui te plaît, te gêne, ce que tu changerais…"></textarea>
+    </div>
+  </article>
+
+  <!-- ② DÉGRINGOLADE -->
+  <article class="dir" id="d2" style="--c: var(--violet)" data-id="degringolade" data-label="② Dégringolade">
+    <div class="dir-head">
+      <span class="dir-num">②</span><h3>Dégringolade</h3>
+      <span class="badge">verbe : déclencher</span>
+      <span class="badge">puzzle physique</span>
+    </div>
+    <p class="pitch">Les chats sont accrochés au nuage. Tu as trois pelotes. Un tir bien placé, et ils tombent les uns sur les autres.</p>
+    <div class="dir-body">
+      <div class="demo">
+        <canvas id="cv2" width="340" height="440"></canvas>
+        <div class="how"><b>Appuie, vise, relâche</b>. La pelote rebondit sur les bords. Un chat qui tombe décroche ceux qu'il percute. Le <b>gros chat</b> ne tombe que si un autre chat lui tombe dessus.</div>
+        <button data-reset="2">Nouvelle grappe</button>
+      </div>
+      <div>
+        <div class="block"><h4>Fantasme du joueur</h4><p>« Je trouve <b>le</b> tir qui fait tout tomber. »</p></div>
+        <div class="block"><h4>Boucle</h4>
+          <div class="loop"><span>lire la grappe</span><i>→</i><span>viser, rebonds compris</span><i>→</i><span>regarder la cascade</span><i>→</i><span>corriger au tir suivant</span><i>→</i><span>3 tirs, un score</span></div>
+        </div>
+        <div class="block"><h4>Lois du monde</h4>
+          <ol>
+            <li>Les chats sont accrochés. Un chat touché se décroche et tombe en emportant ce qu'il percute.</li>
+            <li>La pelote rebondit sur les bords. Le jeu de bande est la compétence principale.</li>
+            <li>Les chats n'ont pas le même poids. Un gros chat ne cède qu'à un chat qui tombe, un chat griffu reste accroché et arrête la cascade.</li>
+            <li>Les objets dévient la chute : les croquettes attirent les chats qui tombent, le parapluie les fait rebondir.</li>
+          </ol>
+        </div>
+        <div class="block"><h4>Ce que les règles produisent ensemble</h4>
+          <div class="combos">
+            <div class="combo"><span class="eq">rebond + gros chat</span><span>viser au-dessus de lui pour qu'un autre lui tombe dessus.</span></div>
+            <div class="combo"><span class="eq">griffu + cascade</span><span>un mur qu'il faut contourner par la bande.</span></div>
+            <div class="combo"><span class="eq">croquettes + chute</span><span>on courbe la cascade vers le reste de la grappe.</span></div>
+          </div>
+        </div>
+        <div class="block"><h4>Session</h4><p>Une averse = un puzzle de 3 tirs, 30 secondes environ. Une averse du jour identique pour tout le monde, un score à partager (« 23 chats en un tir »). Les 62 chats se ramènent à 5 ou 6 profils physiques (poids, accroche, rebond).</p></div>
+        <div class="block kg">
+          <div class="keep"><b>On garde</b>pelote, rebonds, charge du tir, sprites, l'idée de grappe de chats.</div>
+          <div class="drop"><b>On jette</b>temps réel, cœurs, attaquants, armes multiples (une pelote suffit au départ).</div>
+        </div>
+        <div class="risk"><b>Risque :</b> il faut beaucoup de grappes bien construites, ou un générateur qui en produit d'intéressantes. La physique doit être déterministe pour qu'un tir se rejoue à l'identique. <b>Test qui tue :</b> 10 grappes générées. Si on les trouve toutes pareilles au bout de 5, il faudra les dessiner à la main, et ça coûte cher.</div>
+      </div>
+    </div>
+    <div class="vote" data-for="degringolade">
+      <span>Ton avis</span>
+      <button class="vbtn" data-v="love">😍 Oui, ça</button>
+      <button class="vbtn" data-v="maybe">🤔 Peut-être</button>
+      <button class="vbtn" data-v="nope">✋ Non</button>
+      <textarea placeholder="Ce qui te plaît, te gêne, ce que tu changerais…"></textarea>
+    </div>
+  </article>
+
+  <!-- ③ ARCADE -->
+  <article class="dir" id="d3" style="--c: var(--sky)" data-id="arcade" data-label="③ Arcade express">
+    <div class="dir-head">
+      <span class="dir-num">③</span><h3>Arcade express</h3>
+      <span class="badge codex">piste de Codex</span>
+      <span class="badge">verbe : tirer</span>
+    </div>
+    <p class="pitch">Le jeu actuel, resserré : manche de 2 minutes, tir précis, combos lisibles, record à battre, album en bonus.</p>
+    <div class="dir-body">
+      <div class="demo">
+        <canvas id="cv3" width="340" height="440"></canvas>
+        <div class="how"><b>Tape</b> pour lancer une pelote vers ton doigt. Enchaîne les captures pour le combo ; un chat raté le casse. 30 s dans la démo.</div>
+        <button data-reset="3">Rejouer</button>
+      </div>
+      <div>
+        <div class="block"><h4>Fantasme du joueur</h4><p>« Je suis rapide et précis. »</p></div>
+        <div class="block"><h4>Boucle</h4>
+          <div class="loop"><span>repérer</span><i>→</i><span>viser</span><i>→</i><span>tirer</span><i>→</i><span>combo</span><i>→</i><span>record</span></div>
+        </div>
+        <div class="block"><h4>Pour</h4><ul>
+          <li>Le moins de travail : presque tout le code actuel sert.</li>
+          <li>Corrige les vrais défauts (temps qui avance dans les menus, déplacements par image, interruptions en rafale).</li>
+          <li>Facile à tester vite.</li>
+        </ul></div>
+        <div class="block"><h4>Contre</h4><ul>
+          <li>Ne passe pas le test des ballons : sans les chats, c'est le même jeu.</li>
+          <li>La seule raison de revenir est le record. Un album n'en est pas une, puisqu'il ne change rien en jeu.</li>
+          <li>Les 62 chats restent des skins avec des points.</li>
+        </ul></div>
+        <div class="block kg">
+          <div class="keep"><b>On garde</b>presque tout, avec un seul jouet spécial par partie.</div>
+          <div class="drop"><b>On jette</b>améliorations déclenchées par le score, remplacées par 2 pauses fixes.</div>
+        </div>
+        <div class="risk"><b>Risque :</b> un jeu correct mais oubliable. Il marchera, mais on ne le reconnaîtra pas.</div>
+      </div>
+    </div>
+    <div class="vote" data-for="arcade">
+      <span>Ton avis</span>
+      <button class="vbtn" data-v="love">😍 Oui, ça</button>
+      <button class="vbtn" data-v="maybe">🤔 Peut-être</button>
+      <button class="vbtn" data-v="nope">✋ Non</button>
+      <textarea placeholder="Ce qui te plaît, te gêne, ce que tu changerais…"></textarea>
+    </div>
+  </article>
+</section>
+
+<section class="wrap">
+  <div class="reco-box">
+    <div class="eyebrow">Mon choix</div>
+    <h2>① Instincts. ② en repli. Je ne mélange pas les deux.</h2>
+    <p><b>Pourquoi ①.</b> C'est la seule direction où le thème fait le travail : on ne pourrait pas la faire avec des ballons. Elle rend les 62 chats utiles au lieu de décoratifs, elle s'appuie sur le système le plus intéressant déjà présent (les leurres), et sa progression change ta façon de comprendre les chats plutôt que la taille des chiffres.</p>
+    <p><b>Pourquoi pas un mélange ①+②.</b> L'une se joue en temps réel avec un contrôle indirect, l'autre au tour par tour avec un contrôle exact. En les combinant, on obtiendrait deux jeux à moitié faits. Si le test de ① échoue (laser trop mou), on passe à ②.</p>
+    <p><b>Ce qui me ferait changer d'avis.</b> Si tu veux surtout un jeu de réflexes pour des parties de 2 minutes dans le métro, ③ est le bon choix et ① serait trop lent. Si tu veux un défi à partager, plutôt ②.</p>
+  </div>
+</section>
+
+<section class="wrap" id="questions">
+  <div class="eyebrow">Tes choix</div>
+  <h2>Ce qui change le design</h2>
+
+  <div class="q" data-q="public">
+    <h3>Pour qui est ce jeu ?</h3>
+    <p class="why">Le style kawaii fait penser à des enfants. Si c'est le cas, cela change la lecture des règles, le texte et la place de l'échec.</p>
+    <div class="opts">
+      <div class="opt" data-v="Des enfants (les miens ou d'autres)"><b>Des enfants</b><small>Zéro texte, zéro punition, lecture immédiate.</small></div>
+      <div class="opt" data-v="Moi et des amis adultes"><b>Moi et des amis</b><small>On peut viser la profondeur et la maîtrise.</small></div>
+      <div class="opt" data-v="Joueurs mobile casual (store / web)"><b>Joueurs mobile inconnus</b><small>Les 30 premières secondes décident de tout.</small></div>
+      <div class="opt" data-v="Projet perso / vitrine"><b>Projet perso, vitrine</b><small>L'originalité compte plus que la rétention.</small></div>
+    </div>
+    <textarea placeholder="Précision (facultatif)"></textarea>
+  </div>
+
+  <div class="q" data-q="ton">
+    <h3>Détente ou défi ?</h3>
+    <p class="why">C'est la question de Codex, et elle est juste. Elle décide s'il y a des cœurs, un game over, un score.</p>
+    <div class="opts">
+      <div class="opt" data-v="Détente — pas de défaite"><b>Détente</b><small>Pas de défaite. On joue pour voir ce que font les chats.</small></div>
+      <div class="opt" data-v="Maîtrise douce — pas de mort, une note par averse"><b>Maîtrise douce</b><small>Pas de mort, mais chaque averse reçoit une note (1 à 3 pattes) qu'on peut améliorer.</small><span class="tag">va avec ①</span></div>
+      <div class="opt" data-v="Défi — cœurs, game over, record"><b>Défi</b><small>Cœurs, game over, record à battre.</small><span class="tag">va avec ③</span></div>
+    </div>
+    <textarea placeholder="Précision (facultatif)"></textarea>
+  </div>
+
+  <div class="q" data-q="format">
+    <h3>Format d'une session</h3>
+    <p class="why">Une partie infinie, comme aujourd'hui, mélange montée de difficulté et lassitude. Les deux autres formats donnent une fin.</p>
+    <div class="opts">
+      <div class="opt" data-v="Averses courtes avec objectif (60-90 s, enchaînées comme des niveaux)"><b>Averses courtes</b><small>60 à 90 s, un objectif, enchaînées comme des niveaux. Chacune introduit un chat.</small><span class="tag">va avec ① et ②</span></div>
+      <div class="opt" data-v="Manche arcade de 2 min"><b>Manche de 2 min</b><small>Une partie, un score, on relance.</small><span class="tag">va avec ③</span></div>
+      <div class="opt" data-v="Infini comme aujourd'hui"><b>Infini</b><small>On joue jusqu'à perdre.</small></div>
+    </div>
+    <textarea placeholder="Précision (facultatif)"></textarea>
+  </div>
+
+  <div class="q" data-q="chats">
+    <h3>Les 62 chats</h3>
+    <p class="why">Les sprites ont coûté du travail. La question est de savoir s'ils servent au jeu ou à la collection.</p>
+    <div class="opts">
+      <div class="opt" data-v="Chaque chat porte un caractère qui change le jeu"><b>Ils ont un caractère</b><small>~10 comportements, chaque costume en porte un. On les découvre en jouant.</small><span class="tag">va avec ①</span></div>
+      <div class="opt" data-v="Cosmétique, pour l'album"><b>Cosmétique</b><small>Ils restent des skins, l'album sert de récompense.</small></div>
+      <div class="opt" data-v="Réduire à ~15 chats très distincts"><b>On en garde 15</b><small>Moins de chats, mais chacun reconnaissable au premier coup d'œil.</small></div>
+    </div>
+    <textarea placeholder="Précision (facultatif)"></textarea>
+  </div>
+
+  <div class="q" data-q="controle">
+    <h3>Le lanceur en bas</h3>
+    <p class="why">Pour ③ et ②, la fronde en bas est la compétence. Pour ①, poser le jouet directement sous le doigt est plus lisible, mais on perd l'adresse du lancer.</p>
+    <div class="opts">
+      <div class="opt" data-v="Garder la fronde en bas"><b>Garder la fronde</b><small>On lance les jouets, la trajectoire fait partie du jeu.</small></div>
+      <div class="opt" data-v="Doigt direct : le jouet apparaît où je touche"><b>Doigt direct</b><small>Le jouet apparaît là où tu touches. Plus simple, plus tactile.</small></div>
+      <div class="opt" data-v="Selon le jouet (laser direct, le reste lancé)"><b>Selon le jouet</b><small>Laser sous le doigt, carton et pelote lancés.</small></div>
+    </div>
+    <textarea placeholder="Précision (facultatif)"></textarea>
+  </div>
+
+  <div class="q" data-q="libre">
+    <h3>Autre chose ?</h3>
+    <p class="why">Une idée que je n'ai pas vue, une contrainte, un jeu de référence.</p>
+    <textarea placeholder="Notes libres"></textarea>
+  </div>
+</section>
+
+<div class="bar">
+  <span class="progress"><b id="count">0</b> / 9 réponses</span>
+  <button class="ghost" id="reset">Effacer</button>
+  <button id="copy">Copier mon retour</button>
+</div>
+<div class="toast" id="toast">Copié. Colle-le dans la conversation.</div>
+
+<script>
+// ─── Feedback state (persisté) ─────────────────────────────────────────────
+const KEY = 'pdc_directions_feedback_v1';
+const saved = JSON.parse(localStorage.getItem(KEY) || '{}');
+const fb = { votes: saved.votes || {}, voteNotes: saved.voteNotes || {}, answers: saved.answers || {}, notes: saved.notes || {} };
+const persist = () => { localStorage.setItem(KEY, JSON.stringify(fb)); updateCount(); };
+
+document.querySelectorAll('.vote').forEach(v => {
+  const id = v.dataset.for, dir = v.closest('.dir'), ta = v.querySelector('textarea');
+  const paint = () => {
+    v.querySelectorAll('.vbtn').forEach(b => b.classList.toggle('on', fb.votes[id] === b.dataset.v));
+    if (fb.votes[id]) dir.dataset.vote = fb.votes[id]; else delete dir.dataset.vote;
+  };
+  v.querySelectorAll('.vbtn').forEach(b => b.addEventListener('click', () => {
+    fb.votes[id] = fb.votes[id] === b.dataset.v ? undefined : b.dataset.v; paint(); persist();
+  }));
+  ta.value = fb.voteNotes[id] || '';
+  ta.addEventListener('input', () => { fb.voteNotes[id] = ta.value; persist(); });
+  paint();
+});
+
+document.querySelectorAll('.q').forEach(q => {
+  const id = q.dataset.q, ta = q.querySelector('textarea');
+  const paint = () => q.querySelectorAll('.opt').forEach(o => o.classList.toggle('on', fb.answers[id] === o.dataset.v));
+  q.querySelectorAll('.opt').forEach(o => o.addEventListener('click', () => {
+    fb.answers[id] = fb.answers[id] === o.dataset.v ? undefined : o.dataset.v; paint(); persist();
+  }));
+  ta.value = fb.notes[id] || '';
+  ta.addEventListener('input', () => { fb.notes[id] = ta.value; persist(); });
+  paint();
+});
+
+function updateCount() {
+  const n = Object.values(fb.votes).filter(Boolean).length
+          + ['public','ton','format','chats','controle'].filter(k => fb.answers[k]).length
+          + (fb.notes.libre ? 1 : 0);
+  document.getElementById('count').textContent = n;
+}
+updateCount();
+
+const VOTE_LABEL = { love: '😍 oui', maybe: '🤔 peut-être', nope: '✋ non' };
+function toMarkdown() {
+  const out = ['# Retour — directions Pluie de Chats', '', '## Directions'];
+  document.querySelectorAll('.dir').forEach(d => {
+    const id = d.dataset.id, v = fb.votes[id], n = (fb.voteNotes[id] || '').trim();
+    out.push(`- **${d.dataset.label}** : ${v ? VOTE_LABEL[v] : '(pas d\'avis)'}${n ? ` — ${n}` : ''}`);
+  });
+  out.push('', '## Questions');
+  document.querySelectorAll('.q').forEach(q => {
+    const id = q.dataset.q, a = fb.answers[id], n = (fb.notes[id] || '').trim();
+    if (id === 'libre') { if (n) out.push('', '## Notes libres', n); return; }
+    out.push(`- **${q.querySelector('h3').textContent}** : ${a || '(pas de réponse)'}${n ? ` — ${n}` : ''}`);
+  });
+  return out.join('\n');
+}
+const toast = document.getElementById('toast');
+document.getElementById('copy').addEventListener('click', async () => {
+  const md = toMarkdown();
+  try { await navigator.clipboard.writeText(md); toast.textContent = 'Copié. Colle-le dans la conversation.'; }
+  catch { prompt('Copie ce texte :', md); toast.textContent = 'Copie manuelle.'; }
+  toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 2200);
+});
+document.getElementById('reset').addEventListener('click', () => {
+  if (!confirm('Effacer toutes tes réponses ?')) return;
+  localStorage.removeItem(KEY); location.reload();
+});
+
+// ─── Démos (croquis jouables, pas des prototypes) ─────────────────────────
+const IMG = {};
+function img(path) {
+  if (!IMG[path]) { const i = new Image(); i.src = path; IMG[path] = i; }
+  return IMG[path];
+}
+const catImg = (id, pose = 'sit') => img(`sprites/cats/${id}_${pose}.png`);
+
+function setup(cv) {
+  const W = 340, H = 440, dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cv.width = W * dpr; cv.height = H * dpr;
+  const ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
+  return { ctx, W, H };
+}
+function ptr(cv, e) { const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) * 340 / r.width, y: (e.clientY - r.top) * 440 / r.height }; }
+
+function drawSprite(ctx, im, x, y, size, rot = 0, flip = false) {
+  ctx.save(); ctx.translate(x, y); ctx.rotate(rot); if (flip) ctx.scale(-1, 1);
+  if (im.complete && im.naturalWidth) ctx.drawImage(im, -size / 2, -size / 2, size, size);
+  else { ctx.fillStyle = '#c9b8e8'; ctx.beginPath(); ctx.arc(0, 0, size * .35, 0, Math.PI * 2); ctx.fill(); }
+  ctx.restore();
+}
+function sky(ctx, W, H, t) {
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#d9efff'); g.addColorStop(1, '#fff6ea');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = 'rgba(120,160,210,.22)'; ctx.lineWidth = 1.2;
+  for (let i = 0; i < 28; i++) {
+    const x = (i * 53 + t * 30) % (W + 40) - 20, y = (i * 97 + t * 260) % (H + 40) - 20;
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 4, y + 12); ctx.stroke();
+  }
+}
+function hud(ctx, txt, x, y, col = '#2a1b4a', align = 'left') {
+  ctx.font = '700 15px Fredoka, sans-serif'; ctx.textAlign = align; ctx.textBaseline = 'top';
+  ctx.fillStyle = 'rgba(255,255,255,.85)';
+  const w = ctx.measureText(txt).width + 16;
+  const bx = align === 'left' ? x - 8 : align === 'right' ? x - w + 8 : x - w / 2;
+  ctx.beginPath(); ctx.roundRect(bx, y - 4, w, 24, 12); ctx.fill();
+  ctx.fillStyle = col; ctx.fillText(txt, x, y);
+}
+function overlay(ctx, W, H, title, sub) {
+  ctx.fillStyle = 'rgba(255,248,238,.88)'; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = '#2a1b4a'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = '800 30px "Baloo 2", sans-serif'; ctx.fillText(title, W / 2, H / 2 - 16);
+  ctx.font = '500 15px Fredoka, sans-serif'; ctx.fillStyle = '#6b5e86'; ctx.fillText(sub, W / 2, H / 2 + 20);
+}
+
+function runLoop(cv, step) {
+  let visible = false, last = 0;
+  new IntersectionObserver(es => { visible = es[0].isIntersecting; }).observe(cv);
+  const frame = ts => {
+    const dt = Math.min((ts - last) / 1000, 0.05); last = ts;
+    if (visible) step(dt);
+    requestAnimationFrame(frame);
+  };
+  requestAnimationFrame(frame);
+}
+
+// ① Instincts — laser + carton, 3 caractères
+const demo1 = (() => {
+  const cv = document.getElementById('cv1'), { ctx, W, H } = setup(cv);
+  const KINDS = [
+    { k: 'chasseur', ids: ['tabby', 'noir', 'gris', 'bengal'], w: 5, col: '#ff3ea5', tag: 'chasse' },
+    { k: 'trouillard', ids: ['siamois', 'fantome', 'persan'], w: 3, col: '#1a9fd0', tag: 'trouille' },
+    { k: 'chaton', ids: ['micro'], w: 2, col: '#d49a00', tag: 'chaton' },
+  ];
+  const BOX = { x: W / 2, w: 96, top: H - 92 }, FLOOR = H - 26;
+  const boxImg = img('sprites/weapons/carton.png'), laserCol = '#ff2a4a';
+  let cats, dot, home, lost, spawnT, t, inBox, walkers;
+  const reset = () => { cats = []; dot = null; home = 0; lost = 0; spawnT = .2; t = 0; inBox = []; walkers = []; };
+  reset();
+  const pick = () => { const tot = KINDS.reduce((s, k) => s + k.w, 0); let r = Math.random() * tot; for (const k of KINDS) { r -= k.w; if (r <= 0) return k; } return KINDS[0]; };
+  const spawn = () => {
+    const kind = pick(), small = kind.k === 'chaton';
+    cats.push({ kind, id: kind.ids[Math.random() * kind.ids.length | 0], x: 30 + Math.random() * (W - 60), y: -24,
+      vx: 0, size: small ? 34 : 50, flip: Math.random() < .5, wob: Math.random() * 6, alert: 0 });
+  };
+  cv.addEventListener('pointermove', e => { if (e.pointerType === 'mouse' || e.buttons) dot = ptr(cv, e); });
+  cv.addEventListener('pointerdown', e => { dot = ptr(cv, e); cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener('pointerup', e => { if (e.pointerType !== 'mouse') dot = null; });
+  cv.addEventListener('pointerleave', () => { dot = null; });
+
+  runLoop(cv, dt => {
+    t += dt; spawnT -= dt;
+    if (spawnT <= 0) { spawn(); spawnT = 1.25 + Math.random() * .7; }
+    for (const c of cats) {
+      let ax = 0; c.alert = Math.max(0, c.alert - dt * 2);
+      if (dot) {
+        const dx = dot.x - c.x, dy = dot.y - c.y, d = Math.hypot(dx, dy);
+        if (c.kind.k === 'chasseur' && d < 260) { ax += Math.sign(dx) * Math.min(1, Math.abs(dx) / 30) * 900; c.alert = 1; }
+        if (c.kind.k === 'trouillard' && d < 150) { ax -= Math.sign(dx || 1) * (1 - d / 150) * 1400; c.alert = 1; }
+      }
+      if (c.kind.k === 'chaton') {
+        let best = null, bd = 190;
+        for (const o of cats) if (o !== c && o.kind.k !== 'chaton') { const d = Math.hypot(o.x - c.x, o.y - c.y); if (d < bd) { bd = d; best = o; } }
+        if (best) { ax += Math.sign(best.x - c.x) * Math.min(1, Math.abs(best.x - c.x) / 25) * 700; c.alert = .6; }
+      }
+      c.vx = (c.vx + ax * dt) * Math.pow(.04, dt);
+      c.vx = Math.max(-240, Math.min(240, c.vx));
+      c.x = Math.max(22, Math.min(W - 22, c.x + c.vx * dt));
+      c.y += (c.kind.k === 'chaton' ? 52 : 46) * dt;
+      c.wob += dt * 3;
+      if (c.vx > 20) c.flip = false; else if (c.vx < -20) c.flip = true;
+    }
+    for (let i = cats.length - 1; i >= 0; i--) {
+      const c = cats[i];
+      if (c.y >= BOX.top + 6 && Math.abs(c.x - BOX.x) < BOX.w / 2 - 6) { home++; inBox.push(c.id); if (inBox.length > 5) inBox.shift(); cats.splice(i, 1); }
+      else if (c.y >= FLOOR) { lost++; walkers.push({ ...c, y: FLOOR, dir: c.x < W / 2 ? -1 : 1 }); cats.splice(i, 1); }
+    }
+    for (let i = walkers.length - 1; i >= 0; i--) { const w = walkers[i]; w.x += w.dir * 70 * dt; if (w.x < -40 || w.x > W + 40) walkers.splice(i, 1); }
+
+    // draw
+    sky(ctx, W, H, t);
+    ctx.fillStyle = '#e9dcc7'; ctx.fillRect(0, FLOOR + 10, W, H);
+    ctx.fillStyle = '#d8c7ab'; ctx.fillRect(0, FLOOR + 10, W, 3);
+    inBox.forEach((id, k) => drawSprite(ctx, catImg(id), BOX.x - 30 + k * 15, BOX.top + 8, 30));
+    drawSprite(ctx, boxImg, BOX.x, BOX.top + 30, BOX.w + 20);
+    for (const w of walkers) drawSprite(ctx, catImg(w.id, 'tro'), w.x, w.y, w.size * .9, 0, w.dir < 0);
+    for (const c of cats) {
+      drawSprite(ctx, catImg(c.id, c.alert > .5 ? 'tro' : 'mid'), c.x, c.y, c.size, Math.sin(c.wob) * .12, c.flip);
+      ctx.font = '600 11px Fredoka, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+      ctx.fillStyle = c.kind.col; ctx.globalAlpha = .55 + c.alert * .45;
+      ctx.fillText(c.kind.tag, c.x, c.y - c.size / 2 + 2); ctx.globalAlpha = 1;
+    }
+    if (dot) {
+      const g = ctx.createRadialGradient(dot.x, dot.y, 0, dot.x, dot.y, 18);
+      g.addColorStop(0, 'rgba(255,42,74,.9)'); g.addColorStop(1, 'rgba(255,42,74,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(dot.x, dot.y, 18, 0, 7); ctx.fill();
+      ctx.fillStyle = laserCol; ctx.beginPath(); ctx.arc(dot.x, dot.y, 4.5, 0, 7); ctx.fill();
+    }
+    hud(ctx, `🏠 au chaud ${home}`, 14, 12, '#1f8a52');
+    hud(ctx, `🌧 partis ${lost}`, W - 14, 12, '#9a90ad', 'right');
+  });
+  return reset;
+})();
+
+// ② Dégringolade — grappe accrochée, 3 pelotes, réaction en chaîne
+const demo2 = (() => {
+  const cv = document.getElementById('cv2'), { ctx, W, H } = setup(cv);
+  const L = { x: W / 2, y: H - 34 }, G = 820, SPD = 640;
+  const ballImg = img('sprites/weapons/pelote.png');
+  const IDS = ['tabby', 'noir', 'blanc', 'gris', 'siamois', 'bengal', 'scottish', 'sphynx', 'persan', 'rainbow'];
+  let cats, ball, shots, aim, chain, best, total, popups, t, settle;
+  const reset = () => {
+    cats = []; ball = null; shots = 3; aim = null; chain = 0; best = 0; total = 0; popups = []; t = 0; settle = 0;
+    const rows = 4, cols = 6;
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+      if (Math.random() < .14) continue;
+      const off = r % 2 ? 22 : 0;
+      const x = 38 + c * 54 + off; if (x > W - 26) continue;
+      cats.push({ x, y: 86 + r * 46, ax: x, ay: 86 + r * 46, r: 19, id: IDS[Math.random() * IDS.length | 0], hang: true, vx: 0, vy: 0, rot: 0, vr: 0, heavy: false });
+    }
+    const mid = cats.filter(c => c.ay > 120 && c.ay < 200);
+    for (let k = 0; k < 2 && mid.length; k++) { const h = mid.splice(Math.random() * mid.length | 0, 1)[0]; h.heavy = true; h.r = 25; h.id = 'boss'; }
+  };
+  reset();
+  const drop = (c, vx, vy) => { c.hang = false; c.vx = vx; c.vy = vy; c.vr = (Math.random() - .5) * 8; chain++; total++; };
+  const simulate = (tx, ty) => {
+    const dx = tx - L.x, dy = ty - L.y, d = Math.hypot(dx, dy) || 1;
+    let x = L.x, y = L.y, vx = dx / d * SPD, vy = dy / d * SPD; const pts = []; let b = 0;
+    for (let i = 0; i < 70; i++) {
+      for (let s = 0; s < 3; s++) {
+        vy += G * .006; x += vx * .006; y += vy * .006;
+        if (x < 10 || x > W - 10) { vx *= -1; x = Math.max(10, Math.min(W - 10, x)); b++; }
+        if (y < 10) { vy *= -1; y = 10; b++; }
+      }
+      pts.push([x, y]); if (b > 1 || y > H) break;
+    }
+    return pts;
+  };
+  cv.addEventListener('pointerdown', e => { if (!ball && shots > 0) { aim = ptr(cv, e); cv.setPointerCapture(e.pointerId); } else if (shots === 0 && settle > .6) reset(); });
+  cv.addEventListener('pointermove', e => { if (aim) aim = ptr(cv, e); });
+  cv.addEventListener('pointerup', () => {
+    if (!aim) return;
+    const dx = aim.x - L.x, dy = aim.y - L.y, d = Math.hypot(dx, dy);
+    if (d > 20 && dy < 0) { ball = { x: L.x, y: L.y, vx: dx / d * SPD, vy: dy / d * SPD, b: 0, rot: 0 }; shots--; chain = 0; }
+    aim = null;
+  });
+
+  runLoop(cv, dt => {
+    t += dt;
+    if (ball) {
+      ball.vy += G * dt; ball.x += ball.vx * dt; ball.y += ball.vy * dt; ball.rot += dt * 8;
+      if (ball.x < 10 || ball.x > W - 10) { ball.vx *= -1; ball.x = Math.max(10, Math.min(W - 10, ball.x)); }
+      if (ball.y < 10) { ball.vy = Math.abs(ball.vy); }
+      for (const c of cats) {
+        if (!c.hang) continue;
+        const dx = c.x - ball.x, dy = c.y - ball.y, d = Math.hypot(dx, dy);
+        if (d < c.r + 10) {
+          if (!c.heavy) drop(c, ball.vx * .35, ball.vy * .2 - 40);
+          else popups.push({ x: c.x, y: c.y - 30, txt: 'trop lourd !', life: 1, col: '#c0392b' });
+          const nx = dx / (d || 1), ny = dy / (d || 1), dot = ball.vx * nx + ball.vy * ny;
+          ball.vx -= 2 * dot * nx * .9; ball.vy -= 2 * dot * ny * .9;
+          ball.x -= nx * 4; ball.y -= ny * 4;
+        }
+      }
+      if (ball.y > H + 20) ball = null;
+    }
+    for (const f of cats) {
+      if (f.hang) continue;
+      f.vy += G * dt; f.x += f.vx * dt; f.y += f.vy * dt; f.rot += f.vr * dt;
+      if (f.x < f.r || f.x > W - f.r) { f.vx *= -.6; f.x = Math.max(f.r, Math.min(W - f.r, f.x)); }
+      for (const c of cats) {
+        if (!c.hang) continue;
+        const dx = c.x - f.x, dy = c.y - f.y, d = Math.hypot(dx, dy);
+        if (d < c.r + f.r - 4) drop(c, dx * 3 + f.vx * .5, Math.max(0, f.vy * .4));
+      }
+    }
+    cats = cats.filter(c => c.hang || c.y < H + 60);
+    const moving = ball || cats.some(c => !c.hang);
+    if (!moving && chain > 0) {
+      best = Math.max(best, chain);
+      popups.push({ x: W / 2, y: H / 2, txt: chain > 1 ? `Cascade ×${chain}` : '1 chat', life: 1.4, col: '#7b3ff2', big: true });
+      chain = 0;
+    }
+    settle = (!moving && shots === 0) ? settle + dt : 0;
+
+    // draw
+    sky(ctx, W, H, t * .4);
+    ctx.fillStyle = '#ffffff';
+    for (let i = 0; i < 7; i++) { ctx.beginPath(); ctx.ellipse(20 + i * 52, 46 + (i % 2) * 8, 46, 26, 0, 0, 7); ctx.fill(); }
+    ctx.strokeStyle = 'rgba(42,27,74,.25)'; ctx.lineWidth = 1;
+    for (const c of cats) if (c.hang) { ctx.beginPath(); ctx.moveTo(c.ax, 52); ctx.lineTo(c.x, c.y - c.r); ctx.stroke(); }
+    for (const c of cats) {
+      const sway = c.hang ? Math.sin(t * 1.6 + c.ax * .05) * .06 : c.rot;
+      drawSprite(ctx, catImg(c.id, c.hang ? 'sit' : 'mid'), c.x, c.y, c.r * (c.heavy ? 2.3 : 2.6), sway);
+      if (c.heavy && c.hang) { ctx.font = '700 10px Fredoka'; ctx.fillStyle = '#c0392b'; ctx.textAlign = 'center'; ctx.fillText('lourd', c.x, c.y + c.r + 12); }
+    }
+    if (aim && !ball) {
+      ctx.fillStyle = 'rgba(123,63,242,.55)';
+      simulate(aim.x, aim.y).forEach(([x, y], i) => { if (i % 2 === 0) { ctx.beginPath(); ctx.arc(x, y, 2.6, 0, 7); ctx.fill(); } });
+    }
+    if (ball) drawSprite(ctx, ballImg, ball.x, ball.y, 30, ball.rot);
+    ctx.fillStyle = '#ff8a48'; ctx.beginPath(); ctx.arc(L.x, L.y, 14, 0, 7); ctx.fill();
+    for (let i = 0; i < shots; i++) drawSprite(ctx, ballImg, 24 + i * 26, H - 26, 22);
+    for (let i = popups.length - 1; i >= 0; i--) {
+      const p = popups[i]; p.life -= dt; p.y -= dt * 30; if (p.life <= 0) { popups.splice(i, 1); continue; }
+      ctx.globalAlpha = Math.min(1, p.life * 2); ctx.textAlign = 'center'; ctx.fillStyle = p.col;
+      ctx.font = p.big ? '800 30px "Baloo 2"' : '700 12px Fredoka'; ctx.fillText(p.txt, p.x, p.y); ctx.globalAlpha = 1;
+    }
+    hud(ctx, `tombés ${total}`, W - 14, H - 36, '#2a1b4a', 'right');
+    if (shots === 0 && settle > .6) overlay(ctx, W, H, `${total} chats`, `meilleure cascade ×${best} · touche pour rejouer`);
+  });
+  return reset;
+})();
+
+// ③ Arcade — tirer sur les chats qui tombent, combo, 30 s
+const demo3 = (() => {
+  const cv = document.getElementById('cv3'), { ctx, W, H } = setup(cv);
+  const L = { x: W / 2, y: H - 30 };
+  const ballImg = img('sprites/weapons/pelote.png');
+  const IDS = ['tabby', 'noir', 'blanc', 'gris', 'pompier', 'ninja', 'pirate', 'astro', 'viking', 'batman'];
+  let cats, balls, score, combo, timeLeft, spawnT, popups, t;
+  const reset = () => { cats = []; balls = []; score = 0; combo = 0; timeLeft = 30; spawnT = 0; popups = []; t = 0; };
+  reset();
+  cv.addEventListener('pointerdown', e => {
+    if (timeLeft <= 0) { reset(); return; }
+    const p = ptr(cv, e), dx = p.x - L.x, dy = p.y - L.y, d = Math.hypot(dx, dy) || 1;
+    balls.push({ x: L.x, y: L.y, vx: dx / d * 720, vy: dy / d * 720, rot: 0 });
+  });
+  runLoop(cv, dt => {
+    t += dt;
+    if (timeLeft > 0) {
+      timeLeft -= dt; spawnT -= dt;
+      if (spawnT <= 0) { cats.push({ x: 30 + Math.random() * (W - 60), y: -20, vy: 55 + Math.random() * 60 + (30 - timeLeft) * 2, id: IDS[Math.random() * IDS.length | 0], wob: Math.random() * 6 }); spawnT = .55 + Math.random() * .4; }
+      for (const c of cats) { c.y += c.vy * dt; c.wob += dt * 3; }
+      for (let i = cats.length - 1; i >= 0; i--) if (cats[i].y > H + 20) { cats.splice(i, 1); if (combo > 0) popups.push({ x: W / 2, y: H - 70, txt: 'combo cassé', life: .9, col: '#9a90ad' }); combo = 0; }
+      for (let j = balls.length - 1; j >= 0; j--) {
+        const b = balls[j]; b.vy += 280 * dt; b.x += b.vx * dt; b.y += b.vy * dt; b.rot += dt * 10;
+        let hit = false;
+        for (let i = cats.length - 1; i >= 0; i--) {
+          const c = cats[i];
+          if (Math.hypot(c.x - b.x, c.y - b.y) < 30) { combo++; const m = combo >= 9 ? 4 : combo >= 6 ? 3 : combo >= 3 ? 2 : 1; score += m; popups.push({ x: c.x, y: c.y, txt: m > 1 ? `+${m} ×${m}` : '+1', life: .8, col: m > 1 ? '#ff3ea5' : '#7b3ff2' }); cats.splice(i, 1); hit = true; break; }
+        }
+        if (hit || b.y < -20 || b.x < -20 || b.x > W + 20 || b.y > H + 20) balls.splice(j, 1);
+      }
+    }
+    sky(ctx, W, H, t);
+    for (const c of cats) drawSprite(ctx, catImg(c.id, 'mid'), c.x, c.y, 50, Math.sin(c.wob) * .12);
+    for (const b of balls) drawSprite(ctx, ballImg, b.x, b.y, 26, b.rot);
+    ctx.fillStyle = '#ff8a48'; ctx.beginPath(); ctx.arc(L.x, L.y, 14, 0, 7); ctx.fill();
+    for (let i = popups.length - 1; i >= 0; i--) {
+      const p = popups[i]; p.life -= dt; p.y -= dt * 40; if (p.life <= 0) { popups.splice(i, 1); continue; }
+      ctx.globalAlpha = Math.min(1, p.life * 2); ctx.textAlign = 'center'; ctx.fillStyle = p.col; ctx.font = '800 18px "Baloo 2"'; ctx.fillText(p.txt, p.x, p.y); ctx.globalAlpha = 1;
+    }
+    hud(ctx, `score ${score}`, 14, 12);
+    hud(ctx, combo >= 3 ? `combo ${combo}` : `${Math.max(0, Math.ceil(timeLeft))} s`, W - 14, 12, combo >= 3 ? '#ff3ea5' : '#2a1b4a', 'right');
+    if (timeLeft <= 0) overlay(ctx, W, H, `${score} points`, 'touche pour rejouer');
+  });
+  return reset;
+})();
+
+const RESETS = { 1: demo1, 2: demo2, 3: demo3 };
+document.querySelectorAll('[data-reset]').forEach(b => b.addEventListener('click', () => RESETS[b.dataset.reset]()));
+</script>
+</body>
+</html>

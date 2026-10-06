@@ -1,0 +1,762 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pluie de Chats — tour 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Fredoka:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fff8ee; --paper: #ffffff; --ink: #2a1b4a; --ink-soft: #6b5e86; --line: #eadfce;
+    --magenta: #ff3ea5; --violet: #7b3ff2; --sun: #ffce3a; --sky: #26c6f7; --leaf: #3dc47e; --coral: #ff6b35; --wool: #ff8a48;
+    --love: #ff3ea5; --maybe: #ffb020; --nope: #9a90ad;
+    --radius: 18px; --shadow: 0 1px 2px rgba(42,27,74,.06), 0 8px 24px rgba(42,27,74,.06);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 500 16px/1.55 'Fredoka', system-ui, sans-serif; padding-bottom: 140px; }
+  h1, h2, h3 { font-family: 'Baloo 2', sans-serif; line-height: 1.1; margin: 0; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+  section.wrap { margin-top: 56px; }
+  header { padding: 48px 0 8px; }
+  header h1 { font-size: clamp(32px, 5vw, 50px); font-weight: 800; }
+  header h1 span { color: var(--magenta); }
+  header p { color: var(--ink-soft); max-width: 760px; font-size: 18px; margin: 12px 0 0; }
+  .eyebrow { font: 600 13px 'Fredoka'; letter-spacing: .08em; text-transform: uppercase; color: var(--violet); margin-bottom: 8px; }
+  h2 { font-size: 30px; font-weight: 800; margin-bottom: 16px; }
+
+  .heard { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+  .heard div { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; font-size: 15px; }
+  .heard b { display: block; font-family: 'Baloo 2'; font-size: 17px; }
+  .heard span { color: var(--ink-soft); }
+  .synth { margin-top: 14px; background: #f6f0ff; border: 1px solid #ddcdfb; border-radius: 14px; padding: 14px 18px; font-size: 16px; }
+  .synth b { color: var(--violet); }
+
+  .frame { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+  .frame div { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); }
+  .frame b { display: block; font-family: 'Baloo 2'; font-size: 18px; margin-bottom: 2px; }
+  .frame p { margin: 0; color: var(--ink-soft); font-size: 15px; }
+
+  .launch { position: sticky; top: 0; z-index: 15; background: rgba(255,248,238,.95); backdrop-filter: blur(8px); padding: 12px 0; margin-bottom: 18px; border-bottom: 1px solid var(--line); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .launch > span { font-weight: 600; }
+  .seg { display: inline-flex; background: var(--paper); border: 1px solid var(--line); border-radius: 999px; padding: 4px; gap: 2px; }
+  .seg button { font: 600 14px 'Fredoka'; border: 0; background: transparent; color: var(--ink-soft); border-radius: 999px; padding: 7px 14px; cursor: pointer; transition: all .15s; }
+  .seg button:hover { color: var(--ink); }
+  .seg button.on { background: var(--ink); color: #fff; }
+  .launch small { color: var(--ink-soft); font-size: 13px; flex-basis: 100%; }
+
+  .dir { background: var(--paper); border: 2px solid var(--line); border-radius: 24px; box-shadow: var(--shadow); margin-bottom: 28px; overflow: hidden; transition: border-color .2s; }
+  .dir[data-vote="love"] { border-color: var(--love); }
+  .dir[data-vote="maybe"] { border-color: var(--maybe); }
+  .dir[data-vote="nope"] { border-color: var(--nope); opacity: .82; }
+  .dir-head { padding: 22px 26px 6px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+  .dir-num { font: 800 15px 'Baloo 2'; color: #fff; background: var(--c); border-radius: 999px; padding: 2px 12px; }
+  .dir-head h3 { font-size: 32px; font-weight: 800; }
+  .badge { font: 600 12px 'Fredoka'; padding: 3px 10px; border-radius: 999px; background: #f4ecff; color: var(--violet); }
+  .badge.reco { background: var(--leaf); color: #fff; }
+  .pitch { padding: 0 26px; font-size: 20px; max-width: 840px; margin: 6px 0 18px; }
+  .dir-body { display: grid; grid-template-columns: 360px 1fr; gap: 28px; padding: 0 26px 24px; }
+  .demo { position: sticky; top: 76px; align-self: start; }
+  .demo canvas { width: 340px; height: 480px; display: block; border-radius: 18px; border: 1px solid var(--line); touch-action: none; cursor: crosshair; background: #eaf6ff; }
+  .demo .how { font-size: 13px; color: var(--ink-soft); margin-top: 8px; max-width: 340px; }
+  .demo .how b { color: var(--ink); }
+  .demo button { margin-top: 6px; font: 600 13px 'Fredoka'; border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 999px; padding: 5px 14px; cursor: pointer; transition: background .15s; }
+  .demo button:hover { background: #f4ecff; }
+
+  .block { margin-bottom: 18px; }
+  .block h4 { font: 700 14px 'Fredoka'; text-transform: uppercase; letter-spacing: .06em; color: var(--c); margin: 0 0 6px; }
+  .block p { margin: 0; }
+  .block ul { margin: 0; padding-left: 20px; }
+  .block li { margin-bottom: 4px; }
+  .chars { display: grid; gap: 6px; }
+  .char { display: grid; grid-template-columns: 44px 1fr; gap: 10px; align-items: center; font-size: 15px; }
+  .char img { width: 44px; height: 44px; object-fit: contain; }
+  .char b { color: var(--k); }
+  .risk { background: #fff4ec; border-left: 4px solid var(--coral); border-radius: 0 12px 12px 0; padding: 10px 14px; font-size: 15px; }
+  .risk b { color: var(--coral); }
+
+  .vote { border-top: 1px solid var(--line); padding: 16px 26px 20px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; background: #fffcf7; }
+  .vote > span { font-weight: 600; margin-right: 6px; }
+  .vbtn { font: 600 15px 'Fredoka'; border: 2px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 999px; padding: 6px 16px; cursor: pointer; transition: all .15s; }
+  .vbtn:hover { transform: translateY(-1px); }
+  .vbtn.on[data-v="love"] { background: var(--love); border-color: var(--love); color: #fff; }
+  .vbtn.on[data-v="maybe"] { background: var(--maybe); border-color: var(--maybe); color: #fff; }
+  .vbtn.on[data-v="nope"] { background: var(--nope); border-color: var(--nope); color: #fff; }
+  textarea { font: 500 15px 'Fredoka'; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; resize: vertical; width: 100%; min-height: 50px; }
+  textarea:focus { outline: 2px solid var(--violet); outline-offset: 1px; }
+  .vote textarea { flex: 1 1 100%; }
+
+  .share { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .share div { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); }
+  .share b { display: block; font-family: 'Baloo 2'; font-size: 19px; }
+  .share p { margin: 6px 0 0; color: var(--ink-soft); font-size: 15px; }
+  .cost { display: inline-block; margin-top: 8px; font: 600 12px 'Fredoka'; padding: 2px 10px; border-radius: 999px; }
+  .cost.ok { background: #e6f8ee; color: #1f8a52; }
+  .cost.hard { background: #fff1e6; color: #c25a14; }
+
+  .reco-box { background: linear-gradient(135deg, #f1fbf5, #fff8ee); border: 2px solid var(--leaf); border-radius: 24px; padding: 24px 28px; }
+  .reco-box h2 { color: #1f8a52; }
+  .reco-box p { margin: 0 0 10px; max-width: 880px; }
+
+  .q { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 14px; box-shadow: var(--shadow); }
+  .q h3 { font-size: 20px; margin-bottom: 4px; }
+  .q .why { color: var(--ink-soft); font-size: 14px; margin: 0 0 12px; }
+  .opts { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+  .opt { border: 2px solid var(--line); border-radius: 14px; padding: 10px 14px; cursor: pointer; transition: all .15s; background: var(--paper); }
+  .opt:hover { border-color: #cdb8f5; }
+  .opt.on { border-color: var(--violet); background: #f6f0ff; }
+  .opt b { display: block; font-size: 15px; }
+  .opt small { color: var(--ink-soft); font-size: 13px; line-height: 1.35; display: block; }
+  .q textarea { margin-top: 10px; }
+
+  .bar { position: fixed; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,.94); backdrop-filter: blur(8px); border-top: 1px solid var(--line); padding: 12px 24px; display: flex; gap: 14px; align-items: center; justify-content: center; z-index: 20; }
+  .bar .progress { font-weight: 600; color: var(--ink-soft); }
+  .bar .progress b { color: var(--violet); }
+  .bar button { font: 700 16px 'Fredoka'; border: 0; border-radius: 999px; padding: 12px 26px; cursor: pointer; background: var(--violet); color: #fff; transition: background .15s, transform .15s; }
+  .bar button:hover { background: #6930d8; transform: translateY(-1px); }
+  .bar button.ghost { background: transparent; color: var(--ink-soft); border: 1px solid var(--line); padding: 10px 18px; font-size: 14px; }
+  .toast { position: fixed; bottom: 86px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 999px; opacity: 0; transition: all .25s; pointer-events: none; z-index: 30; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 860px) {
+    .dir-body { grid-template-columns: 1fr; }
+    .demo { position: static; justify-self: center; }
+    .share { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="wrap">
+  <div class="eyebrow">Tour 2</div>
+  <h1>On garde le tir. <span>Les chats ont un caractère.</span></h1>
+  <p>Ton retour a tranché. Tu ne voulais ni de la structure de ③ seule, ni des verbes de ① et ②. Voici trois mécaniques signatures, toutes en temps réel et toutes au lanceur. Chacune a une démo jouable et un sélecteur pour essayer les trois façons de tirer.</p>
+</header>
+
+<section class="wrap">
+  <div class="eyebrow">Ce que j'ai retenu</div>
+  <h2>Ton retour, en contraintes</h2>
+  <div class="heard">
+    <div><b>Tirer</b><span>Le plaisir, c'est viser et toucher. Pas de guidage indirect.</span></div>
+    <div><b>Temps réel, sous pression</b><span>Pas de tour par tour, pas de contemplation.</span></div>
+    <div><b>Compris en 5 s</b><span>Pour un joueur mobile qui ne te connaît pas.</span></div>
+    <div><b>Pas de mort</b><span>Des averses courtes, notées, qu'on enchaîne comme des niveaux.</span></div>
+    <div><b>Chaque chat compte</b><span>Son caractère change la façon de jouer.</span></div>
+    <div><b>Partage</b><span>Moments à poster, défi entre amis, classement.</span></div>
+  </div>
+  <div class="synth"><b>Ce que ça donne :</b> le verbe de ③ (tirer) avec la structure de ① (averses, caractères, maîtrise douce). Reste une question que ③ ne réglait pas : <b>qu'est-ce qui rend un tir mémorable ?</b> C'est ce qui fait rejouer et ce qu'on a envie de partager. Ci-dessous, trois réponses différentes.</div>
+</section>
+
+<section class="wrap">
+  <div class="eyebrow">Cadre commun</div>
+  <h2>Ce qui ne change pas d'une variante à l'autre</h2>
+  <div class="frame">
+    <div><b>Averse de 60 à 90 s</b><p>Un nombre fixe de chats tombent. Quand le dernier est passé, l'averse est finie.</p></div>
+    <div><b>Note en pattes 🐾</b><p>De 1 à 3 pattes selon la part de chats attrapés. Rater fait baisser la note, rien d'autre. On rejoue pour la 3ᵉ patte.</p></div>
+    <div><b>Un caractère par averse</b><p>Chaque averse introduit un nouveau chat, avec une règle. Les 62 sprites deviennent une dizaine de caractères habillés de costumes.</p></div>
+    <div><b>Même averse, même pluie</b><p>Chaque averse est tirée d'une graine : on peut la rejouer à l'identique. Le défi entre amis et le classement en ont besoin.</p></div>
+  </div>
+</section>
+
+<section class="wrap" id="directions">
+  <div class="eyebrow">Trois mécaniques signatures</div>
+  <h2>Qu'est-ce qui rend un tir mémorable ?</h2>
+
+  <div class="launch">
+    <span>Lanceur :</span>
+    <div class="seg" id="launchSeg">
+      <button data-m="vise">🎯 Vise vers le doigt</button>
+      <button data-m="glisse">↔️ Glisse en bas</button>
+      <button data-m="fronde">🪃 Fronde</button>
+    </div>
+    <small id="launchHelp"></small>
+  </div>
+
+  <!-- A. FIL DE LAINE -->
+  <article class="dir" style="--c: var(--wool)" data-id="fil" data-label="A. Fil de laine">
+    <div class="dir-head">
+      <span class="dir-num">A</span><h3>Fil de laine</h3>
+      <span class="badge reco">ma recommandation</span>
+    </div>
+    <p class="pitch">La pelote se déroule en volant. Chaque chat qui touche le fil s'y emmêle. Quand la pelote sort de l'écran, le fil se rembobine et ramène tous les chats d'un coup.</p>
+    <div class="dir-body">
+      <div class="demo">
+        <canvas id="cvA"></canvas>
+        <div class="how">Trace des fils qui traversent un maximum de chats. Les rebonds sur les bords allongent le fil. <b>Points = chats sur le fil, au carré.</b> Attention au ninja.</div>
+        <button data-reset="A">Recommencer l'averse</button>
+      </div>
+      <div>
+        <div class="block"><h4>Pourquoi on rejoue</h4><p>Un tir peut ramener 1 chat ou 7. L'écart entre les deux, c'est de la lecture (où vont-ils être dans une seconde ?) et de la bande (un rebond double la longueur du fil). Battre son meilleur fil n'a pas de plafond.</p></div>
+        <div class="block"><h4>Ce qui se partage</h4><p>« 7 chats sur un fil ». Le geste tient en une image : un trait orange qui zigzague et une grappe de chats emmêlés. Le replay de 3 secondes se comprend sans le son et sans le contexte.</p></div>
+        <div class="block"><h4>Les caractères changent la géométrie</h4>
+          <div class="chars">
+            <div class="char" style="--k:#ff3ea5"><img src="sprites/cats/bengal_mid.png" alt=""><span><b>Joueur</b> : saute sur un fil qui passe près de lui. Un fil tiré à côté le ramène quand même.</span></div>
+            <div class="char" style="--k:#1a9fd0"><img src="sprites/cats/siamois_mid.png" alt=""><span><b>Trouillard</b> : bondit de côté quand la pelote approche. On le pousse dans un fil déjà tendu.</span></div>
+            <div class="char" style="--k:#2a1b4a"><img src="sprites/cats/ninja_mid.png" alt=""><span><b>Ninja</b> : coupe le fil. Tout ce qui était emmêlé retombe. On l'attrape seul, ou on l'évite.</span></div>
+            <div class="char" style="--k:#6b5e86"><img src="sprites/cats/persan_mid.png" alt=""><span><b>Plus tard</b> : le chat lourd qui tend le fil vers le bas, la mère qui entraîne ses chatons sur le fil, le chat qui se démêle si on attend trop.</span></div>
+          </div>
+        </div>
+        <div class="risk"><b>Risque :</b> si les chats sont trop serrés, le fil attrape tout sans viser. <b>À régler :</b> la densité et la longueur maximale du fil. <b>Test :</b> un joueur fait-il un fil de 4 chats ou plus volontairement, et le dit-il à voix haute ?</div>
+      </div>
+    </div>
+    <div class="vote" data-for="fil">
+      <span>Ton avis</span>
+      <button class="vbtn" data-v="love">😍 Oui, ça</button>
+      <button class="vbtn" data-v="maybe">🤔 Peut-être</button>
+      <button class="vbtn" data-v="nope">✋ Non</button>
+      <textarea placeholder="Après avoir joué : ce qui marche, ce qui manque…"></textarea>
+    </div>
+  </article>
+
+  <!-- B. CARAMBOLAGE -->
+  <article class="dir" style="--c: var(--magenta)" data-id="carambolage" data-label="B. Carambolage">
+    <div class="dir-head">
+      <span class="dir-num">B</span><h3>Carambolage</h3>
+      <span class="badge">le plus spectaculaire</span>
+    </div>
+    <p class="pitch">Un chat touché devient lui-même un projectile. Il part en vrille et percute les autres, qui partent à leur tour. Tu tires une fois, la pluie fait le reste.</p>
+    <div class="dir-body">
+      <div class="demo">
+        <canvas id="cvB"></canvas>
+        <div class="how">Touche un chat pour lancer la réaction. Le <b>gros</b> traverse tout, le <b>chaton</b> s'arrête vite, le <b>trouillard</b> esquive la pelote mais pas un autre chat.</div>
+        <button data-reset="B">Recommencer l'averse</button>
+      </div>
+      <div>
+        <div class="block"><h4>Pourquoi on rejoue</h4><p>Choisir <b>quel</b> chat toucher en premier : un gros au milieu d'une grappe, ça fait un carambolage de 8. Un chaton isolé, juste 1. C'est un billard en temps réel.</p></div>
+        <div class="block"><h4>Ce qui se partage</h4><p>Le chaos. Les carambolages de 10 sont drôles à regarder, même pour qui ne joue pas.</p></div>
+        <div class="block"><h4>Les caractères changent la physique</h4>
+          <div class="chars">
+            <div class="char" style="--k:#c0392b"><img src="sprites/cats/persan_mid.png" alt=""><span><b>Gros</b> : un boulet de bowling qui traverse sans dévier. C'est la meilleure première cible.</span></div>
+            <div class="char" style="--k:#d49a00"><img src="sprites/cats/micro_mid.png" alt=""><span><b>Chaton</b> : léger, il s'arrête vite. Un mauvais premier choix.</span></div>
+            <div class="char" style="--k:#1a9fd0"><img src="sprites/cats/siamois_mid.png" alt=""><span><b>Trouillard</b> : esquive la pelote. On ne l'attrape qu'avec un autre chat.</span></div>
+          </div>
+        </div>
+        <div class="risk"><b>Risque :</b> le chaos tient beaucoup de la chance. Deux tirs identiques peuvent donner 2 ou 9, ce qui rend le classement injuste et la maîtrise floue. <b>Test :</b> un bon joueur fait-il nettement mieux qu'un débutant sur la même averse ?</div>
+      </div>
+    </div>
+    <div class="vote" data-for="carambolage">
+      <span>Ton avis</span>
+      <button class="vbtn" data-v="love">😍 Oui, ça</button>
+      <button class="vbtn" data-v="maybe">🤔 Peut-être</button>
+      <button class="vbtn" data-v="nope">✋ Non</button>
+      <textarea placeholder="Après avoir joué : ce qui marche, ce qui manque…"></textarea>
+    </div>
+  </article>
+
+  <!-- C. ARCADE À CARACTÈRES -->
+  <article class="dir" style="--c: var(--sky)" data-id="arcade" data-label="C. Arcade à caractères">
+    <div class="dir-head">
+      <span class="dir-num">C</span><h3>Arcade à caractères</h3>
+      <span class="badge">le plus sûr</span>
+    </div>
+    <p class="pitch">Un tir, un chat. Chaque caractère demande un tir différent : par la bande, deux fois, ou pas du tout. Le combo récompense un enchaînement sans erreur.</p>
+    <div class="dir-body">
+      <div class="demo">
+        <canvas id="cvC"></canvas>
+        <div class="how">Le <b>trouillard</b> esquive un tir direct : vise un bord pour le toucher après rebond. Le <b>bouclier</b> prend 2 coups. Le <b>chien déguisé</b> : ne tire pas.</div>
+        <button data-reset="C">Recommencer l'averse</button>
+      </div>
+      <div>
+        <div class="block"><h4>Pourquoi on rejoue</h4><p>Le combo et la note. La progression se fait par l'ajout de caractères qui demandent chacun un geste.</p></div>
+        <div class="block"><h4>Ce qui se partage</h4><p>Un score et un combo. Ça se compare dans un classement, mais ça ne se raconte pas.</p></div>
+        <div class="block"><h4>Les caractères changent le geste</h4>
+          <div class="chars">
+            <div class="char" style="--k:#1a9fd0"><img src="sprites/cats/siamois_mid.png" alt=""><span><b>Trouillard</b> : esquive tout tir direct, seule la bande le touche.</span></div>
+            <div class="char" style="--k:#2f6fb0"><img src="sprites/cats/bouclier_mid.png" alt=""><span><b>Bouclier</b> : deux coups. Le premier fait rebondir la pelote.</span></div>
+            <div class="char" style="--k:#c0392b"><img src="sprites/cats/faux_mid.png" alt=""><span><b>Chien déguisé</b> : le toucher casse le combo. Il faut le lire avant de tirer.</span></div>
+          </div>
+        </div>
+        <div class="risk"><b>Risque :</b> c'est le jeu actuel, en plus propre. Il marche, mais on ne s'en souviendra pas. Le seul moment fort est le score final.</div>
+      </div>
+    </div>
+    <div class="vote" data-for="arcade">
+      <span>Ton avis</span>
+      <button class="vbtn" data-v="love">😍 Oui, ça</button>
+      <button class="vbtn" data-v="maybe">🤔 Peut-être</button>
+      <button class="vbtn" data-v="nope">✋ Non</button>
+      <textarea placeholder="Après avoir joué : ce qui marche, ce qui manque…"></textarea>
+    </div>
+  </article>
+</section>
+
+<section class="wrap">
+  <div class="eyebrow">Partage</div>
+  <h2>Les trois effets réseau que tu as cochés, et ce qu'ils coûtent</h2>
+  <div class="share">
+    <div><b>🎬 Replay du meilleur coup</b><p>Le jeu repère le meilleur tir de l'averse et en fait une vidéo verticale de 3 s, avec la note en surimpression, prête à poster via le partage natif du téléphone.</p><span class="cost ok">tout dans le navigateur</span></div>
+    <div><b>⚔️ Défi entre amis</b><p>Le lien contient la graine de l'averse et ta note. Ton ami joue exactement la même pluie et voit ton score à battre. L'adresse fait tout le travail.</p><span class="cost ok">sans serveur</span></div>
+    <div><b>🏆 Classement</b><p>Un classement par averse. Comme la graine est la même pour tous, c'est comparable. Il faut un serveur pour stocker les scores et un minimum d'anti-triche.</p><span class="cost hard">serveur à ajouter (le site est statique aujourd'hui)</span></div>
+  </div>
+</section>
+
+<section class="wrap">
+  <div class="reco-box">
+    <div class="eyebrow">Mon choix</div>
+    <h2>A. Fil de laine.</h2>
+    <p><b>Le tir porte la signature.</b> En B, le moment fort vient de la physique, pas de toi. En C, il n'y a pas de moment fort. En A, la qualité du fil dépend entièrement de ta lecture et de ta visée, et on la voit d'un coup d'œil : c'est ce qu'il faut pour un classement juste et pour un replay qui donne envie.</p>
+    <p><b>Les caractères agissent sur le fil, pas seulement sur leurs points.</b> Le joueur l'allonge, le trouillard se pousse dedans, le ninja le coupe. Un nouveau chat change la façon de tracer, d'où une progression sans chiffres qui grossissent.</p>
+    <p><b>Compris en 5 s.</b> La pelote laisse un fil, les chats s'y accrochent. Il n'y a rien d'autre à expliquer.</p>
+    <p><b>Ce qui me ferait changer d'avis.</b> Si tu trouves la démo B plus drôle à jouer, et pas seulement à regarder, B passe devant. Il faudra alors traiter son problème de chance, par exemple avec des trajectoires de rebond prévisibles.</p>
+  </div>
+</section>
+
+<section class="wrap" id="questions">
+  <div class="eyebrow">Tes choix</div>
+  <h2>À trancher après avoir joué</h2>
+
+  <div class="q" data-q="lanceur">
+    <h3>Le lanceur, après essai</h3>
+    <p class="why">Change de mode avec le sélecteur au-dessus des démos. Il garde le même mode pour les trois démos.</p>
+    <div class="opts">
+      <div class="opt" data-v="Vise vers le doigt (origine fixe en bas au centre)"><b>🎯 Vise vers le doigt</b><small>L'origine reste en bas au centre, le tir part vers ton doigt. Un tap suffit.</small></div>
+      <div class="opt" data-v="Glisse en bas (le lanceur suit le doigt, tir vertical)"><b>↔️ Glisse en bas</b><small>Le lanceur suit ton doigt le long du bas et tire tout droit. Le plus simple, mais sans rebonds.</small></div>
+      <div class="opt" data-v="Fronde (tirer en arrière n'importe où)"><b>🪃 Fronde</b><small>Tu tires en arrière n'importe où sur l'écran, et le tir part à l'opposé. C'est le plus précis, mais le plus lent.</small></div>
+    </div>
+    <textarea placeholder="Précision (facultatif)"></textarea>
+  </div>
+
+  <div class="q" data-q="partage">
+    <h3>Quel partage en premier ?</h3>
+    <p class="why">Les trois se cumulent, mais l'ordre compte : le classement demande un serveur, les deux autres non.</p>
+    <div class="opts">
+      <div class="opt" data-v="Replay du meilleur coup d'abord"><b>🎬 Replay d'abord</b><small>Le plus viral, il amène des gens qui ne jouent pas encore.</small></div>
+      <div class="opt" data-v="Défi entre amis d'abord"><b>⚔️ Défi d'abord</b><small>Le plus simple, et il fait revenir quelqu'un de précis.</small></div>
+      <div class="opt" data-v="Classement d'abord"><b>🏆 Classement d'abord</b><small>La compétition anonyme. Il faut un serveur.</small></div>
+    </div>
+    <textarea placeholder="Précision (facultatif)"></textarea>
+  </div>
+
+  <div class="q" data-q="libre">
+    <h3>Autre chose ?</h3>
+    <p class="why">Une sensation dans les démos, un jeu de référence, une idée de caractère de chat.</p>
+    <textarea placeholder="Notes libres"></textarea>
+  </div>
+</section>
+
+<div class="bar">
+  <span class="progress"><b id="count">0</b> / 6 réponses</span>
+  <button class="ghost" id="reset">Effacer</button>
+  <button id="copy">Copier mon retour</button>
+</div>
+<div class="toast" id="toast">Copié. Colle-le dans la conversation.</div>
+
+<script>
+// ─── Feedback (persisté) ───────────────────────────────────────────────────
+const KEY = 'pdc_directions_feedback_v2';
+const saved = JSON.parse(localStorage.getItem(KEY) || '{}');
+const fb = { votes: saved.votes || {}, voteNotes: saved.voteNotes || {}, answers: saved.answers || {}, notes: saved.notes || {}, tried: saved.tried || {} };
+const persist = () => { localStorage.setItem(KEY, JSON.stringify(fb)); updateCount(); };
+
+document.querySelectorAll('.vote').forEach(v => {
+  const id = v.dataset.for, dir = v.closest('.dir'), ta = v.querySelector('textarea');
+  const paint = () => {
+    v.querySelectorAll('.vbtn').forEach(b => b.classList.toggle('on', fb.votes[id] === b.dataset.v));
+    if (fb.votes[id]) dir.dataset.vote = fb.votes[id]; else delete dir.dataset.vote;
+  };
+  v.querySelectorAll('.vbtn').forEach(b => b.addEventListener('click', () => { fb.votes[id] = fb.votes[id] === b.dataset.v ? undefined : b.dataset.v; paint(); persist(); }));
+  ta.value = fb.voteNotes[id] || '';
+  ta.addEventListener('input', () => { fb.voteNotes[id] = ta.value; persist(); });
+  paint();
+});
+document.querySelectorAll('.q').forEach(q => {
+  const id = q.dataset.q, ta = q.querySelector('textarea');
+  const paint = () => q.querySelectorAll('.opt').forEach(o => o.classList.toggle('on', fb.answers[id] === o.dataset.v));
+  q.querySelectorAll('.opt').forEach(o => o.addEventListener('click', () => { fb.answers[id] = fb.answers[id] === o.dataset.v ? undefined : o.dataset.v; paint(); persist(); }));
+  ta.value = fb.notes[id] || '';
+  ta.addEventListener('input', () => { fb.notes[id] = ta.value; persist(); });
+  paint();
+});
+function updateCount() {
+  const n = Object.values(fb.votes).filter(Boolean).length + ['lanceur', 'partage'].filter(k => fb.answers[k]).length + (fb.notes.libre ? 1 : 0);
+  document.getElementById('count').textContent = n;
+}
+updateCount();
+
+const VOTE_LABEL = { love: '😍 oui', maybe: '🤔 peut-être', nope: '✋ non' };
+function toMarkdown() {
+  const out = ['# Retour tour 2 — Pluie de Chats', '', '## Mécaniques'];
+  document.querySelectorAll('.dir').forEach(d => {
+    const id = d.dataset.id, v = fb.votes[id], n = (fb.voteNotes[id] || '').trim(), tr = fb.tried[id];
+    const played = tr ? ` _(joué : ${tr.runs} averse(s), meilleure note ${'🐾'.repeat(tr.stars) || '0'}, lanceur ${Object.keys(tr.modes).join('/')})_` : ' _(pas joué)_';
+    out.push(`- **${d.dataset.label}** : ${v ? VOTE_LABEL[v] : '(pas d\'avis)'}${n ? ` — ${n}` : ''}${played}`);
+  });
+  out.push('', '## Questions');
+  document.querySelectorAll('.q').forEach(q => {
+    const id = q.dataset.q, a = fb.answers[id], n = (fb.notes[id] || '').trim();
+    if (id === 'libre') { if (n) out.push('', '## Notes libres', n); return; }
+    out.push(`- **${q.querySelector('h3').textContent}** : ${a || '(pas de réponse)'}${n ? ` — ${n}` : ''}`);
+  });
+  return out.join('\n');
+}
+const toast = document.getElementById('toast');
+document.getElementById('copy').addEventListener('click', async () => {
+  const md = toMarkdown();
+  try { await navigator.clipboard.writeText(md); toast.textContent = 'Copié. Colle-le dans la conversation.'; }
+  catch { prompt('Copie ce texte :', md); toast.textContent = 'Copie manuelle.'; }
+  toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 2200);
+});
+document.getElementById('reset').addEventListener('click', () => { if (confirm('Effacer toutes tes réponses ?')) { localStorage.removeItem(KEY); location.reload(); } });
+
+// ─── Lanceur (partagé par les 3 démos) ─────────────────────────────────────
+const LAUNCH_HELP = {
+  vise: 'Tape ou maintiens : le tir part du centre en bas vers ton doigt. Relâche pour tirer.',
+  glisse: 'Glisse le doigt : le lanceur te suit en bas. Relâche pour tirer tout droit.',
+  fronde: 'Appuie n\'importe où et tire en arrière : la pelote part à l\'opposé. Relâche pour tirer.',
+};
+let MODE = localStorage.getItem('pdc_launch_mode') || 'vise';
+const seg = document.getElementById('launchSeg');
+function paintMode() {
+  seg.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.m === MODE));
+  document.getElementById('launchHelp').textContent = LAUNCH_HELP[MODE];
+}
+seg.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { MODE = b.dataset.m; localStorage.setItem('pdc_launch_mode', MODE); paintMode(); }));
+paintMode();
+
+// ─── Moteur de démo commun ─────────────────────────────────────────────────
+const IMG = {};
+function img(path) { if (!IMG[path]) { const i = new Image(); i.src = path; IMG[path] = i; } return IMG[path]; }
+const catImg = (id, pose) => img(`sprites/cats/${id}_${pose}.png`);
+const ballImg = img('sprites/weapons/pelote.png');
+const CONFETTI = ['#ff3ea5', '#ffce3a', '#26c6f7', '#7b3ff2', '#ff8a48', '#3dc47e'];
+const W = 340, H = 480, OY = H - 34, SPEED = 980, BALL_G = 320;
+
+function drawSprite(ctx, im, x, y, size, rot = 0, flip = false) {
+  ctx.save(); ctx.translate(x, y); ctx.rotate(rot); if (flip) ctx.scale(-1, 1);
+  if (im.complete && im.naturalWidth) ctx.drawImage(im, -size / 2, -size / 2, size, size);
+  else { ctx.fillStyle = '#c9b8e8'; ctx.beginPath(); ctx.arc(0, 0, size * .35, 0, Math.PI * 2); ctx.fill(); }
+  ctx.restore();
+}
+function segDist(px, py, ax, ay, bx, by) {
+  const dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy;
+  const t = l2 ? Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / l2)) : 0;
+  return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+}
+// Avance une pelote ; renvoie 'wall' sur rebond, 'out' si sortie, null sinon.
+function moveBall(b, dt) {
+  b.vy += BALL_G * dt; b.x += b.vx * dt; b.y += b.vy * dt; b.rot = (b.rot || 0) + dt * 12;
+  if (b.x < b.r || b.x > W - b.r) {
+    if (b.b <= 0) return b.x < -30 || b.x > W + 30 ? 'out' : null;
+    b.b--; b.vx *= -1; b.x = Math.max(b.r, Math.min(W - b.r, b.x)); b.bounced = true; return 'wall';
+  }
+  if (b.y < -30 || b.y > H + 30) return 'out';
+  return null;
+}
+
+function makeDemo(id, cfg) {
+  const cv = document.getElementById('cv' + id);
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cv.width = W * dpr; cv.height = H * dpr;
+  const ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
+  const S = {};
+  let aim = null, lx = W / 2, visible = false, last = 0;
+
+  S.reset = () => {
+    Object.assign(S, { cats: [], balls: [], parts: [], pops: [], t: 0, spawned: 0, caught: 0, lost: 0,
+      spawnT: .4, ended: false, shake: 0, cd: 0, best: 0, score: 0, combo: 0 });
+    S.queue = Array.from({ length: cfg.total }, pickKind);
+    S.catchableTotal = S.queue.filter(k => !k.avoid).length;
+    cfg.reset && cfg.reset(S);
+  };
+  const pickKind = () => {
+    const tot = cfg.kinds.reduce((s, k) => s + k.w, 0); let r = Math.random() * tot;
+    for (const k of cfg.kinds) { r -= k.w; if (r <= 0) return k; } return cfg.kinds[0];
+  };
+  S.spawn = () => {
+    const k = S.queue[S.spawned], r = 21 * (k.size || 1), vy = 64 + Math.random() * 26 + S.spawned * 1.4;
+    S.cats.push({ kind: k, id: k.ids[Math.random() * k.ids.length | 0], x: r + 10 + Math.random() * (W - 2 * r - 20), y: -r,
+      vx: 0, vy, vy0: vy, r, st: 'fall', flip: Math.random() < .5, wob: Math.random() * 6, rot: 0, hp: k.hp || 1, leapCd: 0, alert: 0, scale: 1 });
+    S.spawned++;
+  };
+  S.pop = (x, y, txt, col, big) => S.pops.push({ x, y, txt, col, big, life: big ? 1.4 : .8 });
+  S.burst = (x, y, n) => { for (let i = 0; i < n; i++) { const a = Math.random() * 6.28, s = 80 + Math.random() * 260; S.parts.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 80, life: 1, col: CONFETTI[i % 6], sz: 3 + Math.random() * 4 }); } };
+  S.leap = (c, fromX) => { if (c.leapCd > 0) return; c.vx = (c.x < fromX ? -1 : 1) * 520; c.leapCd = 1.1; c.alert = 1; S.pop(c.x, c.y - c.r - 6, '!', c.kind.col); };
+  S.reset();
+
+  const shotFrom = () => {
+    const o = { x: W / 2, y: OY }; let dx, dy;
+    if (MODE === 'vise') { dx = aim.cur.x - o.x; dy = aim.cur.y - o.y; }
+    else if (MODE === 'glisse') { o.x = Math.max(20, Math.min(W - 20, aim.cur.x)); dx = 0; dy = -1; }
+    else { dx = aim.start.x - aim.cur.x; dy = aim.start.y - aim.cur.y; if (Math.hypot(dx, dy) < 18) return null; }
+    const L = Math.hypot(dx, dy); if (L < 1) return null; dx /= L; dy /= L;
+    if (dy > -0.12) return null;
+    return { o, d: { x: dx, y: dy } };
+  };
+  const pos = e => { const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height }; };
+  cv.addEventListener('pointerdown', e => {
+    if (S.ended) { S.reset(); return; }
+    const p = pos(e); aim = { start: p, cur: p }; try { cv.setPointerCapture(e.pointerId); } catch {}
+  });
+  cv.addEventListener('pointermove', e => { if (aim) aim.cur = pos(e); });
+  const release = () => {
+    if (!aim) return;
+    const s = shotFrom(); aim = null;
+    if (!s || S.cd > 0) return;
+    S.cd = cfg.cooldown; cfg.shoot(S, s.o, s.d);
+    const tr = fb.tried[id === 'A' ? 'fil' : id === 'B' ? 'carambolage' : 'arcade'] ||= { runs: 0, stars: 0, modes: {} };
+    tr.modes[MODE] = 1; persist();
+  };
+  cv.addEventListener('pointerup', release);
+  cv.addEventListener('pointercancel', () => { aim = null; });
+
+  const stars = () => { const r = S.caught / S.catchableTotal; return r >= .88 ? 3 : r >= .7 ? 2 : r >= .5 ? 1 : 0; };
+
+  const preview = () => {
+    if (!aim) return;
+    const s = shotFrom(); if (!s) return;
+    const b = { x: s.o.x, y: s.o.y, vx: s.d.x * SPEED, vy: s.d.y * SPEED, r: 12, b: 2 };
+    ctx.fillStyle = 'rgba(123,63,242,.5)';
+    for (let i = 0; i < 90; i++) { if (moveBall(b, 1 / 120) === 'out') break; if (i % 4 === 0) { ctx.beginPath(); ctx.arc(b.x, b.y, 2.4, 0, 7); ctx.fill(); } }
+  };
+
+  function step(dt) {
+    if (!S.ended) {
+      S.t += dt; S.spawnT -= dt; S.cd = Math.max(0, S.cd - dt);
+      if (S.spawned < cfg.total && S.spawnT <= 0) { S.spawn(); S.spawnT = cfg.interval * (.6 + Math.random() * .8); }
+      for (const c of S.cats) {
+        c.wob += dt * 3; c.alert = Math.max(0, c.alert - dt * 1.5); c.leapCd -= dt;
+        if (c.st !== 'fall') continue;
+        cfg.catUpdate && cfg.catUpdate(c, dt, S);
+        c.vx *= Math.pow(.05, dt); c.vy += (c.vy0 - c.vy) * Math.min(1, dt * 2);
+        c.x += c.vx * dt; c.y += c.vy * dt;
+        if (c.x < c.r) { c.x = c.r; c.vx = Math.abs(c.vx); } if (c.x > W - c.r) { c.x = W - c.r; c.vx = -Math.abs(c.vx); }
+        if (Math.abs(c.vx) > 30) c.flip = c.vx < 0;
+        if (c.y > H + c.r) {
+          c.st = 'gone';
+          if (!c.kind.avoid) { S.lost++; if (S.combo > 0 && cfg.comboBreakOnMiss) S.pop(W / 2, H - 80, 'combo cassé', '#9a90ad'); S.combo = 0; S.pop(Math.max(30, Math.min(W - 30, c.x)), H - 50, 'raté', '#9a90ad'); }
+        }
+      }
+      cfg.update(dt, S);
+      S.cats = S.cats.filter(c => c.st !== 'gone');
+      if (S.spawned >= cfg.total && !S.cats.length && !(cfg.busy && cfg.busy(S))) {
+        S.ended = true;
+        const tr = fb.tried[id === 'A' ? 'fil' : id === 'B' ? 'carambolage' : 'arcade'] ||= { runs: 0, stars: 0, modes: {} };
+        tr.runs++; tr.stars = Math.max(tr.stars, stars()); persist();
+      }
+    }
+    for (let i = S.parts.length - 1; i >= 0; i--) { const p = S.parts[i]; p.vy += 600 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.life -= dt * 1.4; if (p.life <= 0) S.parts.splice(i, 1); }
+    for (let i = S.pops.length - 1; i >= 0; i--) { const p = S.pops[i]; p.life -= dt; p.y -= dt * (p.big ? 22 : 40); if (p.life <= 0) S.pops.splice(i, 1); }
+    S.shake *= Math.pow(.002, dt);
+    if (aim && MODE === 'glisse') lx = Math.max(20, Math.min(W - 20, aim.cur.x)); else if (MODE !== 'glisse') lx = W / 2;
+    draw();
+  }
+
+  function draw() {
+    ctx.save();
+    if (S.shake > .3) ctx.translate((Math.random() - .5) * S.shake, (Math.random() - .5) * S.shake);
+    const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#d9efff'); g.addColorStop(1, '#fff6ea');
+    ctx.fillStyle = g; ctx.fillRect(-20, -20, W + 40, H + 40);
+    ctx.strokeStyle = 'rgba(120,160,210,.2)'; ctx.lineWidth = 1.2;
+    for (let i = 0; i < 26; i++) { const x = (i * 53 + S.t * 30) % (W + 40) - 20, y = (i * 97 + S.t * 280) % (H + 40) - 20; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 4, y + 12); ctx.stroke(); }
+    cfg.drawUnder && cfg.drawUnder(ctx, S);
+    for (const c of S.cats) {
+      const pose = c.st === 'fall' ? (c.alert > .4 ? 'tro' : 'mid') : c.st === 'tang' ? 'sit' : 'mid';
+      const rot = c.st === 'fall' ? Math.sin(c.wob) * .12 : c.rot;
+      drawSprite(ctx, catImg(c.id, pose), c.x, c.y, c.r * 2.5 * c.scale, rot, c.flip);
+      if (c.kind.tag && c.st === 'fall') {
+        ctx.font = '700 11px Fredoka, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+        ctx.fillStyle = c.kind.col; ctx.fillText(c.kind.tag + (c.hp > 1 ? ' 🛡' : ''), c.x, c.y - c.r - 2);
+      }
+    }
+    cfg.drawOver && cfg.drawOver(ctx, S);
+    for (const b of S.balls) if (!b.dead) drawSprite(ctx, ballImg, b.x, b.y, 28, b.rot);
+    preview();
+    // lanceur
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(lx, OY, 19, 0, 7); ctx.fill();
+    ctx.strokeStyle = '#ff8a48'; ctx.lineWidth = 3; ctx.stroke();
+    if (S.cd > 0) { ctx.strokeStyle = '#7b3ff2'; ctx.beginPath(); ctx.arc(lx, OY, 19, -Math.PI / 2, -Math.PI / 2 + (1 - S.cd / cfg.cooldown) * 6.283); ctx.stroke(); }
+    drawSprite(ctx, ballImg, lx, OY, 26);
+    for (const p of S.parts) { ctx.globalAlpha = Math.max(0, p.life); ctx.fillStyle = p.col; ctx.fillRect(p.x, p.y, p.sz, p.sz); }
+    ctx.globalAlpha = 1;
+    for (const p of S.pops) {
+      ctx.globalAlpha = Math.min(1, p.life * 2.5); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.font = p.big ? '800 32px "Baloo 2", sans-serif' : '800 17px "Baloo 2", sans-serif';
+      if (p.big) { ctx.lineWidth = 6; ctx.strokeStyle = '#fff'; ctx.strokeText(p.txt, p.x, p.y); }
+      ctx.fillStyle = p.col; ctx.fillText(p.txt, p.x, p.y);
+    }
+    ctx.globalAlpha = 1;
+    ctx.restore();
+    // HUD : barre de progression avec seuils de pattes
+    const bx = 14, bw = W - 28, by = 12;
+    ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.beginPath(); ctx.roundRect(bx - 4, by - 4, bw + 8, 34, 12); ctx.fill();
+    ctx.fillStyle = '#eee4f7'; ctx.beginPath(); ctx.roundRect(bx, by + 18, bw, 8, 4); ctx.fill();
+    const tot = S.catchableTotal;
+    ctx.fillStyle = '#3dc47e'; ctx.beginPath(); ctx.roundRect(bx, by + 18, Math.max(4, bw * Math.min(1, S.caught / tot)), 8, 4); ctx.fill();
+    [.5, .7, .88].forEach(th => { ctx.font = '11px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.globalAlpha = S.caught / tot >= th ? 1 : .35; ctx.fillText('🐾', bx + bw * th, by + 22); });
+    ctx.globalAlpha = 1;
+    ctx.font = '700 13px Fredoka, sans-serif'; ctx.textBaseline = 'top'; ctx.fillStyle = '#2a1b4a';
+    ctx.textAlign = 'left'; ctx.fillText(`🐾 ${S.caught} attrapés · ${S.lost} ratés`, bx, by - 1);
+    ctx.textAlign = 'right'; ctx.fillStyle = '#7b3ff2'; ctx.fillText(cfg.hudRight(S), bx + bw, by - 1);
+    if (S.ended) {
+      ctx.fillStyle = 'rgba(255,248,238,.9)'; ctx.fillRect(0, 0, W, H);
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      const st = stars();
+      ctx.font = '40px sans-serif';
+      for (let i = 0; i < 3; i++) { ctx.globalAlpha = i < st ? 1 : .2; ctx.fillText('🐾', W / 2 + (i - 1) * 54, H / 2 - 60); }
+      ctx.globalAlpha = 1; ctx.fillStyle = '#2a1b4a'; ctx.font = '800 28px "Baloo 2", sans-serif';
+      ctx.fillText(`${S.caught} / ${S.catchableTotal} chats`, W / 2, H / 2);
+      ctx.font = '600 16px Fredoka, sans-serif'; ctx.fillStyle = '#7b3ff2'; ctx.fillText(cfg.endLine(S), W / 2, H / 2 + 34);
+      ctx.font = '500 14px Fredoka, sans-serif'; ctx.fillStyle = '#6b5e86'; ctx.fillText('touche pour rejouer', W / 2, H / 2 + 66);
+    }
+  }
+
+  new IntersectionObserver(es => { visible = es[0].isIntersecting; }).observe(cv);
+  const frame = ts => { const dt = Math.min((ts - last) / 1000, 0.05); last = ts; if (visible) step(dt); requestAnimationFrame(frame); };
+  requestAnimationFrame(frame);
+  return S.reset;
+}
+
+const NORMAL = { k: 'normal', ids: ['tabby', 'noir', 'gris', 'blanc', 'scottish'], w: 5 };
+const TROUILLARD = { k: 'trouillard', ids: ['siamois', 'fantome'], w: 2, tag: 'trouillard', col: '#1a9fd0' };
+
+// A. Fil de laine ───────────────────────────────────────────────────────────
+const resetA = makeDemo('A', {
+  total: 26, interval: 1.25, cooldown: .55,
+  kinds: [NORMAL, { k: 'joueur', ids: ['bengal', 'rainbow'], w: 3, tag: 'joueur', col: '#ff3ea5' }, TROUILLARD,
+          { k: 'ninja', ids: ['ninja'], w: 1, tag: 'ninja ✂️', col: '#2a1b4a' }],
+  reset(S) { S.best = 0; },
+  shoot(S, o, d) { S.balls.push({ x: o.x, y: o.y, ox: o.x, oy: o.y, vx: d.x * SPEED, vy: d.y * SPEED, r: 12, b: 2, rot: 0, thread: [[o.x, o.y]], tangled: [], dead: false, wait: -1, reel: -1, fade: -1 }); },
+  catUpdate(c, dt, S) {
+    if (c.kind.k === 'joueur') {
+      let best = null, bd = 115;
+      for (const b of S.balls) { if (b.fade >= 0 || b.reel >= 0) continue; for (let i = 0; i < b.thread.length; i += 2) { const [px, py] = b.thread[i]; const d = Math.hypot(px - c.x, py - c.y); if (d < bd) { bd = d; best = [px, py]; } } }
+      if (best) { const dx = best[0] - c.x, dy = best[1] - c.y, d = Math.hypot(dx, dy) || 1; c.vx += dx / d * 2600 * dt; c.vy += dy / d * 900 * dt; c.alert = 1; }
+    }
+    if (c.kind.k === 'trouillard') for (const b of S.balls) if (!b.dead && Math.hypot(b.x - c.x, b.y - c.y) < 85) S.leap(c, b.x);
+  },
+  update(dt, S) {
+    for (const b of S.balls) {
+      if (!b.dead) {
+        const px = b.x, py = b.y, res = moveBall(b, dt);
+        const lp = b.thread[b.thread.length - 1]; if (Math.hypot(b.x - lp[0], b.y - lp[1]) > 6 || res === 'wall') b.thread.push([b.x, b.y]);
+        for (const c of S.cats) {
+          if (c.st !== 'fall') continue;
+          let hit = segDist(c.x, c.y, px, py, b.x, b.y) < c.r * .9;
+          // les chats (joueurs surtout) qui viennent toucher un fil déjà tendu
+          if (!hit && c.kind.k === 'joueur') for (let i = 1; i < b.thread.length && !hit; i++) hit = segDist(c.x, c.y, ...b.thread[i - 1], ...b.thread[i]) < c.r * .7;
+          if (!hit) continue;
+          if (c.kind.k === 'ninja') {
+            S.pop(c.x, c.y - 30, '✂️ coupé !', '#2a1b4a'); S.shake = 6;
+            for (const t of b.tangled) { t.st = 'fall'; t.vx = (Math.random() - .5) * 400; t.vy = 40; }
+            b.tangled = []; b.dead = true; b.fade = .4; c.vx = (Math.random() < .5 ? -1 : 1) * 300; break;
+          }
+          c.st = 'tang'; c.ox = c.x; c.oy = c.y; b.tangled.push(c); S.burst(c.x, c.y, 6);
+          S.pop(c.x, c.y - c.r - 8, b.tangled.length > 1 ? `×${b.tangled.length}` : '+1', '#ff8a48');
+        }
+        if (res === 'out' || b.thread.length > 160) { b.dead = true; b.wait = .22; }
+      } else if (b.fade >= 0) { b.fade -= dt; if (b.fade < 0) b.done = true; }
+      else if (b.wait >= 0) { b.wait -= dt; if (b.wait < 0) { b.reel = 0; if (!b.tangled.length) b.done = true; } }
+      else if (b.reel >= 0) {
+        b.reel += dt; const k = Math.min(1, b.reel / .4), e = k * k;
+        for (const c of b.tangled) { c.x = c.ox + (b.ox - c.ox) * e; c.y = c.oy + (b.oy - c.oy) * e; c.scale = 1 - .6 * e; c.rot += dt * 10; }
+        if (k >= 1) {
+          const n = b.tangled.length; S.caught += n; S.score += n * n; S.best = Math.max(S.best, n);
+          for (const c of b.tangled) c.st = 'gone';
+          if (n >= 2) { S.pop(W / 2, H * .42, `${n} sur un fil !`, n >= 5 ? '#ff3ea5' : '#ff8a48', true); S.shake = Math.min(14, n * 2.5); }
+          S.burst(b.ox, b.oy - 20, 10 + n * 6); b.done = true;
+        }
+      }
+    }
+    S.balls = S.balls.filter(b => !b.done);
+  },
+  busy: S => S.balls.length > 0 || S.cats.some(c => c.st === 'tang'),
+  drawUnder(ctx, S) {
+    for (const b of S.balls) {
+      ctx.globalAlpha = b.fade >= 0 ? Math.max(0, b.fade / .4) : 1;
+      ctx.strokeStyle = '#ff8a48'; ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.setLineDash(b.fade >= 0 ? [6, 6] : []);
+      if (b.reel >= 0) { for (const c of b.tangled) { ctx.beginPath(); ctx.moveTo(b.ox, b.oy); ctx.lineTo(c.x, c.y); ctx.stroke(); } }
+      else { ctx.beginPath(); b.thread.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); if (!b.dead) ctx.lineTo(b.x, b.y); ctx.stroke(); }
+      ctx.setLineDash([]); ctx.globalAlpha = 1;
+    }
+    for (const c of S.cats) if (c.st === 'tang' && c.ox !== undefined) { const b = S.balls.find(b => b.tangled.includes(c)); if (b && b.reel < 0) c.x = c.ox + Math.sin(S.t * 9 + c.oy) * 2.5; }
+  },
+  hudRight: S => S.best > 1 ? `meilleur fil ×${S.best}` : `${S.score} pts`,
+  endLine: S => `${S.score} pts · meilleur fil : ${S.best} chat${S.best > 1 ? 's' : ''}`,
+});
+
+// B. Carambolage ────────────────────────────────────────────────────────────
+const resetB = makeDemo('B', {
+  total: 26, interval: 1.0, cooldown: .45,
+  kinds: [NORMAL, { k: 'gros', ids: ['persan'], w: 2, tag: 'gros', col: '#c0392b', size: 1.35 },
+          { k: 'chaton', ids: ['micro'], w: 2, tag: 'chaton', col: '#d49a00', size: .72 }, TROUILLARD],
+  reset(S) { S.best = 0; },
+  shoot(S, o, d) { S.balls.push({ x: o.x, y: o.y, vx: d.x * SPEED, vy: d.y * SPEED, r: 12, b: 2, rot: 0 }); },
+  catUpdate(c, dt, S) { if (c.kind.k === 'trouillard') for (const b of S.balls) if (Math.hypot(b.x - c.x, b.y - c.y) < 85) S.leap(c, b.x); },
+  update(dt, S) {
+    const boulet = (c, vx, vy, shot) => {
+      const sp = Math.hypot(vx, vy), min = 420; if (sp < min) { vx *= min / (sp || 1); vy *= min / (sp || 1); }
+      c.st = 'boul'; c.vx = vx; c.vy = vy; c.vr = (Math.random() - .5) * 16; c.life = c.kind.k === 'chaton' ? .7 : c.kind.k === 'gros' ? 2.0 : 1.25;
+      c.shot = shot; shot.n++; shot.alive++; S.burst(c.x, c.y, 8); S.shake = Math.min(12, S.shake + 2);
+      if (shot.n > 1) S.pop(c.x, c.y - c.r - 6, `×${shot.n}`, '#ff3ea5');
+    };
+    for (const b of S.balls) {
+      if (moveBall(b, dt) === 'out') { b.done = true; continue; }
+      for (const c of S.cats) {
+        if (c.st !== 'fall' || Math.hypot(c.x - b.x, c.y - b.y) > c.r + b.r) continue;
+        boulet(c, b.vx * .8, b.vy * .8, { n: 0, alive: 0 }); b.done = true; break;
+      }
+    }
+    S.balls = S.balls.filter(b => !b.done);
+    for (const c of S.cats) {
+      if (c.st !== 'boul') continue;
+      c.vy += 900 * dt; c.x += c.vx * dt; c.y += c.vy * dt; c.rot += c.vr * dt; c.life -= dt;
+      if (c.x < c.r || c.x > W - c.r) { c.vx *= -.85; c.x = Math.max(c.r, Math.min(W - c.r, c.x)); }
+      if (c.y < c.r) { c.vy = Math.abs(c.vy) * .8; c.y = c.r; }
+      for (const o of S.cats) {
+        if (o.st !== 'fall') continue;
+        const dx = o.x - c.x, dy = o.y - c.y, d = Math.hypot(dx, dy) || 1;
+        if (d > o.r + c.r) continue;
+        const sp = Math.hypot(c.vx, c.vy);
+        boulet(o, dx / d * sp * .75 + c.vx * .3, dy / d * sp * .75 + c.vy * .3, c.shot);
+        if (c.kind.k !== 'gros') { c.vx -= dx / d * sp * .5; c.vy -= dy / d * sp * .5; }
+      }
+      if (c.life <= 0 || c.y > H + 40) {
+        c.st = 'gone'; S.caught++; c.shot.alive--;
+        if (c.shot.alive === 0) {
+          const n = c.shot.n; S.best = Math.max(S.best, n); S.score += n * n;
+          if (n >= 2) S.pop(W / 2, H * .42, `Carambolage ×${n}`, n >= 5 ? '#ff3ea5' : '#7b3ff2', true);
+        }
+      }
+    }
+  },
+  busy: S => S.balls.length > 0 || S.cats.some(c => c.st === 'boul'),
+  drawUnder(ctx, S) {
+    for (const c of S.cats) if (c.st === 'boul') { ctx.fillStyle = 'rgba(255,62,165,.15)'; ctx.beginPath(); ctx.arc(c.x - c.vx * .03, c.y - c.vy * .03, c.r * 1.1, 0, 7); ctx.fill(); }
+  },
+  hudRight: S => S.best > 1 ? `carambolage ×${S.best}` : `${S.score} pts`,
+  endLine: S => `${S.score} pts · meilleur carambolage : ×${S.best}`,
+});
+
+// C. Arcade à caractères ───────────────────────────────────────────────────
+const resetC = makeDemo('C', {
+  total: 26, interval: 1.0, cooldown: .28, comboBreakOnMiss: true,
+  kinds: [NORMAL, { k: 'bouclier', ids: ['bouclier'], w: 2, tag: 'bouclier', col: '#2f6fb0', hp: 2 },
+          { ...TROUILLARD, tag: 'esquive' }, { k: 'faux', ids: ['faux'], w: 1.3, tag: 'chien !', col: '#c0392b', avoid: true }],
+  reset(S) { S.best = 0; },
+  shoot(S, o, d) { S.balls.push({ x: o.x, y: o.y, vx: d.x * SPEED, vy: d.y * SPEED, r: 12, b: 2, rot: 0, bounced: false }); },
+  catUpdate(c, dt, S) { if (c.kind.k === 'trouillard') for (const b of S.balls) if (!b.bounced && Math.hypot(b.x - c.x, b.y - c.y) < 95) S.leap(c, b.x); },
+  update(dt, S) {
+    for (const b of S.balls) {
+      if (moveBall(b, dt) === 'out') { b.done = true; continue; }
+      for (const c of S.cats) {
+        if (c.st !== 'fall' || Math.hypot(c.x - b.x, c.y - b.y) > c.r + b.r) continue;
+        if (c.kind.avoid) { S.combo = 0; S.score = Math.max(0, S.score - 3); S.pop(c.x, c.y - 24, 'WAF ! −3', '#c0392b'); S.shake = 8; c.st = 'gone'; b.done = true; break; }
+        if (c.hp > 1) { c.hp--; b.vy = Math.abs(b.vy) * .6; b.vx *= -.6; S.pop(c.x, c.y - 24, '🛡 encore 1', '#2f6fb0'); S.burst(c.x, c.y, 5); break; }
+        S.combo++; const m = S.combo >= 9 ? 4 : S.combo >= 6 ? 3 : S.combo >= 3 ? 2 : 1;
+        S.score += m; S.caught++; S.best = Math.max(S.best, S.combo);
+        S.pop(c.x, c.y - 10, m > 1 ? `+${m} ×${m}` : '+1', m > 1 ? '#ff3ea5' : '#7b3ff2'); S.burst(c.x, c.y, 10 + m * 4); S.shake = 2 + m;
+        c.st = 'gone'; b.done = true; break;
+      }
+    }
+    S.balls = S.balls.filter(b => !b.done);
+  },
+  busy: S => S.balls.length > 0,
+  hudRight: S => S.combo >= 3 ? `combo ${S.combo}` : `${S.score} pts`,
+  endLine: S => `${S.score} pts · meilleur combo : ${S.best}`,
+});
+
+const RESETS = { A: resetA, B: resetB, C: resetC };
+document.querySelectorAll('[data-reset]').forEach(b => b.addEventListener('click', () => RESETS[b.dataset.reset]()));
+</script>
+</body>
+</html>
